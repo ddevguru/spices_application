@@ -1,0 +1,1213 @@
+{
+  "categories": [
+    {
+      "id": "cat_dry_fruits",
+      "name": "Dry Fruits",
+      "slug": "dry-fruits",
+      "image": "assets/images/cat_dryfruits.jpg",
+      "description": "Rich in essential nutrients, vitamins, and healthy fats.",
+      "order": 1,
+      "isActive": true,
+      "subcategories": [
+        "Almonds",
+        "Cashews",
+        "Pistachios",
+        "Walnuts",
+        "Raisins",
+        "Dates",
+        "Figs",
+        "Anjeer",
+        "Apricots",
+        "Mixed Dry Fruits",
+        "Seeds & Nuts"
+      ]
+    },
+    {
+      "id": "cat_whole_spices",
+      "name": "Whole Spices",
+      "slug": "whole-spices",
+      "image": "assets/images/cat_wholespices.jpg",
+      "description": "Aromatic, pure and hand-selected whole spices.",
+      "order": 2,
+      "isActive": true,
+      "subcategories": [
+        "Green Cardamom",
+        "Black Cardamom",
+        "Cinnamon Sticks",
+        "Cloves",
+        "Black Pepper",
+        "Cumin Seeds",
+        "Coriander Seeds",
+        "Fennel Seeds",
+        "Mustard Seeds",
+        "Star Anise",
+        "Bay Leaves",
+        "Fenugreek Seeds",
+        "Dry Red Chillies"
+      ]
+    },
+    {
+      "id": "cat_blended_spices",
+      "name": "Blended Spices",
+      "slug": "blended-spices",
+      "image": "assets/images/cat_wholespices.jpg",
+      "description": "Authentic heritage spice blends ground to perfection.",
+      "order": 3,
+      "isActive": true,
+      "subcategories": [
+        "Garam Masala",
+        "Kitchen King Masala",
+        "Biryani Masala",
+        "Chole Masala",
+        "Pav Bhaji Masala",
+        "Paneer Masala",
+        "Chicken Masala",
+        "Meat Masala",
+        "Sambhar Masala",
+        "Tandoori Masala",
+        "Turmeric Powder",
+        "Red Chilli Powder",
+        "Coriander Powder",
+        "Cumin Powder"
+      ]
+    },
+    {
+      "id": "cat_cereals",
+      "name": "Cereals",
+      "slug": "cereals",
+      "image": "assets/images/cat_cereals.jpg",
+      "description": "Nutritious whole grains, millets, oats and superfoods.",
+      "order": 4,
+      "isActive": true,
+      "subcategories": [
+        "Oats",
+        "Rolled Oats",
+        "Quinoa",
+        "Millets",
+        "Ragi",
+        "Jowar",
+        "Bajra",
+        "Barley",
+        "Brown Rice",
+        "Dalia",
+        "Corn Flakes",
+        "Muesli",
+        "Wheat",
+        "Multigrain Mix"
+      ]
+    }
+  ],
+  "products": [
+    {
+      "id": "p_almonds",
+      "name": "California Whole Almonds",
+      "brand": "Naturale Pure",
+      "categoryId": "cat_dry_fruits",
+      "categoryName": "Dry Fruits",
+      "subcategoryId": "Almonds",
+      "subcategoryName": "Almonds",
+      "shortDescription": "Jumbo California almonds, crisp & rich in Vitamin E.",
+      "description": "Our premium California almonds are carefully selected from the finest orchards. Naturally rich in protein, healthy fats, fiber, and antioxidant Vitamin E, these crunchy dry fruits offer unmatched freshness and natural buttery flavor.",
+      "rating": 4.9,
+      "reviewCount": 420,
+      "image": "assets/images/cat_dryfruits.jpg",
+      "galleryImages": [
+        "assets/images/cat_dryfruits.jpg",
+        "assets/images/cat_wholespices.jpg"
+      ],
+      "origin": "California, USA",
+      "ingredients": "100% Pure Raw California Almonds",
+      "nutritionFacts": {
+        "Energy": "579 kcal",
+        "Protein": "21.2 g",
+        "Total Fat": "49.9 g",
+        "Fiber": "12.5 g",
+        "Carbohydrates": "21.6 g"
+      },
+      "storageInstructions": "Store in an airtight container in a cool, dry place away from sunlight.",
+      "specifications": {
+        "Grade": "Extra No. 1 Jumbo",
+        "Moisture": "< 6%",
+        "Shelf Life": "12 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": true,
+      "isBestSeller": true,
+      "isTrending": true,
+      "isSpecialOffer": false,
+      "isNewArrival": false,
+      "variants": [
+        {
+          "id": "v_almonds_100",
+          "weightInGrams": 100,
+          "unit": "GM",
+          "title": "100 GM",
+          "price": 120,
+          "originalPrice": 150,
+          "stockQuantity": 85,
+          "sku": "DF-ALM-100",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 20,
+          "isAvailable": true
+        },
+        {
+          "id": "v_almonds_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 280,
+          "originalPrice": 350,
+          "stockQuantity": 60,
+          "sku": "DF-ALM-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_almonds_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 540,
+          "originalPrice": 650,
+          "stockQuantity": 40,
+          "sku": "DF-ALM-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        },
+        {
+          "id": "v_almonds_1000",
+          "weightInGrams": 1000,
+          "unit": "KG",
+          "title": "1 KG",
+          "price": 1050,
+          "originalPrice": 1280,
+          "stockQuantity": 25,
+          "sku": "DF-ALM-1000",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 5,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "id": "p_cashews",
+      "name": "Royal Mangalore Cashews (W240)",
+      "brand": "Naturale Pure",
+      "categoryId": "cat_dry_fruits",
+      "categoryName": "Dry Fruits",
+      "subcategoryId": "Cashews",
+      "subcategoryName": "Cashews",
+      "shortDescription": "Whole jumbo W240 cashews, velvety, creamy & sweet.",
+      "description": "Graded W240 jumbo cashew nuts hand-processed in Karnataka. Sweet, buttery crunch with zero cholesterol. Exceptional quality for daily snacking, festive gifting, or gourmet culinary creations.",
+      "rating": 4.8,
+      "reviewCount": 310,
+      "image": "assets/images/cat_dryfruits.jpg",
+      "galleryImages": [
+        "assets/images/cat_dryfruits.jpg"
+      ],
+      "origin": "Mangalore, India",
+      "ingredients": "100% Whole Cashew Kernels (W240)",
+      "nutritionFacts": {
+        "Energy": "553 kcal",
+        "Protein": "18.2 g",
+        "Total Fat": "43.8 g",
+        "Fiber": "3.3 g",
+        "Carbohydrates": "30.1 g"
+      },
+      "storageInstructions": "Store in a cool dry place in sealed glass or airtight jar.",
+      "specifications": {
+        "Grade": "W240 Jumbo Whole",
+        "Processing": "Sun dried & air sorted",
+        "Shelf Life": "9 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": true,
+      "isBestSeller": true,
+      "isTrending": true,
+      "isSpecialOffer": false,
+      "isNewArrival": false,
+      "variants": [
+        {
+          "id": "v_cashews_100",
+          "weightInGrams": 100,
+          "unit": "GM",
+          "title": "100 GM",
+          "price": 140,
+          "originalPrice": 170,
+          "stockQuantity": 50,
+          "sku": "DF-CSH-100",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 20,
+          "isAvailable": true
+        },
+        {
+          "id": "v_cashews_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 320,
+          "originalPrice": 390,
+          "stockQuantity": 45,
+          "sku": "DF-CSH-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_cashews_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 620,
+          "originalPrice": 750,
+          "stockQuantity": 30,
+          "sku": "DF-CSH-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        },
+        {
+          "id": "v_cashews_1000",
+          "weightInGrams": 1000,
+          "unit": "KG",
+          "title": "1 KG",
+          "price": 1190,
+          "originalPrice": 1450,
+          "stockQuantity": 18,
+          "sku": "DF-CSH-1000",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 5,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "id": "p_pistachios",
+      "name": "Roasted & Salted Iranian Pistachios",
+      "brand": "Naturale Pure",
+      "categoryId": "cat_dry_fruits",
+      "categoryName": "Dry Fruits",
+      "subcategoryId": "Pistachios",
+      "subcategoryName": "Pistachios",
+      "shortDescription": "Crisp in-shell pistachios lightly seasoned with pink Himalayan salt.",
+      "description": "Authentic jumbo pistachios naturally opened on tree branches, lightly roasted to perfection with Himalayan pink salt. High in potassium, antioxidants, and dietary fiber.",
+      "rating": 4.9,
+      "reviewCount": 275,
+      "image": "assets/images/cat_dryfruits.jpg",
+      "galleryImages": [
+        "assets/images/cat_dryfruits.jpg"
+      ],
+      "origin": "Iran",
+      "ingredients": "Pistachios (98%), Himalayan Rock Salt (2%)",
+      "nutritionFacts": {
+        "Energy": "562 kcal",
+        "Protein": "20.2 g",
+        "Total Fat": "45.3 g",
+        "Fiber": "10.6 g",
+        "Carbohydrates": "27.5 g"
+      },
+      "storageInstructions": "Keep sealed to preserve signature crispness.",
+      "specifications": {
+        "Grade": "Super Jumbo Akbari",
+        "Salt Level": "Low (< 1.5%)",
+        "Shelf Life": "12 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": false,
+      "isBestSeller": true,
+      "isTrending": true,
+      "isSpecialOffer": true,
+      "isNewArrival": false,
+      "variants": [
+        {
+          "id": "v_pista_100",
+          "weightInGrams": 100,
+          "unit": "GM",
+          "title": "100 GM",
+          "price": 160,
+          "originalPrice": 195,
+          "stockQuantity": 40,
+          "sku": "DF-PST-100",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 20,
+          "isAvailable": true
+        },
+        {
+          "id": "v_pista_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 380,
+          "originalPrice": 460,
+          "stockQuantity": 35,
+          "sku": "DF-PST-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_pista_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 720,
+          "originalPrice": 880,
+          "stockQuantity": 22,
+          "sku": "DF-PST-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        },
+        {
+          "id": "v_pista_1000",
+          "weightInGrams": 1000,
+          "unit": "KG",
+          "title": "1 KG",
+          "price": 1390,
+          "originalPrice": 1680,
+          "stockQuantity": 14,
+          "sku": "DF-PST-1000",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 5,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "id": "p_walnuts",
+      "name": "Kashmiri Snow-White Walnut Halves",
+      "brand": "Naturale Pure",
+      "categoryId": "cat_dry_fruits",
+      "categoryName": "Dry Fruits",
+      "subcategoryId": "Walnuts",
+      "subcategoryName": "Walnuts",
+      "shortDescription": "Extra light halves from Kashmir valley, potent in Omega-3.",
+      "description": "Organically harvested in high-altitude Kashmiri valleys. Rich in ALA Omega-3 fatty acids for optimal brain health, heart vitality, and glowing skin.",
+      "rating": 4.9,
+      "reviewCount": 184,
+      "image": "assets/images/cat_dryfruits.jpg",
+      "galleryImages": [
+        "assets/images/cat_dryfruits.jpg"
+      ],
+      "origin": "Kashmir, India",
+      "ingredients": "100% Kashmir Walnut Kernels (Halves)",
+      "nutritionFacts": {
+        "Energy": "654 kcal",
+        "Protein": "15.2 g",
+        "Total Fat": "65.2 g",
+        "Fiber": "6.7 g",
+        "Carbohydrates": "13.7 g"
+      },
+      "storageInstructions": "Best refrigerated after opening.",
+      "specifications": {
+        "Grade": "Extra Light Halves",
+        "Omega-3 Content": "9.1g per 100g",
+        "Shelf Life": "9 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": true,
+      "isBestSeller": false,
+      "isTrending": true,
+      "isSpecialOffer": false,
+      "isNewArrival": true,
+      "variants": [
+        {
+          "id": "v_walnut_100",
+          "weightInGrams": 100,
+          "unit": "GM",
+          "title": "100 GM",
+          "price": 150,
+          "originalPrice": 180,
+          "stockQuantity": 30,
+          "sku": "DF-WLN-100",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 20,
+          "isAvailable": true
+        },
+        {
+          "id": "v_walnut_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 360,
+          "originalPrice": 420,
+          "stockQuantity": 25,
+          "sku": "DF-WLN-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_walnut_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 690,
+          "originalPrice": 810,
+          "stockQuantity": 16,
+          "sku": "DF-WLN-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        },
+        {
+          "id": "v_walnut_1000",
+          "weightInGrams": 1000,
+          "unit": "KG",
+          "title": "1 KG",
+          "price": 1340,
+          "originalPrice": 1590,
+          "stockQuantity": 10,
+          "sku": "DF-WLN-1000",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 5,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "id": "p_cardamom",
+      "name": "Idukki Green Cardamom (8mm+ Bold)",
+      "brand": "Naturale Spices",
+      "categoryId": "cat_whole_spices",
+      "categoryName": "Whole Spices",
+      "subcategoryId": "Green Cardamom",
+      "subcategoryName": "Green Cardamom",
+      "shortDescription": "Queen of spices: aromatic 8mm+ bold green pods from Kerala.",
+      "description": "Directly sourced from misty cardamom hills of Idukki, Kerala. Lush green pods bursting with intense floral aroma, essential oils, and therapeutic digestive benefits.",
+      "rating": 5.0,
+      "reviewCount": 192,
+      "image": "assets/images/cat_wholespices.jpg",
+      "galleryImages": [
+        "assets/images/cat_wholespices.jpg"
+      ],
+      "origin": "Idukki, Kerala, India",
+      "ingredients": "100% Whole Green Cardamom",
+      "nutritionFacts": {
+        "Energy": "311 kcal",
+        "Protein": "10.8 g",
+        "Total Fat": "6.7 g",
+        "Fiber": "28.0 g",
+        "Carbohydrates": "68.5 g"
+      },
+      "storageInstructions": "Keep in an airtight jar in a cool dark cabinet.",
+      "specifications": {
+        "Pod Size": "8mm+ Super Bold",
+        "Color": "Natural Fresh Green",
+        "Shelf Life": "18 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": true,
+      "isBestSeller": true,
+      "isTrending": true,
+      "isSpecialOffer": false,
+      "isNewArrival": false,
+      "variants": [
+        {
+          "id": "v_card_50",
+          "weightInGrams": 50,
+          "unit": "GM",
+          "title": "50 GM",
+          "price": 180,
+          "originalPrice": 220,
+          "stockQuantity": 90,
+          "sku": "WS-CRD-050",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 20,
+          "isAvailable": true
+        },
+        {
+          "id": "v_card_100",
+          "weightInGrams": 100,
+          "unit": "GM",
+          "title": "100 GM",
+          "price": 340,
+          "originalPrice": 410,
+          "stockQuantity": 75,
+          "sku": "WS-CRD-100",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_card_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 820,
+          "originalPrice": 980,
+          "stockQuantity": 40,
+          "sku": "WS-CRD-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        },
+        {
+          "id": "v_card_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 1580,
+          "originalPrice": 1890,
+          "stockQuantity": 20,
+          "sku": "WS-CRD-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 5,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "id": "p_cinnamon",
+      "name": "Ceylon Cinnamon Sticks (True Cinnamon)",
+      "brand": "Naturale Spices",
+      "categoryId": "cat_whole_spices",
+      "categoryName": "Whole Spices",
+      "subcategoryId": "Cinnamon Sticks",
+      "subcategoryName": "Cinnamon Sticks",
+      "shortDescription": "Sweet delicate layers of authentic Ceylon Cinnamomum verum.",
+      "description": "Authentic Ceylon cinnamon rolls imported from Sri Lanka. Unlike toxic cassia, true Ceylon cinnamon has low coumarin levels, delicate sweet woodiness, and multi-layered paper-thin quills.",
+      "rating": 4.9,
+      "reviewCount": 160,
+      "image": "assets/images/cat_wholespices.jpg",
+      "galleryImages": [
+        "assets/images/cat_wholespices.jpg"
+      ],
+      "origin": "Sri Lanka",
+      "ingredients": "100% True Ceylon Cinnamon Quills",
+      "nutritionFacts": {
+        "Energy": "247 kcal",
+        "Protein": "4.0 g",
+        "Total Fat": "1.2 g",
+        "Fiber": "53.1 g",
+        "Carbohydrates": "80.6 g"
+      },
+      "storageInstructions": "Airtight glass bottle in cool environment.",
+      "specifications": {
+        "Grade": "Alba / C5 Special",
+        "Coumarin": "< 0.004% (Safe)",
+        "Shelf Life": "24 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": false,
+      "isBestSeller": false,
+      "isTrending": true,
+      "isSpecialOffer": true,
+      "isNewArrival": false,
+      "variants": [
+        {
+          "id": "v_cin_50",
+          "weightInGrams": 50,
+          "unit": "GM",
+          "title": "50 GM",
+          "price": 95,
+          "originalPrice": 120,
+          "stockQuantity": 80,
+          "sku": "WS-CIN-050",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 20,
+          "isAvailable": true
+        },
+        {
+          "id": "v_cin_100",
+          "weightInGrams": 100,
+          "unit": "GM",
+          "title": "100 GM",
+          "price": 180,
+          "originalPrice": 230,
+          "stockQuantity": 60,
+          "sku": "WS-CIN-100",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_cin_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 420,
+          "originalPrice": 520,
+          "stockQuantity": 35,
+          "sku": "WS-CIN-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        },
+        {
+          "id": "v_cin_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 790,
+          "originalPrice": 990,
+          "stockQuantity": 15,
+          "sku": "WS-CIN-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 5,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "id": "p_garam_masala",
+      "name": "Royal Shahi Garam Masala",
+      "brand": "Naturale Heritage",
+      "categoryId": "cat_blended_spices",
+      "categoryName": "Blended Spices",
+      "subcategoryId": "Garam Masala",
+      "subcategoryName": "Garam Masala",
+      "shortDescription": "Handcrafted blend of 16 roasted whole spices & stone-ground herbs.",
+      "description": "Time-honored royal recipe combining roasted cardamom, cloves, cinnamon, mace, nutmeg, black cumin, and bay leaf. Stone ground at slow RPM to preserve volatile aromatic oils.",
+      "rating": 4.9,
+      "reviewCount": 490,
+      "image": "assets/images/cat_wholespices.jpg",
+      "galleryImages": [
+        "assets/images/cat_wholespices.jpg"
+      ],
+      "origin": "Rajasthan, India",
+      "ingredients": "Coriander, Cumin, Cardamom, Cloves, Cinnamon, Star Anise, Black Pepper, Nutmeg, Mace, Bay Leaf",
+      "nutritionFacts": {
+        "Energy": "370 kcal",
+        "Protein": "12.0 g",
+        "Total Fat": "15.0 g",
+        "Fiber": "22.0 g",
+        "Carbohydrates": "46.0 g"
+      },
+      "storageInstructions": "Airtight container away from steam and humidity.",
+      "specifications": {
+        "Blend Count": "16 Pure Spices",
+        "Artificial Colors": "0%",
+        "Shelf Life": "12 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": true,
+      "isBestSeller": true,
+      "isTrending": false,
+      "isSpecialOffer": false,
+      "isNewArrival": false,
+      "variants": [
+        {
+          "id": "v_gm_100",
+          "weightInGrams": 100,
+          "unit": "GM",
+          "title": "100 GM",
+          "price": 110,
+          "originalPrice": 140,
+          "stockQuantity": 120,
+          "sku": "BS-SGM-100",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 20,
+          "isAvailable": true
+        },
+        {
+          "id": "v_gm_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 250,
+          "originalPrice": 320,
+          "stockQuantity": 90,
+          "sku": "BS-SGM-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_gm_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 470,
+          "originalPrice": 590,
+          "stockQuantity": 50,
+          "sku": "BS-SGM-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        },
+        {
+          "id": "v_gm_1000",
+          "weightInGrams": 1000,
+          "unit": "KG",
+          "title": "1 KG",
+          "price": 890,
+          "originalPrice": 1100,
+          "stockQuantity": 25,
+          "sku": "BS-SGM-1000",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 5,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "id": "p_turmeric",
+      "name": "Lakadong Organic Turmeric Powder (7% Curcumin)",
+      "brand": "Naturale Heritage",
+      "categoryId": "cat_blended_spices",
+      "categoryName": "Blended Spices",
+      "subcategoryId": "Turmeric Powder",
+      "subcategoryName": "Turmeric Powder",
+      "shortDescription": "High curcumin (7%+) therapeutic turmeric from Meghalaya.",
+      "description": "Cultivated in the pristine Jaintia Hills of Meghalaya, Lakadong turmeric is globally celebrated for containing over 7% natural curcumin. Deep golden hue, rich earthy aroma, and strong anti-inflammatory properties.",
+      "rating": 5.0,
+      "reviewCount": 380,
+      "image": "assets/images/cat_wholespices.jpg",
+      "galleryImages": [
+        "assets/images/cat_wholespices.jpg"
+      ],
+      "origin": "Meghalaya, India",
+      "ingredients": "100% Organic Lakadong Turmeric Root Powder",
+      "nutritionFacts": {
+        "Curcumin": "7.2%",
+        "Energy": "354 kcal",
+        "Protein": "7.8 g",
+        "Total Fat": "9.9 g",
+        "Fiber": "21.1 g"
+      },
+      "storageInstructions": "Cool, dark place in an airtight glass jar.",
+      "specifications": {
+        "Curcumin Level": "> 7.0%",
+        "Origin": "Lakadong Village, Meghalaya",
+        "Shelf Life": "18 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": true,
+      "isBestSeller": false,
+      "isTrending": true,
+      "isSpecialOffer": true,
+      "isNewArrival": false,
+      "variants": [
+        {
+          "id": "v_tur_100",
+          "weightInGrams": 100,
+          "unit": "GM",
+          "title": "100 GM",
+          "price": 85,
+          "originalPrice": 110,
+          "stockQuantity": 140,
+          "sku": "BS-TUR-100",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 25,
+          "isAvailable": true
+        },
+        {
+          "id": "v_tur_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 195,
+          "originalPrice": 250,
+          "stockQuantity": 100,
+          "sku": "BS-TUR-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_tur_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 360,
+          "originalPrice": 460,
+          "stockQuantity": 60,
+          "sku": "BS-TUR-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        },
+        {
+          "id": "v_tur_1000",
+          "weightInGrams": 1000,
+          "unit": "KG",
+          "title": "1 KG",
+          "price": 680,
+          "originalPrice": 880,
+          "stockQuantity": 35,
+          "sku": "BS-TUR-1000",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 5,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "id": "p_rolled_oats",
+      "name": "Gluten-Free Jumbo Rolled Oats",
+      "brand": "Naturale Grains",
+      "categoryId": "cat_cereals",
+      "categoryName": "Cereals",
+      "subcategoryId": "Rolled Oats",
+      "subcategoryName": "Rolled Oats",
+      "shortDescription": "100% whole grain rolled oats rich in beta-glucan heart fibers.",
+      "description": "Steamed and gently rolled whole oat groats. Packed with soluble beta-glucan fiber to support cardiovascular health, sustain energetic mornings, and provide creamy textured oatmeal or homemade granola.",
+      "rating": 4.8,
+      "reviewCount": 260,
+      "image": "assets/images/cat_cereals.jpg",
+      "galleryImages": [
+        "assets/images/cat_cereals.jpg"
+      ],
+      "origin": "Australia",
+      "ingredients": "100% Certified Gluten-Free Whole Grain Oats",
+      "nutritionFacts": {
+        "Energy": "389 kcal",
+        "Protein": "16.9 g",
+        "Total Fat": "6.9 g",
+        "Fiber": "10.6 g",
+        "Beta-Glucan": "4.2 g"
+      },
+      "storageInstructions": "Keep tightly closed in cool pantry.",
+      "specifications": {
+        "Flake Thickness": "0.75 mm",
+        "Gluten Level": "< 5 ppm (Gluten Free)",
+        "Shelf Life": "12 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": true,
+      "isBestSeller": true,
+      "isTrending": true,
+      "isSpecialOffer": false,
+      "isNewArrival": false,
+      "variants": [
+        {
+          "id": "v_oats_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 90,
+          "originalPrice": 120,
+          "stockQuantity": 80,
+          "sku": "CR-OAT-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 20,
+          "isAvailable": true
+        },
+        {
+          "id": "v_oats_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 160,
+          "originalPrice": 210,
+          "stockQuantity": 60,
+          "sku": "CR-OAT-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_oats_1000",
+          "weightInGrams": 1000,
+          "unit": "KG",
+          "title": "1 KG",
+          "price": 290,
+          "originalPrice": 380,
+          "stockQuantity": 45,
+          "sku": "CR-OAT-1000",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "id": "p_quinoa",
+      "name": "Organic Royal White Quinoa",
+      "brand": "Naturale Grains",
+      "categoryId": "cat_cereals",
+      "categoryName": "Cereals",
+      "subcategoryId": "Quinoa",
+      "subcategoryName": "Quinoa",
+      "shortDescription": "Saponin-free pre-washed Andean supergrain with all 9 essential amino acids.",
+      "description": "Complete plant protein loaded with iron, magnesium, fiber and antioxidants. Pre-washed to eliminate bitterness and cooks into a fluffy, slightly nutty grain ideal for wholesome bowls and salads.",
+      "rating": 4.9,
+      "reviewCount": 145,
+      "image": "assets/images/cat_cereals.jpg",
+      "galleryImages": [
+        "assets/images/cat_cereals.jpg"
+      ],
+      "origin": "Peru / Bolivia",
+      "ingredients": "100% Organic White Quinoa Seeds",
+      "nutritionFacts": {
+        "Energy": "368 kcal",
+        "Protein": "14.1 g",
+        "Total Fat": "6.1 g",
+        "Fiber": "7.0 g",
+        "Iron": "4.6 mg"
+      },
+      "storageInstructions": "Airtight container in a dry location.",
+      "specifications": {
+        "Pre-washed": "Yes (Bitter Saponin Removed)",
+        "Organic Certified": "Yes",
+        "Shelf Life": "18 Months"
+      },
+      "allowCustomWeight": true,
+      "isFeatured": false,
+      "isBestSeller": false,
+      "isTrending": true,
+      "isSpecialOffer": true,
+      "isNewArrival": true,
+      "variants": [
+        {
+          "id": "v_qui_250",
+          "weightInGrams": 250,
+          "unit": "GM",
+          "title": "250 GM",
+          "price": 140,
+          "originalPrice": 180,
+          "stockQuantity": 50,
+          "sku": "CR-QUI-250",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 15,
+          "isAvailable": true
+        },
+        {
+          "id": "v_qui_500",
+          "weightInGrams": 500,
+          "unit": "GM",
+          "title": "500 GM",
+          "price": 260,
+          "originalPrice": 340,
+          "stockQuantity": 40,
+          "sku": "CR-QUI-500",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 10,
+          "isAvailable": true
+        },
+        {
+          "id": "v_qui_1000",
+          "weightInGrams": 1000,
+          "unit": "KG",
+          "title": "1 KG",
+          "price": 490,
+          "originalPrice": 620,
+          "stockQuantity": 25,
+          "sku": "CR-QUI-1000",
+          "minOrderQuantity": 1,
+          "maxOrderQuantity": 5,
+          "isAvailable": true
+        }
+      ]
+    }
+  ],
+  "coupons": [
+    {
+      "id": "cpn_welcome20",
+      "code": "WELCOME20",
+      "description": "20% off on your first order above ₹500",
+      "discountType": "percentage",
+      "discountValue": 20,
+      "minOrderValue": 500,
+      "maxDiscount": 300,
+      "expiryDate": "2026-12-31",
+      "isActive": true
+    },
+    {
+      "id": "cpn_flat100",
+      "code": "NATURALE100",
+      "description": "Flat ₹100 instant discount on orders above ₹800",
+      "discountType": "fixed",
+      "discountValue": 100,
+      "minOrderValue": 800,
+      "maxDiscount": 100,
+      "expiryDate": "2026-12-31",
+      "isActive": true
+    },
+    {
+      "id": "cpn_spice15",
+      "code": "SPICE15",
+      "description": "15% off on Whole & Blended Spices",
+      "discountType": "percentage",
+      "discountValue": 15,
+      "minOrderValue": 350,
+      "maxDiscount": 200,
+      "expiryDate": "2026-12-31",
+      "isActive": true
+    }
+  ],
+  "banners": [
+    {
+      "id": "bnr_1",
+      "title": "20% Discount",
+      "subtitle": "Premium Dry Fruits Collection",
+      "description": "Handpicked California almonds, cashews & walnuts.",
+      "image": "assets/images/cat_dryfruits.jpg",
+      "ctaText": "Shop Collection",
+      "targetCategory": "cat_dry_fruits",
+      "badge": "Special Offer",
+      "order": 1,
+      "isActive": true
+    },
+    {
+      "id": "bnr_2",
+      "title": "Authentic Spices",
+      "subtitle": "Discover Our Best Sellers",
+      "description": "Freshly ground masalas & aromatic Kerala whole spices.",
+      "image": "assets/images/cat_wholespices.jpg",
+      "ctaText": "Explore Flavours",
+      "targetCategory": "cat_whole_spices",
+      "badge": "Fresh Harvest",
+      "order": 2,
+      "isActive": true
+    },
+    {
+      "id": "bnr_3",
+      "title": "Healthy Grains",
+      "subtitle": "Nutritious Cereals & Millets",
+      "description": "Power your mornings with gluten-free oats and organic quinoa.",
+      "image": "assets/images/cat_cereals.jpg",
+      "ctaText": "Discover Cereals",
+      "targetCategory": "cat_cereals",
+      "badge": "Superfoods",
+      "order": 3,
+      "isActive": true
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-849201",
+      "createdAt": "2026-11-05T14:30:00.000Z",
+      "status": "Delivered",
+      "customer": {
+        "name": "Aarav Sharma",
+        "phone": "+91 98765 43210",
+        "email": "aarav.sharma@example.com",
+        "address": {
+          "label": "Home",
+          "street": "Flat 402, Lotus Residency, 12th Main",
+          "area": "Indiranagar",
+          "city": "Bengaluru",
+          "state": "Karnataka",
+          "pincode": "560038"
+        }
+      },
+      "items": [
+        {
+          "productId": "p_almonds",
+          "productName": "California Whole Almonds",
+          "variantId": "v_almonds_500",
+          "variantTitle": "500 GM",
+          "weightInGrams": 500,
+          "price": 540,
+          "quantity": 2,
+          "image": "assets/images/cat_dryfruits.jpg"
+        },
+        {
+          "productId": "p_cardamom",
+          "productName": "Idukki Green Cardamom (8mm+ Bold)",
+          "variantId": "v_card_100",
+          "variantTitle": "100 GM",
+          "weightInGrams": 100,
+          "price": 340,
+          "quantity": 1,
+          "image": "assets/images/cat_wholespices.jpg"
+        }
+      ],
+      "subtotal": 1420,
+      "discount": 200,
+      "couponCode": "WELCOME20",
+      "deliveryFee": 0,
+      "tax": 0,
+      "totalAmount": 1220,
+      "paymentMethod": "UPI",
+      "paymentStatus": "Paid"
+    },
+    {
+      "id": "ORD-930412",
+      "createdAt": "2026-11-06T08:15:00.000Z",
+      "status": "Processing",
+      "customer": {
+        "name": "Priya Nair",
+        "phone": "+91 98112 34567",
+        "email": "priya.nair@example.com",
+        "address": {
+          "label": "Office",
+          "street": "Tower B, 7th Floor, Cyber Gateway",
+          "area": "HITEC City",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "pincode": "500081"
+        }
+      },
+      "items": [
+        {
+          "productId": "p_cashews",
+          "productName": "Royal Mangalore Cashews (W240)",
+          "variantId": "v_cashews_250",
+          "variantTitle": "250 GM",
+          "weightInGrams": 250,
+          "price": 320,
+          "quantity": 1,
+          "image": "assets/images/cat_dryfruits.jpg"
+        },
+        {
+          "productId": "p_rolled_oats",
+          "productName": "Gluten-Free Jumbo Rolled Oats",
+          "variantId": "v_oats_500",
+          "variantTitle": "500 GM",
+          "weightInGrams": 500,
+          "price": 160,
+          "quantity": 2,
+          "image": "assets/images/cat_cereals.jpg"
+        }
+      ],
+      "subtotal": 640,
+      "discount": 0,
+      "couponCode": "",
+      "deliveryFee": 40,
+      "tax": 0,
+      "totalAmount": 680,
+      "paymentMethod": "Credit/Debit Card",
+      "paymentStatus": "Paid"
+    }
+  ],
+  "customers": [
+    {
+      "id": "cust_1",
+      "name": "Aarav Sharma",
+      "email": "aarav.sharma@example.com",
+      "mobile": "+91 98765 43210",
+      "registeredDate": "2026-08-14",
+      "totalOrders": 8,
+      "totalSpent": 9480,
+      "city": "Bengaluru"
+    },
+    {
+      "id": "cust_2",
+      "name": "Priya Nair",
+      "email": "priya.nair@example.com",
+      "mobile": "+91 98112 34567",
+      "registeredDate": "2026-09-02",
+      "totalOrders": 3,
+      "totalSpent": 2840,
+      "city": "Hyderabad"
+    },
+    {
+      "id": "cust_3",
+      "name": "Rohan Mehra",
+      "email": "rohan.mehra@example.com",
+      "mobile": "+91 97654 32109",
+      "registeredDate": "2026-10-10",
+      "totalOrders": 5,
+      "totalSpent": 6120,
+      "city": "Mumbai"
+    }
+  ],
+  "settings": {
+    "storeName": "Naturale - Premium Dry Fruits & Spices",
+    "contactEmail": "care@naturale.com",
+    "contactPhone": "+91 800-NATURALE",
+    "currencySymbol": "₹",
+    "standardDeliveryFee": 40,
+    "freeDeliveryThreshold": 500,
+    "minimumOrderValue": 150,
+    "lowStockThreshold": 15,
+    "enableCustomGramWeight": true,
+    "gstPercentage": 0
+  }
+}
+

@@ -1,0 +1,37 @@
+:root {
+  /* Brand Color Palette - Fresh Warm Cream & Light Peach Aesthetic */
+  --color-canvas-bg: #FAF5ED;
+  --color-peach-bg: #FAF5ED; /* Light airy warm canvas */
+  --color-light-peach: #FCECE0;
+  --color-peach-accent: #FAD0B0;
+  --color-cream-bg: #FFFDF9;
+  --color-white: #FFFFFF;
+  --color-soft-orange: #FFA45B;
+  --color-primary-orange: #FF812E;
+  --color-charcoal: #222222;
+  --color-dark-text: #222222;
+  --color-secondary-text: #8C847E;
+  --color-light-border: #F0E4D8;
+  --color-success-green: #27865F;
+  --color-danger-red: #E53935;
+  --color-warning-yellow: #F59E0B;
+
+  /* Typography */
+  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Soft Natural Shadows */
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 14px rgba(34, 34, 34, 0.05);
+  --shadow-lg: 0 10px 25px rgba(34, 34, 34, 0.07);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 9999px;
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --header-height: 70px;
+}
