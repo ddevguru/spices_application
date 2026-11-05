@@ -31,7 +31,7 @@ services:
     name: dryfruits-admin
     env: static
     rootDir: admin_panel
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npx vite build
     staticPublishPath: dist
     autoDeploy: true
     routes:

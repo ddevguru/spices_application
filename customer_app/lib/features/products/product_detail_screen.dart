@@ -233,7 +233,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             ),
                             const SizedBox(height: 12),
                             WeightVariantSelector(
-                              variants: product.variants,
+                              product: product,
                               selectedVariant: _selectedVariant,
                               onVariantSelected: (v) {
                                 setState(() {

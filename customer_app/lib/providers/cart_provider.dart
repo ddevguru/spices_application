@@ -113,6 +113,10 @@ class CartNotifier extends StateNotifier<CartState> {
     _saveToStorage();
   }
 
+  void addItem(Product product, ProductVariant variant, {int quantity = 1}) {
+    addToCart(product: product, variant: variant, quantity: quantity);
+  }
+
   void updateQuantity(String cartItemId, int newQuantity) {
     if (newQuantity <= 0) {
       removeFromCart(cartItemId);

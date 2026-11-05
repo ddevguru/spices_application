@@ -4,7 +4,7 @@ const API_BASE = (import.meta.env && import.meta.env.VITE_API_URL)
   ? (import.meta.env.VITE_API_URL.startsWith('http')
       ? `${import.meta.env.VITE_API_URL}/api`
       : `https://${import.meta.env.VITE_API_URL}/api`)
-  : 'http://localhost:5000/api';
+  : 'https://dryfruits-api.onrender.com/api';
 
 // Initial fallback seeds
 const INITIAL_DB = {

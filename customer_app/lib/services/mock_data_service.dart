@@ -14,7 +14,7 @@ class MockDataService {
   factory MockDataService() => _instance;
   MockDataService._internal();
 
-  static const String _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:5000/api');
+  static const String _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://dryfruits-api.onrender.com/api');
   bool _serverAvailable = false;
 
   // Cached in-memory storage
@@ -56,11 +56,11 @@ class MockDataService {
 
     // Check if live backend server is up
     try {
-      final res = await http.get(Uri.parse('$_baseUrl/health')).timeout(const Duration(milliseconds: 2000));
+      final res = await http.get(Uri.parse('$_baseUrl/health')).timeout(const Duration(seconds: 8));
       if (res.statusCode == 200) {
         _serverAvailable = true;
-        // Fetch live products from backend (PostgreSQL)
-        final prodRes = await http.get(Uri.parse('$_baseUrl/products')).timeout(const Duration(milliseconds: 3000));
+        // Fetch live products from backend (PostgreSQL on Render)
+        final prodRes = await http.get(Uri.parse('$_baseUrl/products')).timeout(const Duration(seconds: 8));
         if (prodRes.statusCode == 200) {
           final dynamic decoded = jsonDecode(prodRes.body);
           final List list = decoded is List ? decoded : (decoded['data'] ?? []);
@@ -68,8 +68,8 @@ class MockDataService {
             _products = list.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
           }
         }
-        // Fetch live categories from backend (PostgreSQL)
-        final catRes = await http.get(Uri.parse('$_baseUrl/categories')).timeout(const Duration(milliseconds: 3000));
+        // Fetch live categories from backend (PostgreSQL on Render)
+        final catRes = await http.get(Uri.parse('$_baseUrl/categories')).timeout(const Duration(seconds: 8));
         if (catRes.statusCode == 200) {
           final dynamic decoded = jsonDecode(catRes.body);
           final List list = decoded is List ? decoded : (decoded['data'] ?? []);

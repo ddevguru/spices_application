@@ -202,9 +202,9 @@ class _ProductCardState extends ConsumerState<ProductCard> {
                   // Circular Orange Add Button
                   GestureDetector(
                     onTap: () {
-                      ref.read(cartProvider.notifier).addItem(
-                        widget.product,
-                        _selectedVariant,
+                      ref.read(cartProvider.notifier).addToCart(
+                        product: widget.product,
+                        variant: _selectedVariant,
                         quantity: 1,
                       );
                       ScaffoldMessenger.of(context).showSnackBar(
