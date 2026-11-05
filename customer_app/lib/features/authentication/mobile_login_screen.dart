@@ -15,7 +15,7 @@ class MobileLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _MobileLoginScreenState extends ConsumerState<MobileLoginScreen> {
-  final _mobileController = TextEditingController(text: '9876543210');
+  final _mobileController = TextEditingController();
 
   @override
   void dispose() {

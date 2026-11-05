@@ -17,7 +17,7 @@ class OtpVerificationScreen extends ConsumerStatefulWidget {
 }
 
 class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
-  final _otpController = TextEditingController(text: '1234');
+  final _otpController = TextEditingController();
 
   @override
   void dispose() {
