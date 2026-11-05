@@ -119,7 +119,15 @@ export default function Orders() {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((ord) => (
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--color-secondary-text)' }}>
+                    <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--color-dark-text)', marginBottom: '4px' }}>No Orders Found</div>
+                    <div style={{ fontSize: '13px' }}>Customer orders from the mobile app will be displayed here in real-time.</div>
+                  </td>
+                </tr>
+              ) : (
+                filteredOrders.map((ord) => (
                 <tr key={ord.id}>
                   <td style={{ fontWeight: 700 }}>{ord.id}</td>
                   <td style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>
@@ -199,7 +207,7 @@ export default function Orders() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

@@ -7,7 +7,6 @@ import {
   Users,
   Clock,
   AlertTriangle,
-  ArrowUpRight,
   TrendingUp,
 } from 'lucide-react';
 import {
@@ -43,53 +42,53 @@ export default function Dashboard() {
   }, []);
 
   if (loading || !metrics) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}>Loading dashboard analytics...</div>;
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-secondary-text)' }}>Loading live store analytics...</div>;
   }
 
   const kpis = [
     {
       title: 'Total Revenue',
-      value: `₹${metrics.totalRevenue.toLocaleString('en-IN')}`,
-      change: '+18.4% vs last mo',
+      value: `₹${(metrics.totalRevenue || 0).toLocaleString('en-IN')}`,
+      change: metrics.totalRevenue > 0 ? 'Live store revenue' : 'Awaiting first order',
       icon: DollarSign,
       color: '#FF812E',
       bg: 'rgba(255, 129, 46, 0.1)',
     },
     {
       title: 'Total Orders',
-      value: metrics.totalOrders,
-      change: '+12% new orders',
+      value: metrics.totalOrders || 0,
+      change: metrics.totalOrders > 0 ? `${metrics.totalOrders} live orders` : 'No orders yet',
       icon: ShoppingCart,
       color: '#27865F',
       bg: 'rgba(39, 134, 95, 0.1)',
     },
     {
       title: 'Active Products',
-      value: metrics.totalProducts,
-      change: '4 Categories',
+      value: metrics.totalProducts || 0,
+      change: 'Across 4 Categories',
       icon: Package,
       color: '#3B82F6',
       bg: 'rgba(59, 130, 246, 0.1)',
     },
     {
       title: 'Customers',
-      value: metrics.totalCustomers,
-      change: '+4 new this week',
+      value: metrics.totalCustomers || 0,
+      change: metrics.totalCustomers > 0 ? `${metrics.totalCustomers} shoppers` : 'No customers yet',
       icon: Users,
       color: '#8B5CF6',
       bg: 'rgba(139, 92, 246, 0.1)',
     },
     {
       title: 'Pending Fulfillment',
-      value: metrics.pendingOrders,
-      change: 'Requires dispatch',
+      value: metrics.pendingOrders || 0,
+      change: metrics.pendingOrders > 0 ? 'Requires dispatch' : 'All clear',
       icon: Clock,
       color: '#F59E0B',
       bg: 'rgba(245, 158, 11, 0.1)',
     },
     {
       title: 'Low Stock Alert',
-      value: metrics.lowStockCount,
+      value: metrics.lowStockCount || 0,
       change: 'Below 15 units threshold',
       icon: AlertTriangle,
       color: '#EF4444',
@@ -99,17 +98,17 @@ export default function Dashboard() {
 
   return (
     <div>
-      {/* Title & Date */}
+      {/* Title & Live Status */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Store Performance Overview</h1>
           <p style={{ fontSize: '13px', color: 'var(--color-secondary-text)', marginTop: '4px' }}>
-            Real-time sales, order volume, and weight inventory metrics.
+            Real-time catalog, live order volume, and weight inventory metrics.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <span className="badge badge-info" style={{ padding: '8px 14px', fontSize: '12px' }}>
-            Updated Just Now
+          <span className="badge badge-warning" style={{ fontSize: '12px' }}>
+            Live Sync Active
           </span>
         </div>
       </div>
@@ -165,39 +164,49 @@ export default function Dashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Sales Revenue Trend (₹)</h3>
-              <p style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>Monthly performance metrics</p>
+              <p style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>Live monthly customer purchases</p>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <span className="badge badge-success">Growth: +22%</span>
-            </div>
+            {metrics.totalRevenue > 0 && (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <span className="badge badge-success">Live Sales</span>
+              </div>
+            )}
           </div>
           <div style={{ width: '100%', height: '280px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={metrics.salesData}>
-                <defs>
-                  <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FF812E" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#FF812E" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F0E3D8" />
-                <XAxis dataKey="month" stroke="#898078" fontSize={12} />
-                <YAxis stroke="#898078" fontSize={12} />
-                <Tooltip
-                  formatter={(val) => [`₹${val.toLocaleString('en-IN')}`, 'Revenue']}
-                  contentStyle={{ backgroundColor: '#FFF8EF', borderColor: '#F0E3D8', borderRadius: '8px' }}
-                />
-                <Area type="monotone" dataKey="sales" stroke="#FF812E" strokeWidth={3} fillOpacity={1} fill="url(#salesGrad)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {metrics.salesData && metrics.salesData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={metrics.salesData}>
+                  <defs>
+                    <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#FF812E" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#FF812E" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F0E3D8" />
+                  <XAxis dataKey="month" stroke="#898078" fontSize={12} />
+                  <YAxis stroke="#898078" fontSize={12} />
+                  <Tooltip
+                    formatter={(val) => [`₹${val.toLocaleString('en-IN')}`, 'Revenue']}
+                    contentStyle={{ backgroundColor: '#FFF8EF', borderColor: '#F0E3D8', borderRadius: '8px' }}
+                  />
+                  <Area type="monotone" dataKey="sales" stroke="#FF812E" strokeWidth={3} fillOpacity={1} fill="url(#salesGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--color-secondary-text)', backgroundColor: '#FAF5ED', borderRadius: '12px' }}>
+                <TrendingUp size={36} color="var(--color-primary-orange)" style={{ opacity: 0.5, marginBottom: '8px' }} />
+                <p style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-dark-text)' }}>No Sales Recorded Yet</p>
+                <p style={{ fontSize: '12px' }}>Revenue trend will automatically plot as customers place orders in the mobile app.</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Category-wise Sales Distribution */}
+        {/* Category Distribution */}
         <div className="card">
           <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Sales by Category</h3>
-            <p style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>Market share breakdown</p>
+            <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Catalog by Category</h3>
+            <p style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>Active products in database</p>
           </div>
           <div style={{ width: '100%', height: '280px' }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -215,7 +224,7 @@ export default function Dashboard() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(val) => [`${val}%`, 'Share']} />
+                <Tooltip formatter={(val) => [`${val} Products`, 'Catalog']} />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" />
               </PieChart>
             </ResponsiveContainer>
@@ -228,7 +237,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
             <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Recent Orders</h3>
-            <p style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>Latest orders placed across channels</p>
+            <p style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>Customer checkouts from mobile app</p>
           </div>
           <a href="/orders" className="btn-secondary" style={{ fontSize: '12px', padding: '6px 14px' }}>
             View All Orders
@@ -236,48 +245,55 @@ export default function Dashboard() {
         </div>
 
         <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Purchased Items</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Payment</th>
-              </tr>
-            </thead>
-            <tbody>
-              {metrics.recentOrders.map((ord) => (
-                <tr key={ord.id}>
-                  <td style={{ fontWeight: 700 }}>{ord.id}</td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{ord.customer?.name}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-secondary-text)' }}>{ord.customer?.address?.city}</div>
-                  </td>
-                  <td>
-                    {ord.items?.map((i, idx) => (
-                      <span key={idx} style={{ display: 'block', fontSize: '12px' }}>
-                        {i.quantity}x {i.productName} ({i.variantTitle})
-                      </span>
-                    ))}
-                  </td>
-                  <td style={{ fontWeight: 700 }}>₹{ord.totalAmount}</td>
-                  <td>
-                    <span className={`badge ${ord.status === 'Delivered' ? 'badge-success' : ord.status === 'Cancelled' ? 'badge-danger' : 'badge-warning'}`}>
-                      {ord.status}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ fontSize: '12px', fontWeight: 500 }}>{ord.paymentMethod}</span>
-                  </td>
+          {metrics.recentOrders && metrics.recentOrders.length > 0 ? (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Purchased Items</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Payment</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {metrics.recentOrders.map((ord) => (
+                  <tr key={ord.id}>
+                    <td style={{ fontWeight: 700 }}>{ord.id}</td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{ord.customer?.name}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-secondary-text)' }}>{ord.customer?.address?.city}</div>
+                    </td>
+                    <td>
+                      {ord.items?.map((i, idx) => (
+                        <span key={idx} style={{ display: 'block', fontSize: '12px' }}>
+                          {i.quantity}x {i.productName} ({i.variantTitle})
+                        </span>
+                      ))}
+                    </td>
+                    <td style={{ fontWeight: 700 }}>₹{ord.totalAmount}</td>
+                    <td>
+                      <span className={`badge ${ord.status === 'Delivered' ? 'badge-success' : ord.status === 'Cancelled' ? 'badge-danger' : 'badge-warning'}`}>
+                        {ord.status}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '12px', fontWeight: 500 }}>{ord.paymentMethod}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div style={{ padding: '36px', textAlign: 'center', color: 'var(--color-secondary-text)' }}>
+              <Package size={36} style={{ opacity: 0.35, marginBottom: '8px' }} />
+              <p style={{ fontWeight: 700, fontSize: '14px', color: 'var(--color-dark-text)' }}>No Customer Orders Yet</p>
+              <p style={{ fontSize: '12px' }}>New customer orders placed in the Flutter app will appear here in real-time.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
-

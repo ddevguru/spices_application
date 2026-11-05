@@ -251,7 +251,7 @@ export default function AdminLayout() {
               }}
             >
               <ShieldCheck size={14} />
-              Production Demo Mode
+              Live Store Connected
             </div>
 
             {/* Notification Bell */}

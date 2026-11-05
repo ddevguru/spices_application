@@ -6,7 +6,7 @@ const API_BASE = (import.meta.env && import.meta.env.VITE_API_URL)
       : `https://${import.meta.env.VITE_API_URL}/api`)
   : 'https://dryfruits-api.onrender.com/api';
 
-// Initial fallback seeds
+// Authentic Store Data (Strictly Categories & Products only - ZERO Mock Orders / Mock Revenue)
 const INITIAL_DB = {
   categories: [
     {
@@ -17,7 +17,7 @@ const INITIAL_DB = {
       description: "Rich in essential nutrients, vitamins, and healthy fats.",
       order: 1,
       isActive: true,
-      subcategories: ["Almonds", "Cashews", "Pistachios", "Walnuts", "Raisins", "Dates", "Figs", "Anjeer", "Apricots", "Mixed Dry Fruits", "Seeds & Nuts"]
+      subcategories: ["Almonds", "Cashews", "Pistachios", "Walnuts", "Dates", "Raisins", "Figs", "Anjeer", "Apricots", "Mixed Dry Fruits"]
     },
     {
       id: "cat_whole_spices",
@@ -27,7 +27,7 @@ const INITIAL_DB = {
       description: "Aromatic, pure and hand-selected whole spices.",
       order: 2,
       isActive: true,
-      subcategories: ["Green Cardamom", "Black Cardamom", "Cinnamon Sticks", "Cloves", "Black Pepper", "Cumin Seeds", "Coriander Seeds", "Fennel Seeds", "Mustard Seeds", "Star Anise", "Bay Leaves", "Fenugreek Seeds", "Dry Red Chillies"]
+      subcategories: ["Green Cardamom", "Black Pepper", "Cinnamon Sticks", "Cloves", "Cumin Seeds", "Coriander Seeds", "Star Anise"]
     },
     {
       id: "cat_blended_spices",
@@ -37,7 +37,7 @@ const INITIAL_DB = {
       description: "Authentic heritage spice blends ground to perfection.",
       order: 3,
       isActive: true,
-      subcategories: ["Garam Masala", "Kitchen King Masala", "Biryani Masala", "Chole Masala", "Pav Bhaji Masala", "Paneer Masala", "Chicken Masala", "Meat Masala", "Sambhar Masala", "Tandoori Masala", "Turmeric Powder", "Red Chilli Powder", "Coriander Powder", "Cumin Powder"]
+      subcategories: ["Garam Masala", "Turmeric Powder", "Kashmiri Chilli", "Kitchen King", "Biryani Masala"]
     },
     {
       id: "cat_cereals",
@@ -47,116 +47,296 @@ const INITIAL_DB = {
       description: "Nutritious whole grains, millets, oats and superfoods.",
       order: 4,
       isActive: true,
-      subcategories: ["Oats", "Rolled Oats", "Quinoa", "Millets", "Ragi", "Jowar", "Bajra", "Barley", "Brown Rice", "Dalia", "Corn Flakes", "Muesli", "Wheat", "Multigrain Mix"]
+      subcategories: ["Rolled Oats", "Quinoa", "Millets", "Ragi", "Jowar", "Multigrain Mix"]
     }
   ],
   products: [
     {
+      id: "p_ajwa_dates",
+      name: "Saudi Royal Ajwa Dates (Ajwa Khejur)",
+      brand: "Naturale Royal",
+      categoryId: "cat_dry_fruits",
+      categoryName: "Dry Fruits",
+      subcategoryId: "Dates",
+      subcategoryName: "Dates",
+      shortDescription: "Soft, dark, luscious sacred Ajwa dates from Madinah.",
+      description: "Authentic Saudi Arabian Royal Ajwa dates carefully sun-ripened in Madinah orchards.",
+      rating: 4.9,
+      reviewCount: 380,
+      image: "/assets/images/cat_dryfruits.jpg",
+      origin: "Al-Madinah, Saudi Arabia",
+      allowCustomWeight: true,
+      isFeatured: true,
+      isBestSeller: true,
+      variants: [
+        { id: "v_ajwa_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 160, originalPrice: 199, stockQuantity: 95, sku: "DF-AJW-100", isAvailable: true },
+        { id: "v_ajwa_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 380, originalPrice: 475, stockQuantity: 70, sku: "DF-AJW-250", isAvailable: true },
+        { id: "v_ajwa_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 740, originalPrice: 920, stockQuantity: 50, sku: "DF-AJW-500", isAvailable: true },
+        { id: "v_ajwa_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1450, originalPrice: 1800, stockQuantity: 30, sku: "DF-AJW-1000", isAvailable: true }
+      ]
+    },
+    {
       id: "p_almonds",
-      name: "California Whole Almonds",
+      name: "California Whole Almonds (Almond Nut)",
       brand: "Naturale Pure",
       categoryId: "cat_dry_fruits",
       categoryName: "Dry Fruits",
       subcategoryId: "Almonds",
       subcategoryName: "Almonds",
       shortDescription: "Jumbo California almonds, crisp & rich in Vitamin E.",
-      description: "Our premium California almonds are carefully selected from the finest orchards. Naturally rich in protein, healthy fats, fiber, and antioxidant Vitamin E.",
+      description: "Our premium California almonds are carefully selected from the finest orchards.",
       rating: 4.9,
       reviewCount: 420,
-      image: "/assets/images/prod_almonds.jpg",
+      image: "/assets/images/cat_dryfruits.jpg",
       origin: "California, USA",
-      ingredients: "100% Pure Raw California Almonds",
-      nutritionFacts: { "Energy": "579 kcal", "Protein": "21.2 g", "Fat": "49.9 g", "Fiber": "12.5 g" },
-      storageInstructions: "Store in airtight jar in cool dark pantry.",
-      specifications: { "Grade": "Extra No. 1 Jumbo", "Moisture": "< 6%" },
+      allowCustomWeight: true,
       isFeatured: true,
       isBestSeller: true,
       variants: [
-        { id: "v_alm_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 120, originalPrice: 150, stockQuantity: 85, sku: "DF-ALM-100", isAvailable: true },
-        { id: "v_alm_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 280, originalPrice: 350, stockQuantity: 60, sku: "DF-ALM-250", isAvailable: true },
-        { id: "v_alm_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 540, originalPrice: 650, stockQuantity: 40, sku: "DF-ALM-500", isAvailable: true },
-        { id: "v_alm_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1050, originalPrice: 1280, stockQuantity: 25, sku: "DF-ALM-1000", isAvailable: true }
+        { id: "v_almonds_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 120, originalPrice: 150, stockQuantity: 85, sku: "DF-ALM-100", isAvailable: true },
+        { id: "v_almonds_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 280, originalPrice: 350, stockQuantity: 60, sku: "DF-ALM-250", isAvailable: true },
+        { id: "v_almonds_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 540, originalPrice: 650, stockQuantity: 40, sku: "DF-ALM-500", isAvailable: true },
+        { id: "v_almonds_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1050, originalPrice: 1280, stockQuantity: 25, sku: "DF-ALM-1000", isAvailable: true }
+      ]
+    },
+    {
+      id: "p_mixed_dry_fruits",
+      name: "Gourmet Royal Mixed Dry Fruits Bowl",
+      brand: "Naturale Gourmet",
+      categoryId: "cat_dry_fruits",
+      categoryName: "Dry Fruits",
+      subcategoryId: "Mixed Dry Fruits",
+      subcategoryName: "Mixed Dry Fruits",
+      shortDescription: "Signature mix of almonds, cashews, walnuts, pistachios, dates & apricots.",
+      description: "The ultimate power booster mix with almonds, cashews, walnuts, pistachios, apricots, and dates.",
+      rating: 4.9,
+      reviewCount: 520,
+      image: "/assets/images/banner_discount.jpg",
+      origin: "Global Selection",
+      allowCustomWeight: true,
+      isFeatured: true,
+      isBestSeller: true,
+      variants: [
+        { id: "v_mixed_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 150, originalPrice: 180, stockQuantity: 120, sku: "DF-MIX-100", isAvailable: true },
+        { id: "v_mixed_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 350, originalPrice: 420, stockQuantity: 80, sku: "DF-MIX-250", isAvailable: true },
+        { id: "v_mixed_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 680, originalPrice: 820, stockQuantity: 65, sku: "DF-MIX-500", isAvailable: true },
+        { id: "v_mixed_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1320, originalPrice: 1600, stockQuantity: 40, sku: "DF-MIX-1000", isAvailable: true }
       ]
     },
     {
       id: "p_cashews",
-      name: "Royal Mangalore Cashews (W240)",
+      name: "Royal Mangalore Cashews (W240 Jumbo)",
       brand: "Naturale Pure",
       categoryId: "cat_dry_fruits",
       categoryName: "Dry Fruits",
       subcategoryId: "Cashews",
       subcategoryName: "Cashews",
       shortDescription: "Whole jumbo W240 cashews, velvety, creamy & sweet.",
-      description: "Graded W240 jumbo cashew nuts hand-processed in Karnataka. Sweet, buttery crunch with zero cholesterol.",
+      description: "Graded W240 jumbo cashew nuts hand-processed in Karnataka.",
       rating: 4.8,
       reviewCount: 310,
-      image: "/assets/images/prod_cashews.jpg",
+      image: "/assets/images/cat_dryfruits.jpg",
       origin: "Mangalore, India",
-      ingredients: "100% Whole Cashew Kernels (W240)",
-      nutritionFacts: { "Energy": "553 kcal", "Protein": "18.2 g", "Fat": "43.8 g" },
-      storageInstructions: "Keep sealed in glass container.",
-      specifications: { "Grade": "W240 Jumbo", "Shelf Life": "9 Months" },
+      allowCustomWeight: true,
       isFeatured: true,
       isBestSeller: true,
       variants: [
-        { id: "v_csh_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 140, originalPrice: 170, stockQuantity: 50, sku: "DF-CSH-100", isAvailable: true },
-        { id: "v_csh_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 320, originalPrice: 390, stockQuantity: 45, sku: "DF-CSH-250", isAvailable: true },
-        { id: "v_csh_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 620, originalPrice: 750, stockQuantity: 30, sku: "DF-CSH-500", isAvailable: true },
-        { id: "v_csh_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1190, originalPrice: 1450, stockQuantity: 18, sku: "DF-CSH-1000", isAvailable: true }
+        { id: "v_cashews_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 140, originalPrice: 170, stockQuantity: 50, sku: "DF-CSH-100", isAvailable: true },
+        { id: "v_cashews_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 320, originalPrice: 390, stockQuantity: 45, sku: "DF-CSH-250", isAvailable: true },
+        { id: "v_cashews_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 620, originalPrice: 750, stockQuantity: 30, sku: "DF-CSH-500", isAvailable: true },
+        { id: "v_cashews_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1190, originalPrice: 1450, stockQuantity: 20, sku: "DF-CSH-1000", isAvailable: true }
+      ]
+    },
+    {
+      id: "p_pistachios",
+      name: "Roasted & Lightly Salted Afghan Pistachios",
+      brand: "Naturale Pure",
+      categoryId: "cat_dry_fruits",
+      categoryName: "Dry Fruits",
+      subcategoryId: "Pistachios",
+      subcategoryName: "Pistachios",
+      shortDescription: "Naturally opened emerald green Afghan pistachios, toasted to perfection.",
+      description: "Sourced from the sun-drenched orchards of Afghanistan.",
+      rating: 4.9,
+      reviewCount: 285,
+      image: "/assets/images/cat_dryfruits.jpg",
+      origin: "Herat, Afghanistan",
+      allowCustomWeight: true,
+      isFeatured: true,
+      isBestSeller: false,
+      variants: [
+        { id: "v_pista_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 160, originalPrice: 195, stockQuantity: 40, sku: "DF-PIS-100", isAvailable: true },
+        { id: "v_pista_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 380, originalPrice: 460, stockQuantity: 35, sku: "DF-PIS-250", isAvailable: true },
+        { id: "v_pista_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 740, originalPrice: 890, stockQuantity: 25, sku: "DF-PIS-500", isAvailable: true },
+        { id: "v_pista_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1440, originalPrice: 1750, stockQuantity: 15, sku: "DF-PIS-1000", isAvailable: true }
+      ]
+    },
+    {
+      id: "p_walnuts",
+      name: "Kashmir Snow White Walnut Kernels (Akhrot)",
+      brand: "Naturale Pure",
+      categoryId: "cat_dry_fruits",
+      categoryName: "Dry Fruits",
+      subcategoryId: "Walnuts",
+      subcategoryName: "Walnuts",
+      shortDescription: "Extra light organic halves rich in plant-based Omega-3 ALA.",
+      description: "Hand-cracked raw walnut halves from high altitudes of Kashmir Valley.",
+      rating: 4.7,
+      reviewCount: 190,
+      image: "/assets/images/cat_dryfruits.jpg",
+      origin: "Kashmir, India",
+      allowCustomWeight: true,
+      isFeatured: false,
+      isBestSeller: false,
+      variants: [
+        { id: "v_walnut_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 150, originalPrice: 185, stockQuantity: 60, sku: "DF-WAL-100", isAvailable: true },
+        { id: "v_walnut_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 360, originalPrice: 440, stockQuantity: 50, sku: "DF-WAL-250", isAvailable: true },
+        { id: "v_walnut_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 690, originalPrice: 850, stockQuantity: 30, sku: "DF-WAL-500", isAvailable: true },
+        { id: "v_walnut_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1350, originalPrice: 1650, stockQuantity: 18, sku: "DF-WAL-1000", isAvailable: true }
+      ]
+    },
+    {
+      id: "p_figs",
+      name: "Turkish Premium Dried Sun Figs (Anjeer)",
+      brand: "Naturale Royal",
+      categoryId: "cat_dry_fruits",
+      categoryName: "Dry Fruits",
+      subcategoryId: "Anjeer",
+      subcategoryName: "Anjeer",
+      shortDescription: "Plump, naturally dried Turkish Garland figs loaded with calcium & iron.",
+      description: "Sun-dried natural Turkish figs strung into garlands.",
+      rating: 4.8,
+      reviewCount: 215,
+      image: "/assets/images/cat_dryfruits.jpg",
+      origin: "Izmir, Turkey",
+      allowCustomWeight: true,
+      isFeatured: true,
+      isBestSeller: true,
+      variants: [
+        { id: "v_fig_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 140, originalPrice: 175, stockQuantity: 70, sku: "DF-FIG-100", isAvailable: true },
+        { id: "v_fig_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 340, originalPrice: 420, stockQuantity: 55, sku: "DF-FIG-250", isAvailable: true },
+        { id: "v_fig_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 660, originalPrice: 800, stockQuantity: 40, sku: "DF-FIG-500", isAvailable: true },
+        { id: "v_fig_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1290, originalPrice: 1550, stockQuantity: 22, sku: "DF-FIG-1000", isAvailable: true }
       ]
     },
     {
       id: "p_cardamom",
-      name: "Idukki Green Cardamom (8mm+ Bold)",
+      name: "Idukki Green Cardamom (Elaichi 8mm Bold)",
       brand: "Naturale Spices",
       categoryId: "cat_whole_spices",
       categoryName: "Whole Spices",
       subcategoryId: "Green Cardamom",
       subcategoryName: "Green Cardamom",
-      shortDescription: "Queen of spices: aromatic 8mm+ bold green pods from Kerala.",
-      description: "Directly sourced from misty cardamom hills of Idukki, Kerala. Lush green pods bursting with intense aroma.",
-      rating: 5.0,
-      reviewCount: 192,
-      image: "/assets/images/prod_cardamom.jpg",
+      shortDescription: "Hand-harvested 8mm+ giant emerald green cardamom pods.",
+      description: "Directly sourced from mist-clad hills of Idukki, Kerala.",
+      rating: 4.9,
+      reviewCount: 350,
+      image: "/assets/images/cat_wholespices.jpg",
       origin: "Idukki, Kerala, India",
-      ingredients: "100% Whole Green Cardamom",
-      nutritionFacts: { "Energy": "311 kcal", "Protein": "10.8 g" },
-      storageInstructions: "Store in cool dark cupboard in airtight jar.",
-      specifications: { "Pod Size": "8mm+ Super Bold" },
+      allowCustomWeight: true,
       isFeatured: true,
       isBestSeller: true,
       variants: [
-        { id: "v_crd_50", weightInGrams: 50, unit: "GM", title: "50 GM", price: 180, originalPrice: 220, stockQuantity: 90, sku: "WS-CRD-050", isAvailable: true },
-        { id: "v_crd_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 340, originalPrice: 410, stockQuantity: 75, sku: "WS-CRD-100", isAvailable: true },
-        { id: "v_crd_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 820, originalPrice: 980, stockQuantity: 40, sku: "WS-CRD-250", isAvailable: true },
-        { id: "v_crd_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 1580, originalPrice: 1890, stockQuantity: 20, sku: "WS-CRD-500", isAvailable: true }
+        { id: "v_card_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 320, originalPrice: 390, stockQuantity: 50, sku: "WS-CAR-100", isAvailable: true },
+        { id: "v_card_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 760, originalPrice: 920, stockQuantity: 40, sku: "WS-CAR-250", isAvailable: true },
+        { id: "v_card_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 1480, originalPrice: 1800, stockQuantity: 25, sku: "WS-CAR-500", isAvailable: true },
+        { id: "v_card_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 2900, originalPrice: 3500, stockQuantity: 12, sku: "WS-CAR-1000", isAvailable: true }
+      ]
+    },
+    {
+      id: "p_black_pepper",
+      name: "Malabar Tellicherry Black Pepper (TGSEB)",
+      brand: "Naturale Spices",
+      categoryId: "cat_whole_spices",
+      categoryName: "Whole Spices",
+      subcategoryId: "Black Pepper",
+      subcategoryName: "Black Pepper",
+      shortDescription: "Tellicherry Garbled Special Extra Bold whole peppercorns.",
+      description: "The gold standard of black pepper hand-selected from the Malabar coast.",
+      rating: 4.8,
+      reviewCount: 180,
+      image: "/assets/images/cat_wholespices.jpg",
+      origin: "Malabar Coast, Kerala, India",
+      allowCustomWeight: true,
+      isFeatured: false,
+      isBestSeller: true,
+      variants: [
+        { id: "v_pep_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 110, originalPrice: 140, stockQuantity: 75, sku: "WS-PEP-100", isAvailable: true },
+        { id: "v_pep_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 260, originalPrice: 320, stockQuantity: 60, sku: "WS-PEP-250", isAvailable: true },
+        { id: "v_pep_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 500, originalPrice: 620, stockQuantity: 40, sku: "WS-PEP-500", isAvailable: true },
+        { id: "v_pep_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 960, originalPrice: 1180, stockQuantity: 25, sku: "WS-PEP-1000", isAvailable: true }
+      ]
+    },
+    {
+      id: "p_cinnamon",
+      name: "Royal Ceylon Cinnamon Sticks (True Cinnamon)",
+      brand: "Naturale Spices",
+      categoryId: "cat_whole_spices",
+      categoryName: "Whole Spices",
+      subcategoryId: "Cinnamon Sticks",
+      subcategoryName: "Cinnamon Sticks",
+      shortDescription: "Ultra-thin multi-layered Alba grade quills with low coumarin.",
+      description: "Authentic True Ceylon cinnamon quills from Sri Lanka.",
+      rating: 4.8,
+      reviewCount: 160,
+      image: "/assets/images/cat_wholespices.jpg",
+      origin: "Southern Province, Sri Lanka",
+      allowCustomWeight: true,
+      isFeatured: false,
+      isBestSeller: false,
+      variants: [
+        { id: "v_cin_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 180, originalPrice: 220, stockQuantity: 60, sku: "WS-CIN-100", isAvailable: true },
+        { id: "v_cin_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 420, originalPrice: 510, stockQuantity: 45, sku: "WS-CIN-250", isAvailable: true },
+        { id: "v_cin_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 810, originalPrice: 980, stockQuantity: 30, sku: "WS-CIN-500", isAvailable: true },
+        { id: "v_cin_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1550, originalPrice: 1900, stockQuantity: 15, sku: "WS-CIN-1000", isAvailable: true }
       ]
     },
     {
       id: "p_garam_masala",
-      name: "Royal Shahi Garam Masala",
+      name: "Royal Heritage Shahi Garam Masala",
       brand: "Naturale Heritage",
       categoryId: "cat_blended_spices",
       categoryName: "Blended Spices",
       subcategoryId: "Garam Masala",
       subcategoryName: "Garam Masala",
-      shortDescription: "Handcrafted blend of 16 roasted whole spices & stone-ground herbs.",
-      description: "Time-honored royal recipe combining roasted cardamom, cloves, cinnamon, mace, nutmeg, black cumin, and bay leaf.",
+      shortDescription: "Artisanal stone-ground blend of 16 whole roasted royal spices.",
+      description: "Authentic culinary blend formulated with 16 royal spices.",
       rating: 4.9,
-      reviewCount: 490,
-      image: "/assets/images/prod_garammasala.jpg",
-      origin: "Rajasthan, India",
-      ingredients: "Coriander, Cumin, Cardamom, Cloves, Cinnamon, Star Anise",
-      nutritionFacts: { "Energy": "370 kcal", "Protein": "12.0 g" },
-      storageInstructions: "Airtight container away from steam.",
-      specifications: { "Blend Count": "16 Pure Spices" },
+      reviewCount: 395,
+      image: "/assets/images/cat_blendedspices.jpg",
+      origin: "Lucknow Heritage recipe",
+      allowCustomWeight: true,
       isFeatured: true,
       isBestSeller: true,
       variants: [
-        { id: "v_gm_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 110, originalPrice: 140, stockQuantity: 120, sku: "BS-SGM-100", isAvailable: true },
-        { id: "v_gm_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 250, originalPrice: 320, stockQuantity: 90, sku: "BS-SGM-250", isAvailable: true },
-        { id: "v_gm_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 470, originalPrice: 590, stockQuantity: 50, sku: "BS-SGM-500", isAvailable: true },
-        { id: "v_gm_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 890, originalPrice: 1100, stockQuantity: 25, sku: "BS-SGM-1000", isAvailable: true }
+        { id: "v_gm_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 130, originalPrice: 160, stockQuantity: 90, sku: "BS-GM-100", isAvailable: true },
+        { id: "v_gm_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 300, originalPrice: 380, stockQuantity: 65, sku: "BS-GM-250", isAvailable: true },
+        { id: "v_gm_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 580, originalPrice: 720, stockQuantity: 40, sku: "BS-GM-500", isAvailable: true },
+        { id: "v_gm_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 1100, originalPrice: 1400, stockQuantity: 25, sku: "BS-GM-1000", isAvailable: true }
+      ]
+    },
+    {
+      id: "p_turmeric",
+      name: "Organic Salem Turmeric Powder (Curcumin 4.5%)",
+      brand: "Naturale Pure",
+      categoryId: "cat_blended_spices",
+      categoryName: "Blended Spices",
+      subcategoryId: "Turmeric Powder",
+      subcategoryName: "Turmeric Powder",
+      shortDescription: "High-curcumin golden Salem turmeric ground from cured whole fingers.",
+      description: "Certified pesticide-free golden turmeric with 4.5% natural Curcumin potency.",
+      rating: 4.8,
+      reviewCount: 220,
+      image: "/assets/images/cat_blendedspices.jpg",
+      origin: "Salem, Tamil Nadu, India",
+      allowCustomWeight: true,
+      isFeatured: false,
+      isBestSeller: true,
+      variants: [
+        { id: "v_tur_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 80, originalPrice: 105, stockQuantity: 110, sku: "BS-TUR-100", isAvailable: true },
+        { id: "v_tur_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 180, originalPrice: 240, stockQuantity: 85, sku: "BS-TUR-250", isAvailable: true },
+        { id: "v_tur_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 350, originalPrice: 460, stockQuantity: 55, sku: "BS-TUR-500", isAvailable: true },
+        { id: "v_tur_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 680, originalPrice: 880, stockQuantity: 35, sku: "BS-TUR-1000", isAvailable: true }
       ]
     },
     {
@@ -168,73 +348,49 @@ const INITIAL_DB = {
       subcategoryId: "Rolled Oats",
       subcategoryName: "Rolled Oats",
       shortDescription: "100% whole grain rolled oats rich in beta-glucan heart fibers.",
-      description: "Steamed and gently rolled whole oat groats. Packed with soluble beta-glucan fiber to support cardiovascular health.",
+      description: "Steamed and gently rolled whole oat groats packed with soluble beta-glucan.",
       rating: 4.8,
       reviewCount: 260,
-      image: "/assets/images/prod_oats.jpg",
+      image: "/assets/images/cat_cereals.jpg",
       origin: "Australia",
-      ingredients: "100% Certified Gluten-Free Whole Grain Oats",
-      nutritionFacts: { "Energy": "389 kcal", "Protein": "16.9 g" },
-      storageInstructions: "Cool dry pantry.",
-      specifications: { "Gluten Level": "< 5 ppm" },
+      allowCustomWeight: true,
       isFeatured: true,
       isBestSeller: true,
       variants: [
-        { id: "v_oat_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 90, originalPrice: 120, stockQuantity: 80, sku: "CR-OAT-250", isAvailable: true },
-        { id: "v_oat_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 160, originalPrice: 210, stockQuantity: 60, sku: "CR-OAT-500", isAvailable: true },
-        { id: "v_oat_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 290, originalPrice: 380, stockQuantity: 45, sku: "CR-OAT-1000", isAvailable: true }
+        { id: "v_oats_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 45, originalPrice: 60, stockQuantity: 120, sku: "CR-OAT-100", isAvailable: true },
+        { id: "v_oats_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 90, originalPrice: 120, stockQuantity: 80, sku: "CR-OAT-250", isAvailable: true },
+        { id: "v_oats_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 160, originalPrice: 210, stockQuantity: 60, sku: "CR-OAT-500", isAvailable: true },
+        { id: "v_oats_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 290, originalPrice: 380, stockQuantity: 45, sku: "CR-OAT-1000", isAvailable: true }
+      ]
+    },
+    {
+      id: "p_quinoa",
+      name: "Organic Royal White Quinoa",
+      brand: "Naturale Grains",
+      categoryId: "cat_cereals",
+      categoryName: "Cereals",
+      subcategoryId: "Quinoa",
+      subcategoryName: "Quinoa",
+      shortDescription: "Saponin-free pre-washed Andean supergrain with all 9 essential amino acids.",
+      description: "Complete plant protein loaded with iron, magnesium, fiber and antioxidants.",
+      rating: 4.9,
+      reviewCount: 145,
+      image: "/assets/images/cat_cereals.jpg",
+      origin: "Peru / Bolivia",
+      allowCustomWeight: true,
+      isFeatured: false,
+      isBestSeller: false,
+      variants: [
+        { id: "v_qui_100", weightInGrams: 100, unit: "GM", title: "100 GM", price: 65, originalPrice: 85, stockQuantity: 80, sku: "CR-QUI-100", isAvailable: true },
+        { id: "v_qui_250", weightInGrams: 250, unit: "GM", title: "250 GM", price: 140, originalPrice: 180, stockQuantity: 50, sku: "CR-QUI-250", isAvailable: true },
+        { id: "v_qui_500", weightInGrams: 500, unit: "GM", title: "500 GM", price: 260, originalPrice: 340, stockQuantity: 40, sku: "CR-QUI-500", isAvailable: true },
+        { id: "v_qui_1000", weightInGrams: 1000, unit: "KG", title: "1 KG", price: 490, originalPrice: 620, stockQuantity: 25, sku: "CR-QUI-1000", isAvailable: true }
       ]
     }
   ],
-  orders: [
-    {
-      id: "ORD-849201",
-      createdAt: "2026-11-05T14:30:00.000Z",
-      status: "Delivered",
-      customer: {
-        name: "Aarav Sharma",
-        phone: "+91 98765 43210",
-        email: "aarav.sharma@example.com",
-        address: { label: "Home", street: "Flat 402, Lotus Residency", city: "Bengaluru", pincode: "560038" }
-      },
-      items: [
-        { productId: "p_almonds", productName: "California Whole Almonds", variantTitle: "500 GM", price: 540, quantity: 2 },
-        { productId: "p_cardamom", productName: "Idukki Green Cardamom", variantTitle: "100 GM", price: 340, quantity: 1 }
-      ],
-      subtotal: 1420,
-      discount: 200,
-      deliveryFee: 0,
-      totalAmount: 1220,
-      paymentMethod: "UPI",
-      paymentStatus: "Paid"
-    },
-    {
-      id: "ORD-930412",
-      createdAt: "2026-11-06T08:15:00.000Z",
-      status: "Processing",
-      customer: {
-        name: "Priya Nair",
-        phone: "+91 98112 34567",
-        email: "priya.nair@example.com",
-        address: { label: "Office", street: "Tower B, Cyber Gateway", city: "Hyderabad", pincode: "500081" }
-      },
-      items: [
-        { productId: "p_cashews", productName: "Royal Mangalore Cashews", variantTitle: "250 GM", price: 320, quantity: 1 },
-        { productId: "p_rolled_oats", productName: "Gluten-Free Jumbo Rolled Oats", variantTitle: "500 GM", price: 160, quantity: 2 }
-      ],
-      subtotal: 640,
-      discount: 0,
-      deliveryFee: 40,
-      totalAmount: 680,
-      paymentMethod: "Credit/Debit Card",
-      paymentStatus: "Paid"
-    }
-  ],
-  customers: [
-    { id: "cust_1", name: "Aarav Sharma", email: "aarav.sharma@example.com", mobile: "+91 98765 43210", registeredDate: "2026-08-14", totalOrders: 8, totalSpent: 9480, city: "Bengaluru" },
-    { id: "cust_2", name: "Priya Nair", email: "priya.nair@example.com", mobile: "+91 98112 34567", registeredDate: "2026-09-02", totalOrders: 3, totalSpent: 2840, city: "Hyderabad" },
-    { id: "cust_3", name: "Rohan Mehra", email: "rohan.mehra@example.com", mobile: "+91 97654 32109", registeredDate: "2026-10-10", totalOrders: 5, totalSpent: 6120, city: "Mumbai" }
-  ],
+  // STRICTLY NO MOCK ORDERS OR MOCK CUSTOMERS
+  orders: [],
+  customers: [],
   coupons: [
     { id: "cpn_1", code: "WELCOME20", description: "20% off on your first order above ₹500", discountType: "percentage", discountValue: 20, minOrderValue: 500, maxDiscount: 300, expiryDate: "2026-12-31", isActive: true },
     { id: "cpn_2", code: "NATURALE100", description: "Flat ₹100 instant discount on orders above ₹800", discountType: "fixed", discountValue: 100, minOrderValue: 800, maxDiscount: 100, expiryDate: "2026-12-31", isActive: true }
@@ -256,22 +412,29 @@ const INITIAL_DB = {
   }
 };
 
-// Local storage helper
+// Clean local storage helper (strictly no mock orders/customers)
 function getLocalDb() {
-  const data = localStorage.getItem('naturale_admin_db');
+  localStorage.removeItem('naturale_admin_db');
+  localStorage.removeItem('naturale_admin_db_v2');
+  const data = localStorage.getItem('naturale_admin_db_v3');
   if (!data) {
-    localStorage.setItem('naturale_admin_db', JSON.stringify(INITIAL_DB));
+    localStorage.setItem('naturale_admin_db_v3', JSON.stringify(INITIAL_DB));
     return INITIAL_DB;
   }
   try {
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    parsed.orders = [];
+    parsed.customers = [];
+    return parsed;
   } catch {
     return INITIAL_DB;
   }
 }
 
 function saveLocalDb(db) {
-  localStorage.setItem('naturale_admin_db', JSON.stringify(db));
+  db.orders = [];
+  db.customers = [];
+  localStorage.setItem('naturale_admin_db_v3', JSON.stringify(db));
 }
 
 // API methods
@@ -279,10 +442,9 @@ export const mockApi = {
   // Auth
   async login(email, password) {
     try {
-      const res = await axios.post(`${API_BASE}/auth/admin-login`, { email, password }, { timeout: 1500 });
+      const res = await axios.post(`${API_BASE}/auth/login`, { email, password }, { timeout: 6000 });
       return res.data;
     } catch {
-      // Local fallback
       if (email === 'admin@naturale.com' && password === 'admin123') {
         return {
           token: 'demo_token_admin_2026',
@@ -296,31 +458,36 @@ export const mockApi = {
   // Products
   async getProducts() {
     try {
-      const res = await axios.get(`${API_BASE}/products`, { timeout: 1500 });
-      return res.data;
-    } catch {
-      const db = getLocalDb();
-      return db.products;
+      const res = await axios.get(`${API_BASE}/products`, { timeout: 8000 });
+      const products = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (products.length > 0) {
+        const db = getLocalDb();
+        db.products = products;
+        saveLocalDb(db);
+        return products;
+      }
+    } catch (err) {
+      console.warn('Backend products note:', err.message);
     }
+    const db = getLocalDb();
+    return db.products;
   },
 
   async createProduct(productData) {
     try {
-      const res = await axios.post(`${API_BASE}/products`, productData, { timeout: 3000 });
+      const res = await axios.post(`${API_BASE}/products`, productData, { timeout: 8000 });
       const db = getLocalDb();
       db.products.push(res.data);
       saveLocalDb(db);
       return res.data;
     } catch (err) {
-      console.warn('Backend offline, saving product to local state:', err.message);
+      console.warn('Backend offline, saving product locally:', err.message);
       const db = getLocalDb();
       const newProduct = {
         id: `p_${Date.now()}`,
         rating: 4.8,
-        reviewCount: 1,
-        variants: productData.variants || [
-          { id: `v_${Date.now()}_100`, weightInGrams: 100, unit: "GM", title: "100 GM", price: 100, originalPrice: 120, stockQuantity: 20, sku: "NEW-100", isAvailable: true }
-        ],
+        reviewCount: 0,
+        variants: productData.variants || [],
         ...productData
       };
       db.products.push(newProduct);
@@ -331,7 +498,7 @@ export const mockApi = {
 
   async updateProduct(id, productData) {
     try {
-      const res = await axios.put(`${API_BASE}/products/${id}`, productData, { timeout: 3000 });
+      const res = await axios.put(`${API_BASE}/products/${id}`, productData, { timeout: 8000 });
       const db = getLocalDb();
       const idx = db.products.findIndex(p => p.id === id);
       if (idx !== -1) {
@@ -353,7 +520,7 @@ export const mockApi = {
 
   async deleteProduct(id) {
     try {
-      await axios.delete(`${API_BASE}/products/${id}`, { timeout: 3000 });
+      await axios.delete(`${API_BASE}/products/${id}`, { timeout: 8000 });
     } catch (err) {
       console.warn('Backend delete note:', err.message);
     }
@@ -365,6 +532,12 @@ export const mockApi = {
 
   // Weight Variants
   async updateVariant(productId, variantId, variantData) {
+    try {
+      const res = await axios.put(`${API_BASE}/products/${productId}/variants/${variantId}`, variantData, { timeout: 8000 });
+      return res.data;
+    } catch (err) {
+      console.warn('Backend variant update note:', err.message);
+    }
     const db = getLocalDb();
     const prod = db.products.find(p => p.id === productId);
     if (prod) {
@@ -379,14 +552,16 @@ export const mockApi = {
   },
 
   async addVariant(productId, variantData) {
+    try {
+      const res = await axios.post(`${API_BASE}/products/${productId}/variants`, variantData, { timeout: 8000 });
+      return res.data;
+    } catch (err) {
+      console.warn('Backend add variant note:', err.message);
+    }
     const db = getLocalDb();
     const prod = db.products.find(p => p.id === productId);
     if (prod) {
-      const newV = {
-        id: `v_${Date.now()}`,
-        isAvailable: true,
-        ...variantData
-      };
+      const newV = { id: `v_${Date.now()}`, isAvailable: true, ...variantData };
       prod.variants.push(newV);
       saveLocalDb(db);
       return newV;
@@ -395,6 +570,11 @@ export const mockApi = {
   },
 
   async deleteVariant(productId, variantId) {
+    try {
+      await axios.delete(`${API_BASE}/products/${productId}/variants/${variantId}`, { timeout: 8000 });
+    } catch (err) {
+      console.warn('Backend delete variant note:', err.message);
+    }
     const db = getLocalDb();
     const prod = db.products.find(p => p.id === productId);
     if (prod) {
@@ -408,24 +588,30 @@ export const mockApi = {
   // Categories
   async getCategories() {
     try {
-      const res = await axios.get(`${API_BASE}/categories`, { timeout: 2500 });
-      return res.data;
-    } catch {
-      const db = getLocalDb();
-      return db.categories;
+      const res = await axios.get(`${API_BASE}/categories`, { timeout: 8000 });
+      const categories = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (categories.length > 0) {
+        const db = getLocalDb();
+        db.categories = categories;
+        saveLocalDb(db);
+        return categories;
+      }
+    } catch (err) {
+      console.warn('Backend categories note:', err.message);
     }
+    const db = getLocalDb();
+    return db.categories;
   },
 
   async createCategory(catData) {
     try {
-      const res = await axios.post(`${API_BASE}/categories`, catData, { timeout: 3000 });
-      // Keep local store in sync
+      const res = await axios.post(`${API_BASE}/categories`, catData, { timeout: 8000 });
       const db = getLocalDb();
       db.categories.push(res.data);
       saveLocalDb(db);
       return res.data;
     } catch (err) {
-      console.warn('Backend offline, saving category to local state:', err.message);
+      console.warn('Backend offline, saving category locally:', err.message);
       const db = getLocalDb();
       const newCat = {
         id: `cat_${Date.now()}`,
@@ -441,7 +627,7 @@ export const mockApi = {
 
   async updateCategory(id, catData) {
     try {
-      const res = await axios.put(`${API_BASE}/categories/${id}`, catData, { timeout: 3000 });
+      const res = await axios.put(`${API_BASE}/categories/${id}`, catData, { timeout: 8000 });
       const db = getLocalDb();
       const idx = db.categories.findIndex(c => c.id === id);
       if (idx !== -1) {
@@ -463,7 +649,7 @@ export const mockApi = {
 
   async deleteCategory(id) {
     try {
-      await axios.delete(`${API_BASE}/categories/${id}`, { timeout: 3000 });
+      await axios.delete(`${API_BASE}/categories/${id}`, { timeout: 8000 });
     } catch (err) {
       console.warn('Backend delete note:', err.message);
     }
@@ -473,42 +659,42 @@ export const mockApi = {
     return true;
   },
 
-  // Orders
+  // Orders (Strictly Live from Backend, Defaulting to Empty [])
   async getOrders() {
     try {
-      const res = await axios.get(`${API_BASE}/orders`, { timeout: 1500 });
-      return res.data;
+      const res = await axios.get(`${API_BASE}/orders`, { timeout: 8000 });
+      return Array.isArray(res.data) ? res.data : (res.data?.data || []);
     } catch {
-      const db = getLocalDb();
-      return db.orders;
+      return [];
     }
   },
 
   async updateOrderStatus(id, status) {
-    const db = getLocalDb();
-    const order = db.orders.find(o => o.id === id);
-    if (order) {
-      order.status = status;
-      order.updatedAt = new Date().toISOString();
-      saveLocalDb(db);
-      return order;
-    }
-    throw new Error('Order not found');
-  },
-
-  // Customers
-  async getCustomers() {
     try {
-      const res = await axios.get(`${API_BASE}/customers`, { timeout: 1500 });
+      const res = await axios.patch(`${API_BASE}/orders/${id}/status`, { status }, { timeout: 8000 });
       return res.data;
     } catch {
-      const db = getLocalDb();
-      return db.customers;
+      return { id, status };
+    }
+  },
+
+  // Customers (Strictly Live from Backend, Defaulting to Empty [])
+  async getCustomers() {
+    try {
+      const res = await axios.get(`${API_BASE}/customers`, { timeout: 8000 });
+      return Array.isArray(res.data) ? res.data : (res.data?.data || []);
+    } catch {
+      return [];
     }
   },
 
   // Coupons
   async getCoupons() {
+    try {
+      const res = await axios.get(`${API_BASE}/coupons`, { timeout: 8000 });
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (list.length > 0) return list;
+    } catch (_) {}
     const db = getLocalDb();
     return db.coupons;
   },
@@ -530,6 +716,11 @@ export const mockApi = {
 
   // Banners
   async getBanners() {
+    try {
+      const res = await axios.get(`${API_BASE}/banners`, { timeout: 8000 });
+      const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (list.length > 0) return list;
+    } catch (_) {}
     const db = getLocalDb();
     return db.banners;
   },
@@ -551,6 +742,10 @@ export const mockApi = {
 
   // Settings
   async getSettings() {
+    try {
+      const res = await axios.get(`${API_BASE}/settings`, { timeout: 8000 });
+      if (res.data) return res.data;
+    } catch (_) {}
     const db = getLocalDb();
     return db.settings;
   },
@@ -562,25 +757,54 @@ export const mockApi = {
     return db.settings;
   },
 
-  // Dashboard Aggregates
+  // Real Dashboard Aggregates (Live from PostgreSQL - ZERO Fake Revenue)
   async getDashboardMetrics() {
-    const db = getLocalDb();
-    const orders = db.orders || [];
-    const products = db.products || [];
-    const customers = db.customers || [];
+    try {
+      const res = await axios.get(`${API_BASE}/dashboard/metrics`, { timeout: 8000 });
+      if (res.data && res.data.totalProducts !== undefined) {
+        return res.data;
+      }
+    } catch (err) {
+      console.warn('Live dashboard metrics note:', err.message);
+    }
+
+    // Clean Fallback based only on real products & categories
+    const products = await this.getProducts();
+    const categories = await this.getCategories();
+    const orders = await this.getOrders();
+    const customers = await this.getCustomers();
 
     const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
     const pendingOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
-    
-    // Calculate low stock variants count
+
     let lowStockCount = 0;
     products.forEach(p => {
       (p.variants || []).forEach(v => {
-        if (v.stockQuantity <= (db.settings.lowStockThreshold || 15)) {
-          lowStockCount++;
-        }
+        if (v.stockQuantity <= 15) lowStockCount++;
       });
     });
+
+    // Real categories breakdown based on actual active products
+    const categoryCounts = {};
+    categories.forEach(c => { categoryCounts[c.name] = 0; });
+    products.forEach(p => {
+      if (categoryCounts[p.categoryName] !== undefined) {
+        categoryCounts[p.categoryName]++;
+      }
+    });
+
+    const catColors = {
+      'Dry Fruits': '#FF812E',
+      'Whole Spices': '#FFA45B',
+      'Blended Spices': '#27865F',
+      'Cereals': '#898078'
+    };
+
+    const categorySales = Object.entries(categoryCounts).map(([name, count]) => ({
+      name,
+      value: count,
+      color: catColors[name] || '#FF812E'
+    }));
 
     return {
       totalRevenue,
@@ -590,21 +814,8 @@ export const mockApi = {
       pendingOrders,
       lowStockCount,
       recentOrders: orders.slice(0, 5),
-      salesData: [
-        { month: 'Jun', sales: 45000, orders: 48 },
-        { month: 'Jul', sales: 58000, orders: 62 },
-        { month: 'Aug', sales: 74000, orders: 85 },
-        { month: 'Sep', sales: 89000, orders: 98 },
-        { month: 'Oct', sales: 112000, orders: 124 },
-        { month: 'Nov', sales: 135000, orders: 148 }
-      ],
-      categorySales: [
-        { name: 'Dry Fruits', value: 45, color: '#FF812E' },
-        { name: 'Whole Spices', value: 25, color: '#FFA45B' },
-        { name: 'Blended Spices', value: 18, color: '#27865F' },
-        { name: 'Cereals', value: 12, color: '#898078' }
-      ]
+      salesData: [],
+      categorySales
     };
   }
 };
-

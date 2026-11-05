@@ -37,10 +37,26 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       );
       return;
     }
-    final success = await ref.read(authProvider.notifier).login(
-          _emailController.text,
-          _passwordController.text,
+    if (!_emailController.text.trim().contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address')),
+      );
+      return;
+    }
+    if (_passwordController.text.trim().length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 6 characters')),
+      );
+      return;
+    }
+
+    final success = await ref.read(authProvider.notifier).register(
+          name: _nameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+          phone: _phoneController.text,
         );
+
     if (success && mounted) {
       context.go('/main');
     }
@@ -51,11 +67,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.peachBackground,
+      backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           'Create Account',
-          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700),
+          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.darkText),
         ),
       ),
       body: SafeArea(
@@ -64,7 +82,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppColors.creamBackground,
+              color: AppColors.white,
               borderRadius: AppDimensions.roundedLarge,
               border: Border.all(color: AppColors.lightBorder),
               boxShadow: AppDimensions.cardShadow,
@@ -84,7 +102,31 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   'Start enjoying organic pure dry fruits & spices',
                   style: GoogleFonts.inter(fontSize: 13, color: AppColors.secondaryText),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+
+                if (authState.error != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.red.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            authState.error!,
+                            style: GoogleFonts.inter(fontSize: 12, color: Colors.red.shade900),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 Text('Full Name', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),

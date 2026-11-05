@@ -744,13 +744,13 @@ async function seedPostgres(poolInstance) {
       }
     }
 
-    // 4. Save to fallback json as well
+    // 4. Save to fallback json as well (strictly clean orders & customers)
     const fallbackPath = path.join(__dirname, '..', 'data', 'db.json');
     let fbData = { categories, products: COMPREHENSIVE_PRODUCTS, orders: [], customers: [], coupons: [], banners: [], settings: {} };
     try {
       if (fs.existsSync(fallbackPath)) {
         const existing = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-        fbData = { ...existing, categories, products: COMPREHENSIVE_PRODUCTS };
+        fbData = { ...existing, categories, products: COMPREHENSIVE_PRODUCTS, orders: [], customers: [] };
       }
       fs.writeFileSync(fallbackPath, JSON.stringify(fbData, null, 2), 'utf8');
     } catch (_) {}
