@@ -25,19 +25,17 @@ services:
           property: connectionString
 
   # ---------------------------------------------------------------------------
-  # 2. React Admin Dashboard (Vite + Plain CSS)
+  # 2. React Admin Dashboard (Vite + Plain CSS) - Global CDN Static Site
   # ---------------------------------------------------------------------------
   - type: web
     name: dryfruits-admin
     env: static
-    plan: free
-    region: oregon
     rootDir: admin_panel
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     autoDeploy: true
     routes:
-      # Single Page App rewrite rule for client-side routing
+      # Single Page App rewrite rule for React Router client-side routing
       - type: rewrite
         source: /*
         destination: /index.html
@@ -54,8 +52,7 @@ services:
 databases:
   - name: dryfruits-db
     databaseName: dryfruits_db
-    user: postgres
+    user: dryfruits_user
     plan: free
     region: oregon
     postgresMajorVersion: 16
-
