@@ -8,7 +8,6 @@ import '../../models/product_model.dart';
 import '../../models/variant_model.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/product_provider.dart';
-import '../../widgets/app_image.dart';
 
 class ProductVarietyScreen extends ConsumerWidget {
   final String subcategoryId;
@@ -120,13 +119,13 @@ class ProductVarietyScreen extends ConsumerWidget {
               return ListView.separated(
                 physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
-                  20,
-                  14,
-                  20,
-                  cartState.totalItemCount > 0 ? 150 : 100,
+                  16,
+                  12,
+                  16,
+                  cartState.totalItemCount > 0 ? 120 : 60,
                 ),
                 itemCount: products.length + 1,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return _buildHeaderNotice(decodedSub, products.length);
@@ -143,9 +142,9 @@ class ProductVarietyScreen extends ConsumerWidget {
           // Floating Cart Bar if cart has items
           if (cartState.totalItemCount > 0)
             Positioned(
-              left: 20,
-              right: 20,
-              bottom: 24,
+              left: 16,
+              right: 16,
+              bottom: 20,
               child: _buildFloatingCartBar(context, cartState),
             ),
         ],
@@ -155,40 +154,31 @@ class ProductVarietyScreen extends ConsumerWidget {
 
   Widget _buildHeaderNotice(String subcategory, int count) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF7D5BF), width: 1.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF7D5BF), width: 1.1),
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: AppColors.primaryOrange,
-              borderRadius: BorderRadius.circular(10),
+          const Icon(Icons.tune_rounded, color: AppColors.primaryOrange, size: 16),
+          const SizedBox(width: 8),
+          Text(
+            '$count Varieties Available',
+            style: GoogleFonts.poppins(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkText,
             ),
-            child: const Icon(Icons.tune_rounded, color: Colors.white, size: 16),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$count Varieties Available',
-                  style: GoogleFonts.poppins(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.darkText,
-                  ),
-                ),
-                Text(
-                  'Select preferred weight (100g - 1kg) directly on each card below',
-                  style: GoogleFonts.inter(fontSize: 11, color: AppColors.secondaryText),
-                ),
-              ],
+          const Spacer(),
+          Text(
+            'Select weight & add',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppColors.secondaryText,
             ),
           ),
         ],
@@ -198,15 +188,15 @@ class ProductVarietyScreen extends ConsumerWidget {
 
   Widget _buildFloatingCartBar(BuildContext context, CartState cartState) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.darkText,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -216,14 +206,14 @@ class ProductVarietyScreen extends ConsumerWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(7),
+                padding: const EdgeInsets.all(6),
                 decoration: const BoxDecoration(
                   color: AppColors.primaryOrange,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.shopping_bag_rounded, color: Colors.white, size: 16),
+                child: const Icon(Icons.shopping_bag_rounded, color: Colors.white, size: 15),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -231,7 +221,7 @@ class ProductVarietyScreen extends ConsumerWidget {
                   Text(
                     '${cartState.totalItemCount} Items Added',
                     style: GoogleFonts.inter(
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w500,
                       color: Colors.white.withOpacity(0.8),
                     ),
@@ -239,7 +229,7 @@ class ProductVarietyScreen extends ConsumerWidget {
                   Text(
                     CurrencyFormatter.format(cartState.subtotal),
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                     ),
@@ -254,8 +244,8 @@ class ProductVarietyScreen extends ConsumerWidget {
               backgroundColor: AppColors.primaryOrange,
               foregroundColor: Colors.white,
               elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -263,7 +253,7 @@ class ProductVarietyScreen extends ConsumerWidget {
                 Text(
                   'View Cart',
                   style: GoogleFonts.poppins(
-                    fontSize: 13,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
@@ -280,7 +270,7 @@ class ProductVarietyScreen extends ConsumerWidget {
 }
 
 // -------------------------------------------------------------
-// PRODUCT VARIETY CARD WITH INTERACTIVE WEIGHT DROPDOWN
+// COMPACT PRODUCT VARIETY ROW (NO IMAGES, NAME + WEIGHT DROPDOWN)
 // -------------------------------------------------------------
 class ProductVarietyCard extends ConsumerStatefulWidget {
   final Product product;
@@ -317,6 +307,7 @@ class _ProductVarietyCardState extends ConsumerState<ProductVarietyCard> {
       SnackBar(
         content: Text(
           'Added $_quantity x ${widget.product.name} (${_selectedVariant.title}) to Cart! 🛒',
+          style: GoogleFonts.poppins(fontSize: 12.5, fontWeight: FontWeight.w600),
         ),
         backgroundColor: AppColors.successGreen,
         duration: const Duration(seconds: 2),
@@ -330,348 +321,200 @@ class _ProductVarietyCardState extends ConsumerState<ProductVarietyCard> {
     final isAvailable = _selectedVariant.isAvailable && _selectedVariant.stockQuantity > 0;
 
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.lightBorder, width: 1.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.lightBorder, width: 1.1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.035),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.025),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Top Section: Image + Badges
-          Stack(
+          // 1. Variety Name + Weight Dropdown right beside it
+          Row(
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-                child: SizedBox(
-                  height: 160,
-                  width: double.infinity,
-                  child: AppImage(
-                    imagePath: product.image,
-                    fit: BoxFit.cover,
+              Expanded(
+                child: Text(
+                  product.name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.darkText,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              // Rating Badge
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.star_rounded, size: 14, color: Color(0xFFF59E0B)),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${product.rating}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.darkText,
-                        ),
-                      ),
-                      Text(
-                        ' (${product.reviewCount})',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          color: AppColors.secondaryText,
-                        ),
-                      ),
-                    ],
-                  ),
+              const SizedBox(width: 8),
+
+              // Weight Dropdown
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFF7B98E), width: 1),
                 ),
-              ),
-              // Stock Availability Badge
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isAvailable ? const Color(0xFFEBF5EE) : const Color(0xFFFEE2E2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.circle,
-                        size: 7,
-                        color: isAvailable ? const Color(0xFF16A34A) : Colors.red,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        isAvailable ? 'In Stock' : 'Out of Stock',
-                        style: GoogleFonts.inter(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: isAvailable ? const Color(0xFF16A34A) : Colors.red,
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedVariant.id,
+                    isDense: true,
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.primaryOrange,
+                      size: 18,
+                    ),
+                    selectedItemBuilder: (BuildContext context) {
+                      return product.variants.map((v) {
+                        return Center(
+                          child: Text(
+                            v.title,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryOrange,
+                            ),
+                          ),
+                        );
+                      }).toList();
+                    },
+                    items: product.variants.map((v) {
+                      return DropdownMenuItem<String>(
+                        value: v.id,
+                        child: Text(
+                          '${v.title}  (₹${v.price.toInt()})',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.darkText,
+                          ),
                         ),
-                      ),
-                    ],
+                      );
+                    }).toList(),
+                    onChanged: (newVariantId) {
+                      if (newVariantId != null) {
+                        setState(() {
+                          _selectedVariant = product.variants.firstWhere(
+                            (v) => v.id == newVariantId,
+                          );
+                        });
+                      }
+                    },
                   ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 10),
 
-          // 2. Middle Section: Details, Interactive Weight Dropdown & Price
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Product Title
-                Text(
-                  product.name,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.darkText,
-                  ),
-                ),
-                const SizedBox(height: 3),
-
-                // Short Description
-                Text(
-                  product.shortDescription,
-                  style: GoogleFonts.inter(
-                    fontSize: 11.5,
-                    color: AppColors.secondaryText,
-                    height: 1.35,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 14),
-
-                // --------------------------------------------------------
-                // WEIGHT SELECTION DROPDOWN (ESSENTIAL FEATURE)
-                // --------------------------------------------------------
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7ED),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFF7C8A4), width: 1.2),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.scale_rounded, size: 16, color: AppColors.primaryOrange),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Select Weight:',
-                            style: GoogleFonts.inter(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.darkText,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Dropdown Widget
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.primaryOrange.withOpacity(0.5)),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedVariant.id,
-                            isDense: true,
-                            icon: const Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              color: AppColors.primaryOrange,
-                              size: 20,
-                            ),
-                            items: product.variants.map((v) {
-                              return DropdownMenuItem<String>(
-                                value: v.id,
-                                child: Text(
-                                  '${v.title}  (₹${v.price.toInt()})',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.darkText,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (newVariantId) {
-                              if (newVariantId != null) {
-                                setState(() {
-                                  _selectedVariant = product.variants.firstWhere(
-                                    (v) => v.id == newVariantId,
-                                  );
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // 3. Price & Stock Display
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Dynamic Price based on selected weight
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          CurrencyFormatter.format(_selectedVariant.price),
-                          style: GoogleFonts.poppins(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.darkText,
-                          ),
-                        ),
-                        if (_selectedVariant.originalPrice > _selectedVariant.price) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            CurrencyFormatter.format(_selectedVariant.originalPrice),
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              decoration: TextDecoration.lineThrough,
-                              color: AppColors.secondaryText,
-                            ),
-                          ),
-                        ],
-                      ],
+          // 2. Price (Dynamic) + Quantity Stepper + Compact ADD Button
+          Row(
+            children: [
+              // Dynamic Price
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    CurrencyFormatter.format(_selectedVariant.price),
+                    style: GoogleFonts.poppins(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.darkText,
                     ),
-
-                    // Stock Info Tag
+                  ),
+                  if (_selectedVariant.originalPrice > _selectedVariant.price) ...[
+                    const SizedBox(width: 6),
                     Text(
-                      '${_selectedVariant.stockQuantity} packs left',
+                      CurrencyFormatter.format(_selectedVariant.originalPrice),
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _selectedVariant.stockQuantity < 10
-                            ? Colors.red
-                            : AppColors.secondaryText,
+                        decoration: TextDecoration.lineThrough,
+                        color: AppColors.secondaryText,
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 14),
+                ],
+              ),
+              const Spacer(),
 
-                // 4. Quantity Selector + Add To Cart Button Row
-                Row(
+              // Quantity Stepper: [-] qty [+]
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAF5ED),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.lightBorder, width: 1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Stepper: [-] quantity [+]
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFAF5ED),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.lightBorder, width: 1.2),
-                      ),
-                      child: Row(
-                        children: [
-                          InkWell(
-                            onTap: _quantity > 1
-                                ? () => setState(() => _quantity -= 1)
-                                : null,
-                            borderRadius: BorderRadius.circular(16),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                              child: Icon(Icons.remove, size: 16, color: AppColors.darkText),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Text(
-                              '$_quantity',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.darkText,
-                              ),
-                            ),
-                          ),
-                          InkWell(
-                            onTap: _quantity < _selectedVariant.stockQuantity
-                                ? () => setState(() => _quantity += 1)
-                                : null,
-                            borderRadius: BorderRadius.circular(16),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                              child: Icon(Icons.add, size: 16, color: AppColors.primaryOrange),
-                            ),
-                          ),
-                        ],
+                    InkWell(
+                      onTap: _quantity > 1 ? () => setState(() => _quantity -= 1) : null,
+                      borderRadius: BorderRadius.circular(10),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                        child: Icon(Icons.remove, size: 14, color: AppColors.darkText),
                       ),
                     ),
-                    const SizedBox(width: 12),
-
-                    // ADD TO CART BUTTON
-                    Expanded(
-                      child: SizedBox(
-                        height: 46,
-                        child: ElevatedButton(
-                          onPressed: isAvailable ? _onAddToCart : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryOrange,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.grey.shade300,
-                            elevation: 2,
-                            shadowColor: AppColors.primaryOrange.withOpacity(0.35),
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.add_shopping_cart_rounded, size: 17, color: Colors.white),
-                              const SizedBox(width: 8),
-                              Text(
-                                'ADD TO CART',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        '$_quantity',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.darkText,
                         ),
                       ),
                     ),
+                    InkWell(
+                      onTap: _quantity < _selectedVariant.stockQuantity
+                          ? () => setState(() => _quantity += 1)
+                          : null,
+                      borderRadius: BorderRadius.circular(10),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                        child: Icon(Icons.add, size: 14, color: AppColors.primaryOrange),
+                      ),
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+
+              // Compact ADD button
+              SizedBox(
+                height: 32,
+                child: ElevatedButton(
+                  onPressed: isAvailable ? _onAddToCart : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryOrange,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey.shade300,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    isAvailable ? 'ADD' : 'OUT',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
