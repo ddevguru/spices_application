@@ -205,60 +205,65 @@ class AppDrawer extends ConsumerWidget {
             ),
 
             // Bottom Logout / Sign In Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: isLoggedIn
-                  ? SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          Navigator.pop(context);
-                          await ref.read(authProvider.notifier).logout();
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Signed out successfully')),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.logout_rounded, size: 18, color: Colors.red),
-                        label: Text(
-                          'Sign Out',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.red,
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: isLoggedIn
+                    ? SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            await ref.read(authProvider.notifier).logout();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Signed out successfully')),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.logout_rounded, size: 18, color: Colors.red),
+                          label: Text(
+                            'Sign Out',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.red,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.5),
+                            backgroundColor: const Color(0xFFFEF2F2),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                         ),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.red.shade200),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    )
-                  : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          context.push('/login');
-                        },
-                        icon: const Icon(Icons.login_rounded, size: 18, color: Colors.white),
-                        label: Text(
-                          'Sign In / Register',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                      )
+                    : SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            context.push('/login');
+                          },
+                          icon: const Icon(Icons.login_rounded, size: 18, color: Colors.white),
+                          label: Text(
+                            'Sign In / Register',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryOrange,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryOrange,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
                       ),
-                    ),
+              ),
             ),
           ],
         ),

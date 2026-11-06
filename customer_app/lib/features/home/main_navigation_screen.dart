@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../widgets/app_drawer.dart';
 import '../../widgets/custom_bottom_nav.dart';
 import '../categories/categories_screen.dart';
 import '../cart/cart_screen.dart';
@@ -17,6 +18,7 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late int _currentIndex;
 
   @override
@@ -25,23 +27,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _currentIndex = widget.initialIndex;
   }
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    CategoriesScreen(),
-    WishlistScreen(),
-    CartScreen(),
-    ProfileScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      HomeScreen(onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+      const CategoriesScreen(),
+      const WishlistScreen(),
+      const CartScreen(),
+      const ProfileScreen(),
+    ];
+
     return Scaffold(
-      backgroundColor: AppColors.peachBackground,
+      key: _scaffoldKey,
+      drawer: const AppDrawer(),
+      backgroundColor: AppColors.scaffoldBackground,
       body: Stack(
         children: [
           IndexedStack(
             index: _currentIndex,
-            children: _screens,
+            children: screens,
           ),
           Positioned(
             left: 0,

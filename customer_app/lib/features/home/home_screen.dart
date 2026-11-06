@@ -11,14 +11,15 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/product_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onOpenDrawer;
+
+  const HomeScreen({super.key, this.onOpenDrawer});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
   final PageController _bannerController = PageController();
   int _activeBannerIndex = 0;
@@ -225,9 +226,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final productsAsync = ref.watch(filteredProductsProvider);
 
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: AppColors.scaffoldBackground,
-      drawer: const AppDrawer(),
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -245,7 +244,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         // Hamburger Menu Button (Working Drawer Trigger)
                         GestureDetector(
-                          onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                          onTap: () {
+                            if (widget.onOpenDrawer != null) {
+                              widget.onOpenDrawer!();
+                            } else {
+                              Scaffold.of(context).openDrawer();
+                            }
+                          },
                           child: Container(
                             width: 44,
                             height: 44,
