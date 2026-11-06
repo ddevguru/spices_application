@@ -543,8 +543,8 @@ function getLocalDb() {
   }
   try {
     const parsed = JSON.parse(data);
-    parsed.orders = [];
-    parsed.customers = [];
+    if (!Array.isArray(parsed.orders)) parsed.orders = [];
+    if (!Array.isArray(parsed.customers)) parsed.customers = [];
     return parsed;
   } catch {
     return INITIAL_DB;
@@ -552,8 +552,8 @@ function getLocalDb() {
 }
 
 function saveLocalDb(db) {
-  db.orders = [];
-  db.customers = [];
+  if (!Array.isArray(db.orders)) db.orders = [];
+  if (!Array.isArray(db.customers)) db.customers = [];
   localStorage.setItem('naturale_admin_db_v3', JSON.stringify(db));
 }
 
@@ -921,11 +921,16 @@ export const mockApi = {
   // Orders
   async getOrders() {
     try {
-      const res = await axios.get(`${API_BASE}/orders`, { timeout: 2500 });
-      return Array.isArray(res.data) ? res.data : (res.data?.data || []);
-    } catch {
-      return [];
-    }
+      const res = await axios.get(`${API_BASE}/orders`, { timeout: 3500 });
+      const orders = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (orders.length > 0) {
+        const db = getLocalDb();
+        db.orders = orders;
+        saveLocalDb(db);
+        return orders;
+      }
+    } catch (_) {}
+    return getLocalDb().orders || [];
   },
 
   async updateOrderStatus(id, status) {
@@ -940,11 +945,16 @@ export const mockApi = {
   // Customers
   async getCustomers() {
     try {
-      const res = await axios.get(`${API_BASE}/customers`, { timeout: 2500 });
-      return Array.isArray(res.data) ? res.data : (res.data?.data || []);
-    } catch {
-      return [];
-    }
+      const res = await axios.get(`${API_BASE}/customers`, { timeout: 3500 });
+      const customers = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (customers.length > 0) {
+        const db = getLocalDb();
+        db.customers = customers;
+        saveLocalDb(db);
+        return customers;
+      }
+    } catch (_) {}
+    return getLocalDb().customers || [];
   },
 
   // Coupons
