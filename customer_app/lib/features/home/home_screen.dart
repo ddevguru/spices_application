@@ -344,13 +344,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   context.push('/products');
                                 }
                               },
+                              cursorColor: AppColors.primaryOrange,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: AppColors.darkText,
+                                fontWeight: FontWeight.w500,
+                              ),
                               decoration: InputDecoration(
-                                hintText: 'Search dry fruits, spices, cereals...',
+                                hintText: 'Search here',
                                 hintStyle: GoogleFonts.inter(
                                   fontSize: 14,
                                   color: AppColors.secondaryText.withOpacity(0.75),
                                 ),
                                 border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                                filled: false,
+                                fillColor: Colors.transparent,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 14),
                                 isDense: true,
                               ),
                             ),
