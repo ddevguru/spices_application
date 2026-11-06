@@ -13,6 +13,7 @@ import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/orders/my_orders_screen.dart';
 import '../../features/orders/order_success_screen.dart';
 import '../../features/orders/order_tracking_screen.dart';
+import '../../features/orders/quick_reorder_screen.dart';
 import '../../features/products/product_detail_screen.dart';
 import '../../features/products/product_listing_screen.dart';
 import '../../features/profile/saved_addresses_screen.dart';
@@ -96,6 +97,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/my-orders',
         builder: (context, state) => const MyOrdersScreen(),
+      ),
+      GoRoute(
+        path: '/quick-reorder',
+        builder: (context, state) => const QuickReorderScreen(),
+      ),
+      GoRoute(
+        path: '/buy-again',
+        builder: (context, state) => const QuickReorderScreen(),
       ),
       GoRoute(
         path: '/order-tracking/:id',

@@ -117,6 +117,28 @@ class CartNotifier extends StateNotifier<CartState> {
     addToCart(product: product, variant: variant, quantity: quantity);
   }
 
+  void addMultipleItems(List<CartItem> incomingItems) {
+    List<CartItem> newItems = List<CartItem>.from(state.items);
+    for (final incoming in incomingItems) {
+      final existingIndex = newItems.indexWhere(
+        (i) => i.productId == incoming.productId && i.variant.id == incoming.variant.id,
+      );
+      if (existingIndex != -1) {
+        final current = newItems[existingIndex];
+        newItems[existingIndex] = current.copyWith(quantity: current.quantity + incoming.quantity);
+      } else {
+        newItems.add(incoming);
+      }
+    }
+    state = state.copyWith(items: newItems);
+    _saveToStorage();
+  }
+
+  void replaceCartWithItems(List<CartItem> incomingItems) {
+    state = state.copyWith(items: incomingItems, clearCoupon: true);
+    _saveToStorage();
+  }
+
   void updateQuantity(String cartItemId, int newQuantity) {
     if (newQuantity <= 0) {
       removeFromCart(cartItemId);

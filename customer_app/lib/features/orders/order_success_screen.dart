@@ -123,6 +123,19 @@ class OrderSuccessScreen extends StatelessWidget {
                 isOutlined: true,
                 onPressed: () => context.go('/main'),
               ),
+              const SizedBox(height: 10),
+              TextButton.icon(
+                icon: const Icon(Icons.repeat_rounded, size: 18, color: AppColors.primaryOrange),
+                label: Text(
+                  'View Quick Reorder List →',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryOrange,
+                  ),
+                ),
+                onPressed: () => context.push('/quick-reorder'),
+              ),
             ],
           ),
         ),

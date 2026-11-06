@@ -157,10 +157,17 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   _buildMenuItem(
+                    icon: Icons.repeat_rounded,
+                    title: 'Quick Reorder (Buy Again)',
+                    subtitle: 'Multi-select past items & direct 1-tap reorder',
+                    onTap: () => context.push('/quick-reorder'),
+                  ),
+                  const Divider(color: AppColors.lightBorder, height: 1, indent: 16, endIndent: 16),
+                  _buildMenuItem(
                     icon: Icons.receipt_long_rounded,
                     title: 'My Orders',
                     subtitle: 'Track active orders & history',
-                    onTap: () => context.push('/orders'),
+                    onTap: () => context.push('/my-orders'),
                   ),
                   const Divider(color: AppColors.lightBorder, height: 1, indent: 16, endIndent: 16),
                   _buildMenuItem(

@@ -151,12 +151,23 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   _drawerItem(
                     context,
+                    icon: Icons.repeat_rounded,
+                    activeIcon: Icons.repeat_on_rounded,
+                    title: 'Quick Reorder (Buy Again)',
+                    trailingBadge: '1-Click',
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/quick-reorder');
+                    },
+                  ),
+                  _drawerItem(
+                    context,
                     icon: Icons.shopping_bag_outlined,
                     activeIcon: Icons.shopping_bag_rounded,
                     title: 'My Orders',
                     onTap: () {
                       Navigator.pop(context);
-                      context.push('/orders');
+                      context.push('/my-orders');
                     },
                   ),
                   _drawerItem(
