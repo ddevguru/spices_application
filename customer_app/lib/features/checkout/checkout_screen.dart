@@ -36,11 +36,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     setState(() => _isPlacingOrder = true);
 
-    final user = MockDataService().getProfile();
-    final address = user.addresses[_selectedAddressIndex.clamp(0, user.addresses.length - 1)];
+    final authUser = ref.read(authProvider).user;
+    final user = authUser ?? MockDataService().getProfile();
+    final address = user.addresses.isNotEmpty 
+        ? user.addresses[_selectedAddressIndex.clamp(0, user.addresses.length - 1)]
+        : const OrderAddress(label: 'Home', street: 'Current Location', area: 'Main Road', city: 'India', state: 'India', pincode: '000000');
 
     final orderCustomer = OrderCustomer(
-      name: user.name,
+      name: user.name.isNotEmpty ? user.name : 'Customer',
       phone: user.phone,
       email: user.email,
       address: address,
@@ -90,7 +93,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
-    final user = MockDataService().getProfile();
+    final user = ref.watch(authProvider).user ?? MockDataService().getProfile();
 
     return Scaffold(
       backgroundColor: AppColors.peachBackground,

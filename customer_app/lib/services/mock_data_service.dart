@@ -24,29 +24,12 @@ class MockDataService {
   List<Coupon> _coupons = [];
   List<CustomerOrder> _orders = [];
   UserProfile _userProfile = const UserProfile(
-    id: 'usr_1',
-    name: 'Aarav Sharma',
-    email: 'aarav.sharma@example.com',
-    phone: '+91 98765 43210',
+    id: 'cust_default',
+    name: 'Member',
+    email: '',
+    phone: '',
     avatarUrl: '',
-    addresses: [
-      OrderAddress(
-        label: 'Home',
-        street: 'Flat 402, Lotus Residency, 12th Main',
-        area: 'Indiranagar',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560038',
-      ),
-      OrderAddress(
-        label: 'Office',
-        street: 'Tower B, 7th Floor, Cyber Gateway',
-        area: 'HITEC City',
-        city: 'Hyderabad',
-        state: 'Telangana',
-        pincode: '500081',
-      ),
-    ],
+    addresses: [],
   );
 
   bool _initialized = false;

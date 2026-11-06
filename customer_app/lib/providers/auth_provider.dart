@@ -66,6 +66,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       final loggedIn = token != null && token.isNotEmpty && user != null;
 
+      if (user != null) {
+        MockDataService().updateProfile(user);
+      }
+
       state = state.copyWith(
         isOnboarded: onboarded,
         isAuthenticated: loggedIn,
@@ -134,6 +138,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await prefs.setString('auth_token', token);
         await prefs.setString('user_profile', jsonEncode(user.toJson()));
         await prefs.setBool('is_logged_in', true);
+        MockDataService().updateProfile(user);
 
         state = state.copyWith(
           isLoading: false,
@@ -207,6 +212,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await prefs.setString('auth_token', token);
         await prefs.setString('user_profile', jsonEncode(user.toJson()));
         await prefs.setBool('is_logged_in', true);
+        MockDataService().updateProfile(user);
 
         state = state.copyWith(
           isLoading: false,
@@ -343,11 +349,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> updateProfile(UserProfile updatedUser) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_profile', jsonEncode(updatedUser.toJson()));
+    MockDataService().updateProfile(updatedUser);
+    state = state.copyWith(user: updatedUser);
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('user_profile');
     await prefs.setBool('is_logged_in', false);
+    MockDataService().updateProfile(const UserProfile(id: '', name: 'Member', email: '', phone: ''));
     state = state.copyWith(isAuthenticated: false, token: null, user: null);
   }
 }
