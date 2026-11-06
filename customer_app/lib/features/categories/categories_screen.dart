@@ -44,6 +44,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 width: 110,
                 color: const Color(0xFFF6DEC9),
                 child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 90),
                   itemCount: categories.length,
                   itemBuilder: (context, index) {
                     final cat = categories[index];

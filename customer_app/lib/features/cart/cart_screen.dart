@@ -11,7 +11,9 @@ import '../../widgets/app_image.dart';
 import '../../widgets/custom_button.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
-  const CartScreen({super.key});
+  final bool isInBottomNav;
+
+  const CartScreen({super.key, this.isInBottomNav = true});
 
   @override
   ConsumerState<CartScreen> createState() => _CartScreenState();
@@ -52,7 +54,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           'Shopping Cart (${cartState.totalItemCount})',
           style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700),
         ),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: !widget.isInBottomNav,
         actions: [
           if (cartState.items.isNotEmpty)
             TextButton(
@@ -357,58 +359,98 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 120),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
 
-                // Bottom Checkout Bar
+                // Bottom Checkout Bar - Floating above CustomBottomNav when in main nav
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  margin: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    bottom: widget.isInBottomNav
+                        ? (84.0 + MediaQuery.of(context).padding.bottom)
+                        : (16.0 + MediaQuery.of(context).padding.bottom),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   decoration: BoxDecoration(
                     color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withOpacity(0.08),
                         blurRadius: 16,
-                        offset: const Offset(0, -4),
+                        offset: const Offset(0, 4),
                       )
                     ],
+                    border: Border.all(color: AppColors.lightBorder, width: 1),
                   ),
-                  child: SafeArea(
-                    top: false,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Payable Amount',
-                              style: GoogleFonts.inter(fontSize: 12, color: AppColors.secondaryText),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Payable Amount',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.secondaryText,
                             ),
-                            Text(
-                              CurrencyFormatter.format(cartState.grandTotal),
-                              style: GoogleFonts.poppins(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.darkText,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            CurrencyFormatter.format(cartState.grandTotal),
+                            style: GoogleFonts.poppins(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.darkText,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: () => context.push('/checkout'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryOrange,
+                              foregroundColor: Colors.white,
+                              elevation: 2,
+                              shadowColor: AppColors.primaryOrange.withOpacity(0.35),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
                               ),
                             ),
-                          ],
-                        ),
-                        SizedBox(
-                          width: 200,
-                          child: CustomButton(
-                            text: 'Proceed to Checkout',
-                            height: 50,
-                            icon: Icons.arrow_forward_rounded,
-                            onPressed: () => context.push('/checkout'),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    'Proceed to Checkout',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+                              ],
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],

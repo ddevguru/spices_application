@@ -80,7 +80,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/cart',
-        builder: (context, state) => const CartScreen(),
+        builder: (context, state) => const CartScreen(isInBottomNav: false),
       ),
       GoRoute(
         path: '/checkout',

@@ -33,7 +33,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       HomeScreen(onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer()),
       const CategoriesScreen(),
       const WishlistScreen(),
-      const CartScreen(),
+      const CartScreen(isInBottomNav: true),
       const ProfileScreen(),
     ];
 

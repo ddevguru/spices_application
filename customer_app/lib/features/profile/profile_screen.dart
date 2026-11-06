@@ -285,6 +285,7 @@ class ProfileScreen extends ConsumerWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
+            const SizedBox(height: 110),
           ],
         ),
       ),
