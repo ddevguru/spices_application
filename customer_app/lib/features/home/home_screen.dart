@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_dimensions.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../models/order_model.dart';
 import '../../providers/auth_provider.dart';
@@ -20,8 +19,8 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
-    final userName = (user != null && user.name.isNotEmpty) ? user.name : 'Deepak Mishra';
-    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'D';
+    final userName = (user != null && user.name.trim().isNotEmpty) ? user.name.trim() : 'Valued Customer';
+    final userInitial = (user != null && user.name.trim().isNotEmpty) ? user.name.trim()[0].toUpperCase() : 'U';
 
     final ordersAsync = ref.watch(orderProvider);
     final cartState = ref.watch(cartProvider);
@@ -251,16 +250,12 @@ class HomeScreen extends ConsumerWidget {
   // DASHBOARD STATISTICS (4 CARDS)
   // -------------------------------------------------------------
   Widget _buildStatisticsGrid(BuildContext context, List<CustomerOrder> orders) {
-    final totalOrdersCount = orders.isNotEmpty ? orders.length : 24;
-    final totalSpentAmount = orders.isNotEmpty
-        ? orders.fold(0.0, (sum, o) => sum + o.totalAmount)
-        : 12450.0;
-    final pendingCount = orders.isNotEmpty
-        ? orders.where((o) => !['delivered', 'cancelled'].contains(o.status.toLowerCase())).length
-        : 3;
-    final totalSavings = orders.isNotEmpty
-        ? orders.fold(0.0, (sum, o) => sum + o.discount + 80.0)
-        : 2350.0;
+    final totalOrdersCount = orders.length;
+    final totalSpentAmount = orders.fold(0.0, (sum, o) => sum + o.totalAmount);
+    final pendingCount = orders
+        .where((o) => !['delivered', 'cancelled'].contains(o.status.toLowerCase()))
+        .length;
+    final totalSavings = orders.fold(0.0, (sum, o) => sum + o.discount);
 
     return GridView.count(
       shrinkWrap: true,
@@ -274,7 +269,7 @@ class HomeScreen extends ConsumerWidget {
         _buildStatCard(
           title: 'Total Orders',
           value: '$totalOrdersCount',
-          subtext: '+12% this month',
+          subtext: totalOrdersCount > 0 ? '$totalOrdersCount placed' : 'No orders yet',
           icon: Icons.shopping_bag_outlined,
           cardColor: const Color(0xFFFDEEE3),
           iconColor: const Color(0xFFE26117),
@@ -284,7 +279,7 @@ class HomeScreen extends ConsumerWidget {
         _buildStatCard(
           title: 'Total Spent',
           value: CurrencyFormatter.format(totalSpentAmount),
-          subtext: 'Verified Spends',
+          subtext: totalOrdersCount > 0 ? 'Verified Spends' : '₹0 total spends',
           icon: Icons.account_balance_wallet_outlined,
           cardColor: const Color(0xFFFFF5EB),
           iconColor: const Color(0xFFD97706),
@@ -294,7 +289,7 @@ class HomeScreen extends ConsumerWidget {
         _buildStatCard(
           title: 'Pending Orders',
           value: '$pendingCount',
-          subtext: pendingCount > 0 ? 'In Transit / Dispatch' : 'All Orders Delivered',
+          subtext: pendingCount > 0 ? '$pendingCount in transit' : 'No active orders',
           icon: Icons.hourglass_top_rounded,
           cardColor: const Color(0xFFFEE8D6),
           iconColor: const Color(0xFFEA580C),
@@ -304,7 +299,7 @@ class HomeScreen extends ConsumerWidget {
         _buildStatCard(
           title: 'Total Savings',
           value: CurrencyFormatter.format(totalSavings),
-          subtext: 'Coupons & Deals',
+          subtext: totalSavings > 0 ? 'Coupons & Deals' : 'No discounts used',
           icon: Icons.savings_outlined,
           cardColor: const Color(0xFFEBF5EE),
           iconColor: const Color(0xFF16A34A),
@@ -566,106 +561,84 @@ class HomeScreen extends ConsumerWidget {
   // SECTION B: RECENT ORDERS
   // -------------------------------------------------------------
   Widget _buildRecentOrdersSection(BuildContext context, List<CustomerOrder> orders) {
-    // If user has orders, show last 3, otherwise realistic mock orders
-    final List<CustomerOrder> displayOrders = orders.isNotEmpty
-        ? orders.take(3).toList()
-        : [
-            CustomerOrder(
-              id: 'ORD-98214',
-              createdAt: DateTime.now().subtract(const Duration(days: 1)),
-              status: 'Delivered',
-              customer: const OrderCustomer(
-                name: 'Deepak Mishra',
-                phone: '9876543210',
-                email: 'deepakm7778@gmail.com',
-                address: OrderAddress(label: 'Home', street: 'MG Road', area: 'Civil Lines', city: 'Delhi', state: 'Delhi', pincode: '110001'),
-              ),
-              items: const [
-                OrderItemRecord(
-                  productId: 'p_almonds',
-                  productName: 'California Whole Almonds',
-                  variantId: 'v_a250',
-                  variantTitle: '250 GM',
-                  weightInGrams: 250,
-                  price: 280,
-                  quantity: 2,
-                  image: 'assets/images/prod_almonds.jpg',
+    if (orders.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Orders',
+                style: GoogleFonts.poppins(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkText,
                 ),
-                OrderItemRecord(
-                  productId: 'p_cashews',
-                  productName: 'Royal Mangalore Cashews (W240)',
-                  variantId: 'v_c250',
-                  variantTitle: '250 GM',
-                  weightInGrams: 250,
-                  price: 320,
-                  quantity: 1,
-                  image: 'assets/images/prod_cashews.jpg',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.lightBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ],
-              subtotal: 880,
-              discount: 80,
-              deliveryFee: 0,
-              totalAmount: 800,
-              paymentMethod: 'UPI (GPay)',
             ),
-            CustomerOrder(
-              id: 'ORD-89402',
-              createdAt: DateTime.now().subtract(const Duration(days: 4)),
-              status: 'Out for Delivery',
-              customer: const OrderCustomer(
-                name: 'Deepak Mishra',
-                phone: '9876543210',
-                email: 'deepakm7778@gmail.com',
-                address: OrderAddress(label: 'Home', street: 'MG Road', area: 'Civil Lines', city: 'Delhi', state: 'Delhi', pincode: '110001'),
-              ),
-              items: const [
-                OrderItemRecord(
-                  productId: 'p_cardamom',
-                  productName: 'Royal Bold Green Cardamom (8mm)',
-                  variantId: 'v_gc100',
-                  variantTitle: '100 GM',
-                  weightInGrams: 100,
-                  price: 290,
-                  quantity: 1,
-                  image: 'assets/images/cat_wholespices.jpg',
+            child: Column(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryOrange.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.receipt_long_outlined, size: 24, color: AppColors.primaryOrange),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'No Orders Placed Yet',
+                  style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.darkText),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Explore our categories to order fresh dry fruits and spices directly to your doorstep!',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.secondaryText),
+                ),
+                const SizedBox(height: 14),
+                ElevatedButton.icon(
+                  onPressed: () => context.push('/categories'),
+                  icon: const Icon(Icons.shopping_bag_outlined, size: 16, color: Colors.white),
+                  label: Text(
+                    'Browse Categories',
+                    style: GoogleFonts.poppins(fontSize: 12.5, fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryOrange,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  ),
                 ),
               ],
-              subtotal: 290,
-              discount: 0,
-              deliveryFee: 40,
-              totalAmount: 330,
-              paymentMethod: 'Credit Card',
             ),
-            CustomerOrder(
-              id: 'ORD-82104',
-              createdAt: DateTime.now().subtract(const Duration(days: 8)),
-              status: 'Processing',
-              customer: const OrderCustomer(
-                name: 'Deepak Mishra',
-                phone: '9876543210',
-                email: 'deepakm7778@gmail.com',
-                address: OrderAddress(label: 'Home', street: 'MG Road', area: 'Civil Lines', city: 'Delhi', state: 'Delhi', pincode: '110001'),
-              ),
-              items: const [
-                OrderItemRecord(
-                  productId: 'p_walnut',
-                  productName: 'Kashmiri Snow-White Walnut Halves',
-                  variantId: 'v_w500',
-                  variantTitle: '500 GM',
-                  weightInGrams: 500,
-                  price: 680,
-                  quantity: 1,
-                  image: 'assets/images/prod_walnuts.jpg',
-                ),
-              ],
-              subtotal: 680,
-              discount: 50,
-              deliveryFee: 0,
-              totalAmount: 630,
-              paymentMethod: 'UPI',
-            ),
-          ];
+          ),
+        ],
+      );
+    }
 
+    final displayOrders = orders.take(3).toList();
     final dateFormat = DateFormat('dd MMM yyyy');
 
     return Column(
@@ -776,7 +749,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const Divider(color: AppColors.lightBorder, height: 18),
 
-                  // Bottom Row: Amount & View Details Button
+                  // Bottom Row: Amount & Actions
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -799,24 +772,55 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      InkWell(
-                        onTap: () {
-                          context.push('/order-tracking/${order.id}', extra: order);
-                        },
-                        child: Row(
-                          children: [
-                            Text(
-                              'View Details',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryOrange,
+                      Row(
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              context.push('/order-receipt/${order.id}', extra: order);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryOrange.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.receipt_rounded, size: 13, color: AppColors.primaryOrange),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Bill',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primaryOrange,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.primaryOrange),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () {
+                              context.push('/order-tracking/${order.id}', extra: order);
+                            },
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Details',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primaryOrange,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                const Icon(Icons.arrow_forward_rounded, size: 13, color: AppColors.primaryOrange),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

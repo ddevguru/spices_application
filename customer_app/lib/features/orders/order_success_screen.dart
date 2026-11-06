@@ -111,6 +111,15 @@ class OrderSuccessScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               CustomButton(
+                text: 'View Bill Receipt / Tax Invoice',
+                icon: Icons.receipt_long_rounded,
+                isOutlined: true,
+                onPressed: () {
+                  context.push('/order-receipt/${order?.id ?? "ORD-849201"}', extra: order);
+                },
+              ),
+              const SizedBox(height: 12),
+              CustomButton(
                 text: 'Track Order',
                 icon: Icons.timeline_rounded,
                 onPressed: () {

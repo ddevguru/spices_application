@@ -1332,55 +1332,7 @@ class MockDataService {
       ),
     ];
 
-    _orders = [
-      CustomerOrder(
-        id: 'ORD-849201',
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        status: 'Delivered',
-        customer: const OrderCustomer(
-          name: 'Aarav Sharma',
-          phone: '+91 98765 43210',
-          email: 'aarav.sharma@example.com',
-          address: OrderAddress(
-            label: 'Home',
-            street: 'Flat 402, Lotus Residency, 12th Main',
-            area: 'Indiranagar',
-            city: 'Bengaluru',
-            state: 'Karnataka',
-            pincode: '560038',
-          ),
-        ),
-        items: const [
-          OrderItemRecord(
-            productId: 'p_almonds',
-            productName: 'California Whole Almonds',
-            variantId: 'v_almonds_500',
-            variantTitle: '500 GM',
-            weightInGrams: 500,
-            price: 540,
-            quantity: 2,
-            image: 'assets/images/prod_almonds.jpg',
-          ),
-          OrderItemRecord(
-            productId: 'p_cardamom',
-            productName: 'Idukki Green Cardamom (8mm+ Bold)',
-            variantId: 'v_card_100',
-            variantTitle: '100 GM',
-            weightInGrams: 100,
-            price: 340,
-            quantity: 1,
-            image: 'assets/images/prod_cardamom.jpg',
-          ),
-        ],
-        subtotal: 1420,
-        discount: 200,
-        couponCode: 'WELCOME20',
-        deliveryFee: 0,
-        totalAmount: 1220,
-        paymentMethod: 'UPI',
-        paymentStatus: 'Paid',
-      ),
-    ];
+    _orders = [];
   }
 
   // Categories API

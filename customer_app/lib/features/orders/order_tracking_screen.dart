@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -232,6 +233,30 @@ class OrderTrackingScreen extends StatelessWidget {
                       style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    context.push('/order-receipt/$orderId', extra: order);
+                  },
+                  icon: const Icon(Icons.receipt_long_rounded, color: AppColors.primaryOrange),
+                  label: Text(
+                    'View Bill Receipt / Tax Invoice',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryOrange,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.primaryOrange, width: 1.5),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
                 ),
               ),
             ],

@@ -179,18 +179,37 @@ class MyOrdersScreen extends ConsumerWidget {
               ),
               Row(
                 children: [
-                  OutlinedButton(
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      context.push('/order-receipt/${order.id}', extra: order);
+                    },
+                    icon: const Icon(Icons.receipt_rounded, size: 14, color: AppColors.primaryOrange),
+                    label: Text(
+                      'Bill Receipt',
+                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.primaryOrange),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primaryOrange),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      backgroundColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
                     onPressed: () {
                       context.push('/order-tracking/${order.id}', extra: order);
                     },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.primaryOrange),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryOrange,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     child: Text(
                       'Track Order',
-                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryOrange),
+                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.white),
                     ),
                   ),
                 ],

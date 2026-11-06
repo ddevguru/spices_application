@@ -12,6 +12,7 @@ import '../../features/checkout/checkout_screen.dart';
 import '../../features/home/main_navigation_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/orders/my_orders_screen.dart';
+import '../../features/orders/order_receipt_screen.dart';
 import '../../features/orders/order_success_screen.dart';
 import '../../features/orders/order_tracking_screen.dart';
 import '../../features/orders/quick_reorder_screen.dart';
@@ -137,6 +138,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id'] ?? 'ORD-849201';
           final order = state.extra as CustomerOrder?;
           return OrderTrackingScreen(orderId: id, order: order);
+        },
+      ),
+      GoRoute(
+        path: '/order-receipt/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? 'ORD-849201';
+          final order = state.extra as CustomerOrder?;
+          return OrderReceiptScreen(orderId: id, order: order);
         },
       ),
       GoRoute(
