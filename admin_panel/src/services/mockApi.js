@@ -678,6 +678,71 @@ export const mockApi = {
     return true;
   },
 
+  async bulkImportProducts(productList, replaceExisting = false) {
+    const db = getLocalDb();
+    if (!db.products) db.products = [];
+    if (!db.categories) db.categories = [];
+
+    const now = Date.now();
+    const imported = [];
+
+    if (replaceExisting) {
+      db.products = [];
+    }
+
+    productList.forEach((prod, i) => {
+      const existingIdx = db.products.findIndex(
+        p => p.name.toLowerCase() === prod.name.toLowerCase() || (prod.id && p.id === prod.id)
+      );
+
+      // Auto ensure category has this subcategory
+      if (prod.categoryId && prod.subcategoryId) {
+        const cat = db.categories.find(
+          c => c.id === prod.categoryId || c.name.toLowerCase() === (prod.categoryName || '').toLowerCase()
+        );
+        if (cat) {
+          if (!cat.subcategories) cat.subcategories = [];
+          if (!cat.subcategories.includes(prod.subcategoryId)) {
+            cat.subcategories.push(prod.subcategoryId);
+          }
+        }
+      }
+
+      if (existingIdx !== -1 && !replaceExisting) {
+        db.products[existingIdx] = {
+          ...db.products[existingIdx],
+          ...prod,
+          variants: (prod.variants && prod.variants.length > 0) ? prod.variants : db.products[existingIdx].variants,
+        };
+        imported.push(db.products[existingIdx]);
+      } else {
+        const newProd = {
+          id: prod.id || `p_${now}_${i}`,
+          rating: prod.rating || 4.85,
+          reviewCount: prod.reviewCount || 15,
+          brand: prod.brand || 'Naturale Pure',
+          origin: prod.origin || 'India',
+          image: prod.image || '/assets/images/cat_dryfruits.jpg',
+          allowCustomWeight: true,
+          isFeatured: !!prod.isFeatured,
+          isBestSeller: !!prod.isBestSeller,
+          variants: prod.variants || [],
+          ...prod,
+        };
+        db.products.push(newProd);
+        imported.push(newProd);
+      }
+    });
+
+    saveLocalDb(db);
+
+    try {
+      await axios.post(`${API_BASE}/products/bulk`, { products: imported }, { timeout: 3500 });
+    } catch (_) {}
+
+    return imported;
+  },
+
   // Weight Variants
   async updateVariant(productId, variantId, variantData) {
     const db = getLocalDb();
