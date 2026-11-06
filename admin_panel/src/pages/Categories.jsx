@@ -3,8 +3,8 @@ import { mockApi } from '../services/mockApi';
 import { Plus, Edit2, Trash2, Tag, Check, X } from 'lucide-react';
 
 export default function Categories() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(() => mockApi.getCategoriesSync());
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [newSubcategory, setNewSubcategory] = useState('');
@@ -22,11 +22,9 @@ export default function Categories() {
   const loadCategories = async () => {
     try {
       const data = await mockApi.getCategories();
-      setCategories(data);
+      if (data && data.length > 0) setCategories(data);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

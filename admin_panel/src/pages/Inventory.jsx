@@ -3,19 +3,17 @@ import { mockApi } from '../services/mockApi';
 import { Search, AlertTriangle, CheckCircle, Plus, Minus } from 'lucide-react';
 
 export default function Inventory() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => mockApi.getProductsSync());
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState('all'); // all, low, oos
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const loadData = async () => {
     try {
       const data = await mockApi.getProducts();
-      setProducts(data);
+      if (data && data.length > 0) setProducts(data);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

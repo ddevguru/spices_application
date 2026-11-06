@@ -455,214 +455,239 @@ export const mockApi = {
     }
   },
 
+  // Fast Synchronous Getters (0ms Instant Load)
+  getProductsSync() {
+    return getLocalDb().products || [];
+  },
+
+  getCategoriesSync() {
+    return getLocalDb().categories || [];
+  },
+
+  getOrdersSync() {
+    return getLocalDb().orders || [];
+  },
+
+  getCustomersSync() {
+    return getLocalDb().customers || [];
+  },
+
+  getCouponsSync() {
+    return getLocalDb().coupons || [];
+  },
+
+  getBannersSync() {
+    return getLocalDb().banners || [];
+  },
+
+  getSettingsSync() {
+    return getLocalDb().settings || {};
+  },
+
   // Products
   async getProducts() {
+    const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/products`, { timeout: 8000 });
+      const res = await axios.get(`${API_BASE}/products`, { timeout: 2500 });
       const products = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (products.length > 0) {
-        const db = getLocalDb();
         db.products = products;
         saveLocalDb(db);
         return products;
       }
-    } catch (err) {
-      console.warn('Backend products note:', err.message);
-    }
-    const db = getLocalDb();
-    return db.products;
+    } catch (_) {}
+    return db.products || [];
   },
 
   async createProduct(productData) {
+    const db = getLocalDb();
+    const newProduct = {
+      id: `p_${Date.now()}`,
+      rating: 4.8,
+      reviewCount: 0,
+      variants: productData.variants || [],
+      ...productData
+    };
+    db.products.push(newProduct);
+    saveLocalDb(db);
+
     try {
-      const res = await axios.post(`${API_BASE}/products`, productData, { timeout: 8000 });
-      const db = getLocalDb();
-      db.products.push(res.data);
-      saveLocalDb(db);
-      return res.data;
-    } catch (err) {
-      console.warn('Backend offline, saving product locally:', err.message);
-      const db = getLocalDb();
-      const newProduct = {
-        id: `p_${Date.now()}`,
-        rating: 4.8,
-        reviewCount: 0,
-        variants: productData.variants || [],
-        ...productData
-      };
-      db.products.push(newProduct);
-      saveLocalDb(db);
-      return newProduct;
-    }
+      const res = await axios.post(`${API_BASE}/products`, productData, { timeout: 3500 });
+      if (res.data?.id) {
+        const idx = db.products.findIndex(p => p.id === newProduct.id);
+        if (idx !== -1) {
+          db.products[idx] = res.data;
+          saveLocalDb(db);
+        }
+        return res.data;
+      }
+    } catch (_) {}
+    return newProduct;
   },
 
   async updateProduct(id, productData) {
-    try {
-      const res = await axios.put(`${API_BASE}/products/${id}`, productData, { timeout: 8000 });
-      const db = getLocalDb();
-      const idx = db.products.findIndex(p => p.id === id);
-      if (idx !== -1) {
-        db.products[idx] = { ...db.products[idx], ...res.data };
-        saveLocalDb(db);
-      }
-      return res.data;
-    } catch (err) {
-      const db = getLocalDb();
-      const idx = db.products.findIndex(p => p.id === id);
-      if (idx !== -1) {
-        db.products[idx] = { ...db.products[idx], ...productData };
-        saveLocalDb(db);
-        return db.products[idx];
-      }
-      throw new Error('Product not found');
+    const db = getLocalDb();
+    const idx = db.products.findIndex(p => p.id === id);
+    if (idx !== -1) {
+      db.products[idx] = { ...db.products[idx], ...productData };
+      saveLocalDb(db);
     }
+
+    try {
+      const res = await axios.put(`${API_BASE}/products/${id}`, productData, { timeout: 3500 });
+      if (res.data) {
+        if (idx !== -1) {
+          db.products[idx] = { ...db.products[idx], ...res.data };
+          saveLocalDb(db);
+        }
+        return res.data;
+      }
+    } catch (_) {}
+
+    return idx !== -1 ? db.products[idx] : productData;
   },
 
   async deleteProduct(id) {
-    try {
-      await axios.delete(`${API_BASE}/products/${id}`, { timeout: 8000 });
-    } catch (err) {
-      console.warn('Backend delete note:', err.message);
-    }
     const db = getLocalDb();
     db.products = db.products.filter(p => p.id !== id);
     saveLocalDb(db);
+
+    try {
+      await axios.delete(`${API_BASE}/products/${id}`, { timeout: 3500 });
+    } catch (_) {}
     return true;
   },
 
   // Weight Variants
   async updateVariant(productId, variantId, variantData) {
-    try {
-      const res = await axios.put(`${API_BASE}/products/${productId}/variants/${variantId}`, variantData, { timeout: 8000 });
-      return res.data;
-    } catch (err) {
-      console.warn('Backend variant update note:', err.message);
-    }
     const db = getLocalDb();
     const prod = db.products.find(p => p.id === productId);
+    let updatedV = variantData;
     if (prod) {
       const vIdx = prod.variants.findIndex(v => v.id === variantId);
       if (vIdx !== -1) {
         prod.variants[vIdx] = { ...prod.variants[vIdx], ...variantData };
         saveLocalDb(db);
-        return prod.variants[vIdx];
+        updatedV = prod.variants[vIdx];
       }
     }
-    throw new Error('Variant not found');
+
+    try {
+      const res = await axios.put(`${API_BASE}/products/${productId}/variants/${variantId}`, variantData, { timeout: 3500 });
+      return res.data || updatedV;
+    } catch (_) {}
+
+    return updatedV;
   },
 
   async addVariant(productId, variantData) {
-    try {
-      const res = await axios.post(`${API_BASE}/products/${productId}/variants`, variantData, { timeout: 8000 });
-      return res.data;
-    } catch (err) {
-      console.warn('Backend add variant note:', err.message);
-    }
     const db = getLocalDb();
     const prod = db.products.find(p => p.id === productId);
+    const newV = { id: `v_${Date.now()}`, isAvailable: true, ...variantData };
     if (prod) {
-      const newV = { id: `v_${Date.now()}`, isAvailable: true, ...variantData };
       prod.variants.push(newV);
       saveLocalDb(db);
-      return newV;
     }
-    throw new Error('Product not found');
+
+    try {
+      const res = await axios.post(`${API_BASE}/products/${productId}/variants`, variantData, { timeout: 3500 });
+      return res.data || newV;
+    } catch (_) {}
+
+    return newV;
   },
 
   async deleteVariant(productId, variantId) {
-    try {
-      await axios.delete(`${API_BASE}/products/${productId}/variants/${variantId}`, { timeout: 8000 });
-    } catch (err) {
-      console.warn('Backend delete variant note:', err.message);
-    }
     const db = getLocalDb();
     const prod = db.products.find(p => p.id === productId);
     if (prod) {
       prod.variants = prod.variants.filter(v => v.id !== variantId);
       saveLocalDb(db);
-      return true;
     }
-    throw new Error('Product not found');
+
+    try {
+      await axios.delete(`${API_BASE}/products/${productId}/variants/${variantId}`, { timeout: 3500 });
+    } catch (_) {}
+    return true;
   },
 
   // Categories
   async getCategories() {
+    const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/categories`, { timeout: 8000 });
+      const res = await axios.get(`${API_BASE}/categories`, { timeout: 2500 });
       const categories = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (categories.length > 0) {
-        const db = getLocalDb();
         db.categories = categories;
         saveLocalDb(db);
         return categories;
       }
-    } catch (err) {
-      console.warn('Backend categories note:', err.message);
-    }
-    const db = getLocalDb();
-    return db.categories;
+    } catch (_) {}
+    return db.categories || [];
   },
 
   async createCategory(catData) {
+    const db = getLocalDb();
+    const newCat = {
+      id: `cat_${Date.now()}`,
+      isActive: true,
+      subcategories: [],
+      ...catData
+    };
+    db.categories.push(newCat);
+    saveLocalDb(db);
+
     try {
-      const res = await axios.post(`${API_BASE}/categories`, catData, { timeout: 8000 });
-      const db = getLocalDb();
-      db.categories.push(res.data);
-      saveLocalDb(db);
-      return res.data;
-    } catch (err) {
-      console.warn('Backend offline, saving category locally:', err.message);
-      const db = getLocalDb();
-      const newCat = {
-        id: `cat_${Date.now()}`,
-        isActive: true,
-        subcategories: [],
-        ...catData
-      };
-      db.categories.push(newCat);
-      saveLocalDb(db);
-      return newCat;
-    }
+      const res = await axios.post(`${API_BASE}/categories`, catData, { timeout: 3500 });
+      if (res.data?.id) {
+        const idx = db.categories.findIndex(c => c.id === newCat.id);
+        if (idx !== -1) {
+          db.categories[idx] = res.data;
+          saveLocalDb(db);
+        }
+        return res.data;
+      }
+    } catch (_) {}
+    return newCat;
   },
 
   async updateCategory(id, catData) {
-    try {
-      const res = await axios.put(`${API_BASE}/categories/${id}`, catData, { timeout: 8000 });
-      const db = getLocalDb();
-      const idx = db.categories.findIndex(c => c.id === id);
-      if (idx !== -1) {
-        db.categories[idx] = { ...db.categories[idx], ...res.data };
-        saveLocalDb(db);
-      }
-      return res.data;
-    } catch (err) {
-      const db = getLocalDb();
-      const idx = db.categories.findIndex(c => c.id === id);
-      if (idx !== -1) {
-        db.categories[idx] = { ...db.categories[idx], ...catData };
-        saveLocalDb(db);
-        return db.categories[idx];
-      }
-      throw new Error('Category not found');
+    const db = getLocalDb();
+    const idx = db.categories.findIndex(c => c.id === id);
+    if (idx !== -1) {
+      db.categories[idx] = { ...db.categories[idx], ...catData };
+      saveLocalDb(db);
     }
+
+    try {
+      const res = await axios.put(`${API_BASE}/categories/${id}`, catData, { timeout: 3500 });
+      if (res.data) {
+        if (idx !== -1) {
+          db.categories[idx] = { ...db.categories[idx], ...res.data };
+          saveLocalDb(db);
+        }
+        return res.data;
+      }
+    } catch (_) {}
+
+    return idx !== -1 ? db.categories[idx] : catData;
   },
 
   async deleteCategory(id) {
-    try {
-      await axios.delete(`${API_BASE}/categories/${id}`, { timeout: 8000 });
-    } catch (err) {
-      console.warn('Backend delete note:', err.message);
-    }
     const db = getLocalDb();
     db.categories = db.categories.filter(c => c.id !== id);
     saveLocalDb(db);
+
+    try {
+      await axios.delete(`${API_BASE}/categories/${id}`, { timeout: 3500 });
+    } catch (_) {}
     return true;
   },
 
-  // Orders (Strictly Live from Backend, Defaulting to Empty [])
+  // Orders
   async getOrders() {
     try {
-      const res = await axios.get(`${API_BASE}/orders`, { timeout: 8000 });
+      const res = await axios.get(`${API_BASE}/orders`, { timeout: 2500 });
       return Array.isArray(res.data) ? res.data : (res.data?.data || []);
     } catch {
       return [];
@@ -671,17 +696,17 @@ export const mockApi = {
 
   async updateOrderStatus(id, status) {
     try {
-      const res = await axios.patch(`${API_BASE}/orders/${id}/status`, { status }, { timeout: 8000 });
+      const res = await axios.patch(`${API_BASE}/orders/${id}/status`, { status }, { timeout: 3500 });
       return res.data;
     } catch {
       return { id, status };
     }
   },
 
-  // Customers (Strictly Live from Backend, Defaulting to Empty [])
+  // Customers
   async getCustomers() {
     try {
-      const res = await axios.get(`${API_BASE}/customers`, { timeout: 8000 });
+      const res = await axios.get(`${API_BASE}/customers`, { timeout: 2500 });
       return Array.isArray(res.data) ? res.data : (res.data?.data || []);
     } catch {
       return [];
@@ -690,13 +715,13 @@ export const mockApi = {
 
   // Coupons
   async getCoupons() {
+    const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/coupons`, { timeout: 8000 });
+      const res = await axios.get(`${API_BASE}/coupons`, { timeout: 2500 });
       const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (list.length > 0) return list;
     } catch (_) {}
-    const db = getLocalDb();
-    return db.coupons;
+    return db.coupons || [];
   },
 
   async createCoupon(data) {
@@ -716,13 +741,13 @@ export const mockApi = {
 
   // Banners
   async getBanners() {
+    const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/banners`, { timeout: 8000 });
+      const res = await axios.get(`${API_BASE}/banners`, { timeout: 2500 });
       const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (list.length > 0) return list;
     } catch (_) {}
-    const db = getLocalDb();
-    return db.banners;
+    return db.banners || [];
   },
 
   async createBanner(data) {
@@ -742,12 +767,12 @@ export const mockApi = {
 
   // Settings
   async getSettings() {
+    const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/settings`, { timeout: 8000 });
+      const res = await axios.get(`${API_BASE}/settings`, { timeout: 2500 });
       if (res.data) return res.data;
     } catch (_) {}
-    const db = getLocalDb();
-    return db.settings;
+    return db.settings || {};
   },
 
   async updateSettings(data) {
@@ -757,22 +782,13 @@ export const mockApi = {
     return db.settings;
   },
 
-  // Real Dashboard Aggregates (Live from PostgreSQL - ZERO Fake Revenue)
-  async getDashboardMetrics() {
-    try {
-      const res = await axios.get(`${API_BASE}/dashboard/metrics`, { timeout: 8000 });
-      if (res.data && res.data.totalProducts !== undefined) {
-        return res.data;
-      }
-    } catch (err) {
-      console.warn('Live dashboard metrics note:', err.message);
-    }
-
-    // Clean Fallback based only on real products & categories
-    const products = await this.getProducts();
-    const categories = await this.getCategories();
-    const orders = await this.getOrders();
-    const customers = await this.getCustomers();
+  // Instant Synchronous Dashboard Calculation (0ms)
+  getDashboardMetricsSync() {
+    const db = getLocalDb();
+    const products = db.products || [];
+    const categories = db.categories || [];
+    const orders = db.orders || [];
+    const customers = db.customers || [];
 
     const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
     const pendingOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
@@ -784,7 +800,6 @@ export const mockApi = {
       });
     });
 
-    // Real categories breakdown based on actual active products
     const categoryCounts = {};
     categories.forEach(c => { categoryCounts[c.name] = 0; });
     products.forEach(p => {
@@ -817,5 +832,17 @@ export const mockApi = {
       salesData: [],
       categorySales
     };
+  },
+
+  // Real Dashboard Aggregates with fast fallback
+  async getDashboardMetrics() {
+    const local = this.getDashboardMetricsSync();
+    try {
+      const res = await axios.get(`${API_BASE}/dashboard/metrics`, { timeout: 2500 });
+      if (res.data && res.data.totalProducts !== undefined) {
+        return res.data;
+      }
+    } catch (_) {}
+    return local;
   }
 };

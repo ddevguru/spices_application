@@ -3,7 +3,7 @@ import { mockApi } from '../services/mockApi';
 import { Plus, Trash2, Ticket, CheckCircle2 } from 'lucide-react';
 
 export default function Coupons() {
-  const [coupons, setCoupons] = useState([]);
+  const [coupons, setCoupons] = useState(() => mockApi.getCouponsSync());
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     code: '',
@@ -17,8 +17,10 @@ export default function Coupons() {
   });
 
   const loadCoupons = async () => {
-    const list = await mockApi.getCoupons();
-    setCoupons(list);
+    try {
+      const list = await mockApi.getCoupons();
+      if (list && list.length > 0) setCoupons(list);
+    } catch (_) {}
   };
 
   useEffect(() => {

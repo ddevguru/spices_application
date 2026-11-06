@@ -3,19 +3,17 @@ import { mockApi } from '../services/mockApi';
 import { Search, Mail, Phone, Calendar, ShoppingBag } from 'lucide-react';
 
 export default function Customers() {
-  const [customers, setCustomers] = useState([]);
+  const [customers, setCustomers] = useState(() => mockApi.getCustomersSync());
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
         const data = await mockApi.getCustomers();
-        setCustomers(data);
+        if (data) setCustomers(data);
       } catch (err) {
         console.error(err);
-      } finally {
-        setLoading(false);
       }
     }
     load();

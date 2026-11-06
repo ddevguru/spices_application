@@ -3,7 +3,7 @@ import { mockApi } from '../services/mockApi';
 import { Plus, Trash2, Image, ExternalLink } from 'lucide-react';
 
 export default function Banners() {
-  const [banners, setBanners] = useState([]);
+  const [banners, setBanners] = useState(() => mockApi.getBannersSync());
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -15,8 +15,10 @@ export default function Banners() {
   });
 
   const loadBanners = async () => {
-    const list = await mockApi.getBanners();
-    setBanners(list);
+    try {
+      const list = await mockApi.getBanners();
+      if (list && list.length > 0) setBanners(list);
+    } catch (_) {}
   };
 
   useEffect(() => {

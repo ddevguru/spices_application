@@ -4,11 +4,11 @@ import { Plus, Search, Edit3, Trash2, Layers, CheckCircle2, XCircle } from 'luci
 import VariantsModal from './VariantsModal';
 
 export default function Products() {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState(() => mockApi.getProductsSync());
+  const [categories, setCategories] = useState(() => mockApi.getCategoriesSync());
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Modal states
   const [showProductModal, setShowProductModal] = useState(false);
@@ -37,12 +37,10 @@ export default function Products() {
   const loadData = async () => {
     try {
       const [prods, cats] = await Promise.all([mockApi.getProducts(), mockApi.getCategories()]);
-      setProducts(prods);
-      setCategories(cats);
+      if (prods && prods.length > 0) setProducts(prods);
+      if (cats && cats.length > 0) setCategories(cats);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

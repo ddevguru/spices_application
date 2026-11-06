@@ -3,11 +3,11 @@ import { mockApi } from '../services/mockApi';
 import { Search, Eye, Printer, XCircle, CheckCircle2, Truck } from 'lucide-react';
 
 export default function Orders() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState(() => mockApi.getOrdersSync());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const statuses = [
     'Pending',
@@ -23,11 +23,9 @@ export default function Orders() {
   const loadOrders = async () => {
     try {
       const data = await mockApi.getOrders();
-      setOrders(data);
+      if (data) setOrders(data);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

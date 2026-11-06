@@ -24,24 +24,22 @@ import {
 } from 'recharts';
 
 export default function Dashboard() {
-  const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState(() => mockApi.getDashboardMetricsSync());
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
         const data = await mockApi.getDashboardMetrics();
-        setMetrics(data);
+        if (data) setMetrics(data);
       } catch (err) {
         console.error(err);
-      } finally {
-        setLoading(false);
       }
     }
     load();
   }, []);
 
-  if (loading || !metrics) {
+  if (!metrics) {
     return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-secondary-text)' }}>Loading live store analytics...</div>;
   }
 
