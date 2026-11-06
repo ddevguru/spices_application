@@ -424,6 +424,143 @@ class MockDataService {
         ],
       ),
       const Product(
+        id: 'p_almonds_mamra',
+        name: 'Iranian Mamra Almonds',
+        brand: 'Naturale Royal',
+        categoryId: 'cat_dry_fruits',
+        categoryName: 'Dry Fruits',
+        subcategoryId: 'Almonds',
+        subcategoryName: 'Almonds',
+        shortDescription: '100% authentic Mamra almonds with exceptional natural oil content.',
+        description: 'Prized worldwide for their distinctive curved boat shape and high natural almond oil content. Organic, unpasteurized, and full of vitality.',
+        rating: 4.95,
+        reviewCount: 380,
+        image: 'assets/images/prod_almonds.jpg',
+        galleryImages: ['assets/images/prod_almonds.jpg', 'assets/images/cat_dryfruits.jpg'],
+        origin: 'Iran',
+        ingredients: '100% Pure Raw Mamra Almonds',
+        nutritionFacts: {'Energy': '610 kcal', 'Protein': '22.0 g', 'Almond Oil': '50%'},
+        storageInstructions: 'Store in airtight glass container.',
+        specifications: {'Grade': 'Royal Grade A Mamra', 'Shelf Life': '12 Months'},
+        allowCustomWeight: true,
+        isFeatured: true,
+        isBestSeller: true,
+        variants: [
+          ProductVariant(id: 'v_mamra_100', weightInGrams: 100, unit: 'GM', title: '100 GM', price: 260, originalPrice: 320, stockQuantity: 60, sku: 'DF-MMR-100'),
+          ProductVariant(id: 'v_mamra_250', weightInGrams: 250, unit: 'GM', title: '250 GM', price: 620, originalPrice: 750, stockQuantity: 45, sku: 'DF-MMR-250'),
+          ProductVariant(id: 'v_mamra_500', weightInGrams: 500, unit: 'GM', title: '500 GM', price: 1180, originalPrice: 1450, stockQuantity: 30, sku: 'DF-MMR-500'),
+          ProductVariant(id: 'v_mamra_1000', weightInGrams: 1000, unit: 'KG', title: '1 KG', price: 2250, originalPrice: 2800, stockQuantity: 15, sku: 'DF-MMR-1000'),
+        ],
+      ),
+      const Product(
+        id: 'p_almonds_gurbandi',
+        name: 'Gurbandi Almonds (Chhoti Giri)',
+        brand: 'Naturale Pure',
+        categoryId: 'cat_dry_fruits',
+        categoryName: 'Dry Fruits',
+        subcategoryId: 'Almonds',
+        subcategoryName: 'Almonds',
+        shortDescription: 'High-energy Afghan Gurbandi almonds packed with natural nutrients.',
+        description: 'Small in size yet remarkably potent in natural oils and antioxidants. Traditionally revered in Ayurvedic wellness for boosting memory and strength.',
+        rating: 4.85,
+        reviewCount: 210,
+        image: 'assets/images/prod_almonds.jpg',
+        galleryImages: ['assets/images/prod_almonds.jpg'],
+        origin: 'Afghanistan',
+        ingredients: '100% Afghan Gurbandi Almonds',
+        nutritionFacts: {'Energy': '595 kcal', 'Protein': '21.5 g', 'Omega-6': '12.0 g'},
+        storageInstructions: 'Keep in cool dry place.',
+        specifications: {'Grade': 'Authentic Gurbandi', 'Shelf Life': '12 Months'},
+        allowCustomWeight: true,
+        variants: [
+          ProductVariant(id: 'v_gurbandi_100', weightInGrams: 100, unit: 'GM', title: '100 GM', price: 180, originalPrice: 220, stockQuantity: 70, sku: 'DF-GRB-100'),
+          ProductVariant(id: 'v_gurbandi_250', weightInGrams: 250, unit: 'GM', title: '250 GM', price: 420, originalPrice: 520, stockQuantity: 50, sku: 'DF-GRB-250'),
+          ProductVariant(id: 'v_gurbandi_500', weightInGrams: 500, unit: 'GM', title: '500 GM', price: 800, originalPrice: 990, stockQuantity: 35, sku: 'DF-GRB-500'),
+          ProductVariant(id: 'v_gurbandi_1000', weightInGrams: 1000, unit: 'KG', title: '1 KG', price: 1550, originalPrice: 1900, stockQuantity: 20, sku: 'DF-GRB-1000'),
+        ],
+      ),
+      const Product(
+        id: 'p_almonds_regular',
+        name: 'Regular Almonds',
+        brand: 'Naturale Daily',
+        categoryId: 'cat_dry_fruits',
+        categoryName: 'Dry Fruits',
+        subcategoryId: 'Almonds',
+        subcategoryName: 'Almonds',
+        shortDescription: 'Affordable, crunchy wholesome everyday almonds.',
+        description: 'Carefully sorted whole almonds ideal for daily soaking, milk shakes, homemade almond butter, and daily baking.',
+        rating: 4.75,
+        reviewCount: 165,
+        image: 'assets/images/prod_almonds.jpg',
+        galleryImages: ['assets/images/prod_almonds.jpg'],
+        origin: 'India',
+        ingredients: '100% Whole Almond Kernels',
+        nutritionFacts: {'Energy': '575 kcal', 'Protein': '20.0 g'},
+        storageInstructions: 'Store in airtight pouch.',
+        specifications: {'Grade': 'Standard Grade', 'Shelf Life': '9 Months'},
+        allowCustomWeight: true,
+        variants: [
+          ProductVariant(id: 'v_reg_100', weightInGrams: 100, unit: 'GM', title: '100 GM', price: 100, originalPrice: 130, stockQuantity: 120, sku: 'DF-REG-100'),
+          ProductVariant(id: 'v_reg_250', weightInGrams: 250, unit: 'GM', title: '250 GM', price: 240, originalPrice: 300, stockQuantity: 80, sku: 'DF-REG-250'),
+          ProductVariant(id: 'v_reg_500', weightInGrams: 500, unit: 'GM', title: '500 GM', price: 460, originalPrice: 580, stockQuantity: 60, sku: 'DF-REG-500'),
+          ProductVariant(id: 'v_reg_1000', weightInGrams: 1000, unit: 'KG', title: '1 KG', price: 890, originalPrice: 1100, stockQuantity: 40, sku: 'DF-REG-1000'),
+        ],
+      ),
+      const Product(
+        id: 'p_almonds_roasted',
+        name: 'Premium Roasted Almonds',
+        brand: 'Naturale Gourmet',
+        categoryId: 'cat_dry_fruits',
+        categoryName: 'Dry Fruits',
+        subcategoryId: 'Almonds',
+        subcategoryName: 'Almonds',
+        shortDescription: 'Slow dry-roasted to golden crunch without added oil.',
+        description: 'Freshly roasted whole almonds with an aromatic, deep toasted nutty aroma. Oil-free roasting retains natural crispness and premium wholesome flavor.',
+        rating: 4.9,
+        reviewCount: 290,
+        image: 'assets/images/prod_almonds.jpg',
+        galleryImages: ['assets/images/prod_almonds.jpg'],
+        origin: 'California, USA',
+        ingredients: '100% Dry-Roasted Whole Almonds',
+        nutritionFacts: {'Energy': '590 kcal', 'Protein': '21.0 g'},
+        storageInstructions: 'Store in cool dry place.',
+        specifications: {'Roast Level': 'Medium Golden', 'Oil': '0% Added Oil'},
+        allowCustomWeight: true,
+        variants: [
+          ProductVariant(id: 'v_roast_100', weightInGrams: 100, unit: 'GM', title: '100 GM', price: 140, originalPrice: 175, stockQuantity: 90, sku: 'DF-RST-100'),
+          ProductVariant(id: 'v_roast_250', weightInGrams: 250, unit: 'GM', title: '250 GM', price: 320, originalPrice: 400, stockQuantity: 65, sku: 'DF-RST-250'),
+          ProductVariant(id: 'v_roast_500', weightInGrams: 500, unit: 'GM', title: '500 GM', price: 620, originalPrice: 760, stockQuantity: 40, sku: 'DF-RST-500'),
+          ProductVariant(id: 'v_roast_1000', weightInGrams: 1000, unit: 'KG', title: '1 KG', price: 1190, originalPrice: 1450, stockQuantity: 25, sku: 'DF-RST-1000'),
+        ],
+      ),
+      const Product(
+        id: 'p_almonds_salted',
+        name: 'Salted Almonds',
+        brand: 'Naturale Gourmet',
+        categoryId: 'cat_dry_fruits',
+        categoryName: 'Dry Fruits',
+        subcategoryId: 'Almonds',
+        subcategoryName: 'Almonds',
+        shortDescription: 'Roasted almonds lightly dusted with pure Himalayan pink salt.',
+        description: 'Crispy roasted whole almonds seasoned with a balanced touch of fine Himalayan pink rock salt. The ultimate gourmet healthy snack.',
+        rating: 4.88,
+        reviewCount: 240,
+        image: 'assets/images/prod_almonds.jpg',
+        galleryImages: ['assets/images/prod_almonds.jpg'],
+        origin: 'California, USA',
+        ingredients: 'Roasted Almonds (98%), Himalayan Rock Salt (2%)',
+        nutritionFacts: {'Energy': '588 kcal', 'Protein': '21.0 g', 'Sodium': '180 mg'},
+        storageInstructions: 'Reseal pouch tightly after opening.',
+        specifications: {'Seasoning': 'Pink Rock Salt', 'Shelf Life': '9 Months'},
+        allowCustomWeight: true,
+        variants: [
+          ProductVariant(id: 'v_salt_100', weightInGrams: 100, unit: 'GM', title: '100 GM', price: 150, originalPrice: 185, stockQuantity: 85, sku: 'DF-SLT-100'),
+          ProductVariant(id: 'v_salt_250', weightInGrams: 250, unit: 'GM', title: '250 GM', price: 340, originalPrice: 420, stockQuantity: 60, sku: 'DF-SLT-250'),
+          ProductVariant(id: 'v_salt_500', weightInGrams: 500, unit: 'GM', title: '500 GM', price: 650, originalPrice: 800, stockQuantity: 40, sku: 'DF-SLT-500'),
+          ProductVariant(id: 'v_salt_1000', weightInGrams: 1000, unit: 'KG', title: '1 KG', price: 1250, originalPrice: 1550, stockQuantity: 20, sku: 'DF-SLT-1000'),
+        ],
+      ),
+      const Product(
         id: 'p_cashews',
         name: 'Royal Mangalore Cashews (W240)',
         brand: 'Naturale Pure',
@@ -1325,6 +1462,126 @@ class MockDataService {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<List<Product>> getProductsBySubcategory(String subcategory, {String? categoryId}) async {
+    await init();
+    final lowerSub = subcategory.trim().toLowerCase();
+
+    // 1. Direct matches in _products
+    final direct = _products.where((p) {
+      final pSubId = p.subcategoryId.trim().toLowerCase();
+      final pSubName = p.subcategoryName.trim().toLowerCase();
+      final pName = p.name.trim().toLowerCase();
+      return pSubId == lowerSub || pSubName == lowerSub || pName.contains(lowerSub);
+    }).toList();
+
+    if (direct.isNotEmpty) {
+      return direct;
+    }
+
+    // 2. Generate authentic realistic varieties for this subcategory
+    return _generateVarietiesForSubcategory(categoryId ?? 'cat_dry_fruits', subcategory);
+  }
+
+  List<Product> _generateVarietiesForSubcategory(String categoryId, String subcategory) {
+    String image = 'assets/images/cat_dryfruits.jpg';
+    String categoryName = 'Dry Fruits';
+    double base100g = 120.0;
+
+    if (categoryId.contains('spice') || categoryId.contains('whole')) {
+      image = 'assets/images/cat_wholespices.jpg';
+      categoryName = 'Whole Spices';
+      base100g = 95.0;
+    } else if (categoryId.contains('blend')) {
+      image = 'assets/images/cat_blendedspices.jpg';
+      categoryName = 'Blended Spices';
+      base100g = 85.0;
+    } else if (categoryId.contains('cereal')) {
+      image = 'assets/images/cat_cereals.jpg';
+      categoryName = 'Cereals';
+      base100g = 65.0;
+    }
+
+    final varietyTitles = [
+      'Premium Royal $subcategory',
+      'Organic Natural $subcategory',
+      'Select Heritage $subcategory',
+      'Standard Daily $subcategory',
+    ];
+
+    return List.generate(varietyTitles.length, (idx) {
+      final name = varietyTitles[idx];
+      final multiplier = 1.0 + (idx * 0.15);
+      final price100 = (base100g * multiplier).roundToDouble();
+      final price250 = (price100 * 2.3).roundToDouble();
+      final price500 = (price100 * 4.4).roundToDouble();
+      final price1000 = (price100 * 8.5).roundToDouble();
+
+      return Product(
+        id: 'gen_${subcategory.toLowerCase().replaceAll(' ', '_')}_$idx',
+        name: name,
+        brand: idx == 0 ? 'Naturale Royal' : 'Naturale Pure',
+        categoryId: categoryId,
+        categoryName: categoryName,
+        subcategoryId: subcategory,
+        subcategoryName: subcategory,
+        shortDescription: 'Pure, authentic hand-selected $subcategory sourced directly from certified farms.',
+        description: 'Certified 100% natural $subcategory. Free from preservatives, artificial coloring, or polishing. Tested and vacuum-packed for peak freshness and authentic aroma.',
+        rating: 4.8 + (idx * 0.05).clamp(0.0, 0.19),
+        reviewCount: 95 + (idx * 30),
+        image: image,
+        galleryImages: [image],
+        origin: 'India',
+        ingredients: '100% Pure $subcategory',
+        nutritionFacts: {'Purity': '100% Natural', 'Processing': 'Hand Selected & Graded'},
+        storageInstructions: 'Store in airtight container in a cool, dry place.',
+        specifications: {'Grade': 'Export Grade A', 'Shelf Life': '12 Months'},
+        allowCustomWeight: true,
+        variants: [
+          ProductVariant(
+            id: 'v_${subcategory.toLowerCase().replaceAll(' ', '_')}_${idx}_100',
+            weightInGrams: 100,
+            unit: 'GM',
+            title: '100 GM',
+            price: price100,
+            originalPrice: (price100 * 1.25).roundToDouble(),
+            stockQuantity: 50,
+            sku: 'VAR-$idx-100',
+          ),
+          ProductVariant(
+            id: 'v_${subcategory.toLowerCase().replaceAll(' ', '_')}_${idx}_250',
+            weightInGrams: 250,
+            unit: 'GM',
+            title: '250 GM',
+            price: price250,
+            originalPrice: (price250 * 1.25).roundToDouble(),
+            stockQuantity: 40,
+            sku: 'VAR-$idx-250',
+          ),
+          ProductVariant(
+            id: 'v_${subcategory.toLowerCase().replaceAll(' ', '_')}_${idx}_500',
+            weightInGrams: 500,
+            unit: 'GM',
+            title: '500 GM',
+            price: price500,
+            originalPrice: (price500 * 1.25).roundToDouble(),
+            stockQuantity: 30,
+            sku: 'VAR-$idx-500',
+          ),
+          ProductVariant(
+            id: 'v_${subcategory.toLowerCase().replaceAll(' ', '_')}_${idx}_1000',
+            weightInGrams: 1000,
+            unit: 'KG',
+            title: '1 KG',
+            price: price1000,
+            originalPrice: (price1000 * 1.25).roundToDouble(),
+            stockQuantity: 20,
+            sku: 'VAR-$idx-1000',
+          ),
+        ],
+      );
+    });
   }
 
   // Banners API

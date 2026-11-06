@@ -6,6 +6,7 @@ import '../../features/authentication/mobile_login_screen.dart';
 import '../../features/authentication/otp_verification_screen.dart';
 import '../../features/authentication/signup_screen.dart';
 import '../../features/categories/categories_screen.dart';
+import '../../features/categories/subcategories_screen.dart';
 import '../../features/cart/cart_screen.dart';
 import '../../features/checkout/checkout_screen.dart';
 import '../../features/home/main_navigation_screen.dart';
@@ -16,8 +17,10 @@ import '../../features/orders/order_tracking_screen.dart';
 import '../../features/orders/quick_reorder_screen.dart';
 import '../../features/products/product_detail_screen.dart';
 import '../../features/products/product_listing_screen.dart';
+import '../../features/products/product_variety_screen.dart';
 import '../../features/profile/saved_addresses_screen.dart';
 import '../../features/wishlist/wishlist_screen.dart';
+import '../../models/category_model.dart';
 import '../../models/order_model.dart';
 import '../../providers/auth_provider.dart';
 
@@ -63,6 +66,28 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/categories',
         builder: (context, state) => const CategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/categories/:categoryId/subcategories',
+        builder: (context, state) {
+          final catId = state.pathParameters['categoryId'] ?? 'cat_dry_fruits';
+          final category = state.extra as Category?;
+          return SubcategoriesScreen(categoryId: catId, category: category);
+        },
+      ),
+      GoRoute(
+        path: '/subcategories/:subcategoryId/products',
+        builder: (context, state) {
+          final subcategoryId = state.pathParameters['subcategoryId'] ?? 'Almonds';
+          final extraMap = state.extra as Map<String, dynamic>? ?? {};
+          final catId = extraMap['categoryId'] as String?;
+          final catName = extraMap['categoryName'] as String?;
+          return ProductVarietyScreen(
+            subcategoryId: subcategoryId,
+            categoryId: catId,
+            categoryName: catName,
+          );
+        },
       ),
       GoRoute(
         path: '/products',

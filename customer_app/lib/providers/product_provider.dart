@@ -117,3 +117,8 @@ final productDetailProvider = FutureProvider.family<Product?, String>((ref, id) 
   return service.getProductById(id);
 });
 
+final subcategoryProductsFamily = FutureProvider.family<List<Product>, ({String? categoryId, String subcategory})>((ref, arg) async {
+  final service = ref.watch(dataServiceProvider);
+  return service.getProductsBySubcategory(arg.subcategory, categoryId: arg.categoryId);
+});
+

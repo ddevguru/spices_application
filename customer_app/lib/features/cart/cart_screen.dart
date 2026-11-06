@@ -8,7 +8,6 @@ import '../../core/utils/currency_formatter.dart';
 import '../../models/cart_item_model.dart';
 import '../../providers/cart_provider.dart';
 import '../../widgets/app_image.dart';
-import '../../widgets/custom_button.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool isInBottomNav;

@@ -131,9 +131,9 @@ class AppDrawer extends ConsumerWidget {
                 children: [
                   _drawerItem(
                     context,
-                    icon: Icons.home_outlined,
-                    activeIcon: Icons.home_rounded,
-                    title: 'Home Store',
+                    icon: Icons.dashboard_outlined,
+                    activeIcon: Icons.dashboard_rounded,
+                    title: 'Home Dashboard',
                     onTap: () {
                       Navigator.pop(context);
                       context.go('/main');

@@ -3,245 +3,94 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_dimensions.dart';
+import '../../models/category_model.dart';
 import '../../providers/product_provider.dart';
 import '../../widgets/app_image.dart';
 
-class CategoriesScreen extends ConsumerStatefulWidget {
+class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
 
   @override
-  ConsumerState<CategoriesScreen> createState() => _CategoriesScreenState();
-}
-
-class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
-  int _selectedCategoryIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesFutureProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.peachBackground,
+      backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
         title: Text(
-          'Explore Categories',
-          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700),
+          'All Categories',
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkText,
+          ),
         ),
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search_rounded, color: AppColors.darkText),
+            onPressed: () => context.push('/products'),
+          ),
+        ],
       ),
       body: categoriesAsync.when(
         data: (categories) {
-          if (categories.isEmpty) {
-            return const Center(child: Text('No categories available'));
-          }
-          final selectedCat = categories[_selectedCategoryIndex];
-
-          return Row(
-            children: [
-              // Left Vertical Category Tabs
-              Container(
-                width: 110,
-                color: const Color(0xFFF6DEC9),
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 90),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final cat = categories[index];
-                    final isSelected = index == _selectedCategoryIndex;
-
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedCategoryIndex = index;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.creamBackground : Colors.transparent,
-                          border: Border(
-                            left: BorderSide(
-                              color: isSelected ? AppColors.primaryOrange : Colors.transparent,
-                              width: 4,
-                            ),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 52,
-                              height: 52,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected ? AppColors.primaryOrange : AppColors.lightBorder,
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: ClipOval(
-                                child: AppImage(
-                                  imagePath: cat.image,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              cat.name,
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                color: isSelected ? AppColors.primaryOrange : AppColors.darkText,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+          // Display ONLY the four main categories as strictly requested
+          final List<Category> mainFour = [
+            categories.firstWhere(
+              (c) => c.id == 'cat_dry_fruits' || c.name.toLowerCase().contains('dry fruit'),
+              orElse: () => const Category(
+                id: 'cat_dry_fruits',
+                name: 'Dry Fruits',
+                slug: 'dry-fruits',
+                image: 'assets/images/cat_dryfruits.jpg',
+                description: 'Royal almonds, cashews, pistachios, walnuts, dates & superfood nuts.',
+                subcategories: ['Almonds', 'Cashews', 'Pistachios', 'Walnuts', 'Raisins', 'Dates', 'Figs', 'Apricots', 'Anjeer', 'Mixed Dry Fruits', 'Seeds & Nuts'],
               ),
-
-              // Right Subcategories Panel
-              Expanded(
-                child: Container(
-                  color: AppColors.creamBackground,
-                  child: ListView(
-                    padding: const EdgeInsets.all(20),
-                    children: [
-                      // Category Hero Header
-                      Container(
-                        height: 120,
-                        decoration: BoxDecoration(
-                          borderRadius: AppDimensions.roundedMedium,
-                          boxShadow: AppDimensions.cardShadow,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: AppDimensions.roundedMedium,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              AppImage(
-                                imagePath: selectedCat.image,
-                                fit: BoxFit.cover,
-                              ),
-                              Container(
-                                color: Colors.black.withOpacity(0.35),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      selectedCat.name,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    Text(
-                                      selectedCat.description,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        color: Colors.white.withOpacity(0.9),
-                                      ),
-                                      maxLines: 2,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Subcategories (${selectedCat.subcategories.length})',
-                            style: GoogleFonts.poppins(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.darkText,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              ref.read(productFilterProvider.notifier).setCategory(selectedCat.id);
-                              context.push('/products');
-                            },
-                            child: Text(
-                              'View All',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryOrange,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Grid of Subcategory Pills / Tiles
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: selectedCat.subcategories.map((sub) {
-                          return GestureDetector(
-                            onTap: () {
-                              ref.read(productFilterProvider.notifier).setCategory(selectedCat.id);
-                              ref.read(productFilterProvider.notifier).setSubcategory(sub);
-                              context.push('/products');
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.lightBorder),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  )
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.circle, size: 8, color: AppColors.primaryOrange),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    sub,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.darkText,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  const Icon(Icons.chevron_right, size: 16, color: AppColors.secondaryText),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                ),
+            ),
+            categories.firstWhere(
+              (c) => c.id == 'cat_whole_spices' || c.name.toLowerCase().contains('whole spice'),
+              orElse: () => const Category(
+                id: 'cat_whole_spices',
+                name: 'Whole Spices',
+                slug: 'whole-spices',
+                image: 'assets/images/cat_wholespices.jpg',
+                description: 'Aromatic green cardamom, cloves, cinnamon, pepper & authentic whole seeds.',
+                subcategories: ['Green Cardamom', 'Black Cardamom', 'Cinnamon Sticks', 'Cloves', 'Black Pepper', 'Cumin Seeds', 'Coriander Seeds', 'Fennel Seeds', 'Mustard Seeds', 'Star Anise', 'Bay Leaves', 'Fenugreek Seeds', 'Dry Red Chillies'],
               ),
-            ],
+            ),
+            categories.firstWhere(
+              (c) => c.id == 'cat_blended_spices' || c.name.toLowerCase().contains('blended spice'),
+              orElse: () => const Category(
+                id: 'cat_blended_spices',
+                name: 'Blended Spices',
+                slug: 'blended-spices',
+                image: 'assets/images/cat_blendedspices.jpg',
+                description: 'Heritage garam masala, biryani, chole, pav bhaji & traditional ground spices.',
+                subcategories: ['Garam Masala', 'Kitchen King Masala', 'Biryani Masala', 'Chole Masala', 'Pav Bhaji Masala', 'Paneer Masala', 'Chicken Masala', 'Meat Masala', 'Sambhar Masala', 'Tandoori Masala', 'Turmeric Powder', 'Red Chilli Powder', 'Coriander Powder', 'Cumin Powder'],
+              ),
+            ),
+            categories.firstWhere(
+              (c) => c.id == 'cat_cereals' || c.name.toLowerCase().contains('cereal'),
+              orElse: () => const Category(
+                id: 'cat_cereals',
+                name: 'Cereals',
+                slug: 'cereals',
+                image: 'assets/images/cat_cereals.jpg',
+                description: 'Wholesome rolled oats, quinoa, organic millets, ragi, barley & multigrain mix.',
+                subcategories: ['Oats', 'Rolled Oats', 'Quinoa', 'Millets', 'Ragi', 'Jowar', 'Bajra', 'Barley', 'Brown Rice', 'Dalia', 'Corn Flakes', 'Muesli', 'Wheat', 'Multigrain Mix'],
+              ),
+            ),
+          ];
+
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 110),
+            itemCount: mainFour.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 18),
+            itemBuilder: (context, index) {
+              final cat = mainFour[index];
+              return _buildCategoryCard(context, cat, index);
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -249,5 +98,145 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       ),
     );
   }
-}
 
+  Widget _buildCategoryCard(BuildContext context, Category category, int index) {
+    final subcount = category.subcategories.isNotEmpty
+        ? category.subcategories.length
+        : (index == 0 ? 11 : (index == 1 ? 13 : 14));
+
+    return InkWell(
+      onTap: () {
+        context.push(
+          '/categories/${category.id}/subcategories',
+          extra: category,
+        );
+      },
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        height: 165,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.lightBorder, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              // Background Category Image with gentle fade overlay
+              Positioned(
+                right: -20,
+                top: 0,
+                bottom: 0,
+                width: 170,
+                child: ShaderMask(
+                  shaderCallback: (rect) {
+                    return const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [Colors.transparent, Colors.black],
+                      stops: [0.0, 0.45],
+                    ).createShader(rect);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: AppImage(
+                    imagePath: category.image,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+
+              // Left Content Container
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Badge: Number of subcategories
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightPeach,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFF7B98E), width: 1),
+                      ),
+                      child: Text(
+                        '$subcount Subcategories Available',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFC04E00),
+                        ),
+                      ),
+                    ),
+
+                    // Title & Description
+                    SizedBox(
+                      width: 220,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            category.name,
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.darkText,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            category.description,
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: AppColors.secondaryText,
+                              height: 1.35,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // "Explore Subcategories →" Button
+                    Row(
+                      children: [
+                        Text(
+                          'Explore Subcategories',
+                          style: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryOrange,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primaryOrange,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 15),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
