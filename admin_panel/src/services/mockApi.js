@@ -804,6 +804,55 @@ export const mockApi = {
     return true;
   },
 
+  async bulkImportCategories(categoryList, replaceExisting = false) {
+    const db = getLocalDb();
+    if (!db.categories) db.categories = [];
+
+    const now = Date.now();
+    const imported = [];
+
+    if (replaceExisting) {
+      db.categories = [];
+    }
+
+    categoryList.forEach((cat, i) => {
+      const existingIdx = db.categories.findIndex(
+        c => c.name.toLowerCase() === cat.name.toLowerCase() || (cat.slug && c.slug === cat.slug)
+      );
+
+      if (existingIdx !== -1 && !replaceExisting) {
+        const mergedSubcategories = Array.from(
+          new Set([...(db.categories[existingIdx].subcategories || []), ...(cat.subcategories || [])])
+        );
+        db.categories[existingIdx] = {
+          ...db.categories[existingIdx],
+          ...cat,
+          subcategories: mergedSubcategories,
+        };
+        imported.push(db.categories[existingIdx]);
+      } else {
+        const newCat = {
+          id: cat.id || `cat_${now}_${i}`,
+          isActive: cat.isActive !== undefined ? cat.isActive : true,
+          subcategories: cat.subcategories || [],
+          order: cat.order || (db.categories.length + 1),
+          image: cat.image || '/assets/images/cat_dryfruits.jpg',
+          ...cat,
+        };
+        db.categories.push(newCat);
+        imported.push(newCat);
+      }
+    });
+
+    saveLocalDb(db);
+
+    try {
+      await axios.post(`${API_BASE}/categories/bulk`, { categories: imported }, { timeout: 3500 });
+    } catch (_) {}
+
+    return imported;
+  },
+
   // Orders
   async getOrders() {
     try {
