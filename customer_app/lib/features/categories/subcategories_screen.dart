@@ -56,16 +56,16 @@ class SubcategoriesScreen extends ConsumerWidget {
 
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
-                // 1. Category Hero Banner Card
+                // 1. Category Hero Banner Card (Full Width Image + Crisp Overlay Text)
                 _buildHeroBanner(cat, subcategories.length),
 
-                const SizedBox(height: 22),
+                const SizedBox(height: 20),
 
                 // 2. Section Title
                 Row(
@@ -74,13 +74,13 @@ class SubcategoriesScreen extends ConsumerWidget {
                     Text(
                       'Subcategories (${subcategories.length})',
                       style: GoogleFonts.poppins(
-                        fontSize: 17,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppColors.darkText,
                       ),
                     ),
                     Text(
-                      'Click to view varieties',
+                      'Tap to view varieties',
                       style: GoogleFonts.inter(
                         fontSize: 11.5,
                         color: AppColors.secondaryText,
@@ -88,18 +88,18 @@ class SubcategoriesScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
 
-                // 3. Subcategories 2-Column Grid
+                // 3. Subcategories Compact 2-Column Grid
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: subcategories.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 0.95,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.32,
                   ),
                   itemBuilder: (context, index) {
                     final sub = subcategories[index];
@@ -107,7 +107,7 @@ class SubcategoriesScreen extends ConsumerWidget {
                   },
                 ),
 
-                const SizedBox(height: 110),
+                const SizedBox(height: 90),
               ],
             ),
           );
@@ -120,82 +120,88 @@ class SubcategoriesScreen extends ConsumerWidget {
 
   Widget _buildHeroBanner(Category cat, int count) {
     return Container(
-      height: 130,
+      height: 145,
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.lightBorder, width: 1.2),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 12,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         child: Stack(
+          fit: StackFit.expand,
           children: [
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: 140,
-              child: ShaderMask(
-                shaderCallback: (rect) {
-                  return const LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [Colors.transparent, Colors.black],
-                    stops: [0.0, 0.45],
-                  ).createShader(rect);
-                },
-                blendMode: BlendMode.dstIn,
-                child: AppImage(
-                  imagePath: cat.image,
-                  fit: BoxFit.cover,
+            // 1. FULL WIDTH Image
+            AppImage(
+              imagePath: cat.image,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+
+            // 2. High contrast gradient overlay so text is 100% readable
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Colors.black.withOpacity(0.85),
+                    Colors.black.withOpacity(0.55),
+                    Colors.black.withOpacity(0.15),
+                  ],
+                  stops: const [0.0, 0.58, 1.0],
                 ),
               ),
             ),
+
+            // 3. Crisp Text Content
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.lightPeach,
+                      color: AppColors.primaryOrange,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '$count Varieties Category',
-                      style: GoogleFonts.inter(
+                      '$count Subcategories',
+                      style: GoogleFonts.poppins(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primaryOrange,
+                        color: Colors.white,
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     cat.name,
                     style: GoogleFonts.poppins(
-                      fontSize: 19,
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.darkText,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  SizedBox(
-                    width: 200,
+                  const SizedBox(height: 4),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 240),
                     child: Text(
                       cat.description,
                       style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.secondaryText,
+                        fontSize: 11.5,
+                        color: Colors.white.withOpacity(0.92),
+                        height: 1.3,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -222,17 +228,17 @@ class SubcategoriesScreen extends ConsumerWidget {
           },
         );
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.lightBorder, width: 1.2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.lightBorder, width: 1.1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.025),
-              blurRadius: 8,
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
@@ -241,80 +247,78 @@ class SubcategoriesScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Top Circle Icon Badge
+            // Top Row: Icon + Arrow
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     color: const Color(0xFFFDEEE3),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFF8D2BA)),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
                     child: Icon(
                       _getSubcategoryIcon(subcategory),
                       color: AppColors.primaryOrange,
-                      size: 22,
+                      size: 18,
                     ),
                   ),
                 ),
                 Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFAF5ED),
+                  width: 22,
+                  height: 22,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFAF5ED),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.lightBorder),
                   ),
-                  child: const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.secondaryText),
+                  child: const Center(
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 12,
+                      color: AppColors.secondaryText,
+                    ),
+                  ),
                 ),
               ],
             ),
 
-            // Middle: Name
+            // Bottom Column: Name & Varieties Link
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   subcategory,
                   style: GoogleFonts.poppins(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.darkText,
-                    height: 1.25,
+                    height: 1.2,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  '100g - 1kg packs',
-                  style: GoogleFonts.inter(
-                    fontSize: 10.5,
-                    color: AppColors.secondaryText,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'View Varieties',
+                      style: GoogleFonts.inter(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryOrange,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 13,
+                      color: AppColors.primaryOrange,
+                    ),
+                  ],
                 ),
               ],
-            ),
-
-            // Bottom: "View Varieties →"
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF7ED),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'View Varieties →',
-                style: GoogleFonts.inter(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primaryOrange,
-                ),
-              ),
             ),
           ],
         ),
