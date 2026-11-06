@@ -1,15 +1,27 @@
+'use client';
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockApi } from '../services/mockApi';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [adminUser, setAdminUser] = useState(() => {
-    const saved = localStorage.getItem('naturale_admin_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [loading, setLoading] = useState(false);
+  const [adminUser, setAdminUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('naturale_admin_user');
+      if (saved) {
+        setAdminUser(JSON.parse(saved));
+      }
+    } catch (err) {
+      console.error('Failed to parse admin user from localStorage:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const login = async (email, password) => {
     setLoading(true);
@@ -17,8 +29,10 @@ export function AuthProvider({ children }) {
     try {
       const data = await mockApi.login(email, password);
       setAdminUser(data.user);
-      localStorage.setItem('naturale_admin_user', JSON.stringify(data.user));
-      localStorage.setItem('naturale_admin_token', data.token);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('naturale_admin_user', JSON.stringify(data.user));
+        localStorage.setItem('naturale_admin_token', data.token);
+      }
       setLoading(false);
       return true;
     } catch (err) {
@@ -30,8 +44,10 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setAdminUser(null);
-    localStorage.removeItem('naturale_admin_user');
-    localStorage.removeItem('naturale_admin_token');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('naturale_admin_user');
+      localStorage.removeItem('naturale_admin_token');
+    }
   };
 
   return (
@@ -44,4 +60,3 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
-

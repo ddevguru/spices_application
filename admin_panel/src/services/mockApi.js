@@ -1,10 +1,12 @@
 import axios from 'axios';
 
-const API_BASE = (import.meta.env && import.meta.env.VITE_API_URL)
-  ? (import.meta.env.VITE_API_URL.startsWith('http')
-      ? `${import.meta.env.VITE_API_URL}/api`
-      : `https://${import.meta.env.VITE_API_URL}/api`)
-  : 'https://dryfruits-api.onrender.com/api';
+const API_BASE = (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_URL)
+  ? (process.env.NEXT_PUBLIC_API_URL.startsWith('http')
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+      : `https://${process.env.NEXT_PUBLIC_API_URL}/api`)
+  : (typeof window !== 'undefined' && window.__NEXT_DATA__?.env?.NEXT_PUBLIC_API_URL)
+      ? `${window.__NEXT_DATA__.env.NEXT_PUBLIC_API_URL}/api`
+      : 'https://dryfruits-api.onrender.com/api';
 
 // Authentic Store Data (Strictly Categories & Products only - ZERO Mock Orders / Mock Revenue)
 const INITIAL_DB = {
@@ -534,14 +536,17 @@ const INITIAL_DB = {
 
 // Clean local storage helper (strictly no mock orders/customers)
 function getLocalDb() {
-  localStorage.removeItem('naturale_admin_db');
-  localStorage.removeItem('naturale_admin_db_v2');
-  const data = localStorage.getItem('naturale_admin_db_v3');
-  if (!data) {
-    localStorage.setItem('naturale_admin_db_v3', JSON.stringify(INITIAL_DB));
+  if (typeof window === 'undefined') {
     return INITIAL_DB;
   }
   try {
+    localStorage.removeItem('naturale_admin_db');
+    localStorage.removeItem('naturale_admin_db_v2');
+    const data = localStorage.getItem('naturale_admin_db_v3');
+    if (!data) {
+      localStorage.setItem('naturale_admin_db_v3', JSON.stringify(INITIAL_DB));
+      return INITIAL_DB;
+    }
     const parsed = JSON.parse(data);
     if (!Array.isArray(parsed.orders)) parsed.orders = [];
     if (!Array.isArray(parsed.customers)) parsed.customers = [];
@@ -552,9 +557,14 @@ function getLocalDb() {
 }
 
 function saveLocalDb(db) {
+  if (typeof window === 'undefined') return;
   if (!Array.isArray(db.orders)) db.orders = [];
   if (!Array.isArray(db.customers)) db.customers = [];
-  localStorage.setItem('naturale_admin_db_v3', JSON.stringify(db));
+  try {
+    localStorage.setItem('naturale_admin_db_v3', JSON.stringify(db));
+  } catch (e) {
+    console.error('Failed to save to localStorage:', e);
+  }
 }
 
 // API methods

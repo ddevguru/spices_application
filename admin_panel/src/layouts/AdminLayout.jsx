@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
@@ -18,13 +21,14 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
-export default function AdminLayout() {
+export default function AdminLayout({ children }) {
   const { adminUser, logout } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    router.push('/login');
   };
 
   const navItems = [
@@ -108,12 +112,12 @@ export default function AdminLayout() {
           </p>
           {navItems.map((item) => {
             const Icon = item.icon;
+            const isActive = item.path === '/' ? pathname === '/' : pathname.startsWith(item.path);
             return (
-              <NavLink
+              <Link
                 key={item.path}
-                to={item.path}
-                end={item.path === '/'}
-                style={({ isActive }) => ({
+                href={item.path}
+                style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
@@ -125,11 +129,12 @@ export default function AdminLayout() {
                   color: isActive ? 'var(--color-primary-orange)' : 'var(--color-dark-text)',
                   backgroundColor: isActive ? 'var(--color-light-peach)' : 'transparent',
                   transition: 'all 0.15s ease',
-                })}
+                  textDecoration: 'none',
+                }}
               >
                 <Icon size={18} />
                 <span>{item.label}</span>
-              </NavLink>
+              </Link>
             );
           })}
         </nav>
@@ -287,7 +292,7 @@ export default function AdminLayout() {
 
         {/* Page Content View */}
         <main style={{ padding: '32px', flex: 1 }}>
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>
