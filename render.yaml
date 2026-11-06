@@ -25,20 +25,20 @@ services:
           property: connectionString
 
   # ---------------------------------------------------------------------------
-  # 2. Next.js Admin Dashboard (Next.js 14 App Router)
+  # 2. Next.js Admin Dashboard (Next.js 14 Static Export SPA)
   # ---------------------------------------------------------------------------
   - type: web
     name: dryfruits-admin
-    env: node
+    env: static
     rootDir: admin_panel
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    staticPublishPath: dist
     autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
       - key: NEXT_PUBLIC_API_URL
         fromService:
           name: dryfruits-api
