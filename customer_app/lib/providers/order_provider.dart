@@ -31,10 +31,18 @@ class OrderNotifier extends StateNotifier<AsyncValue<List<CustomerOrder>>> {
         final cEmail = cust.email.toLowerCase().trim();
         final cPhone = cust.phone.trim();
 
-        final matchEmail = cleanEmail.isNotEmpty && cEmail == cleanEmail;
-        final matchPhone = cleanPhone.isNotEmpty && cPhone == cleanPhone;
+        // Strict User Scoping:
+        // 1. If user signed in with email, order MUST match this user's email
+        if (cleanEmail.isNotEmpty) {
+          return cEmail == cleanEmail;
+        }
 
-        return matchEmail || matchPhone;
+        // 2. Only for mobile-only users without email, match by phone
+        if (cleanPhone.isNotEmpty) {
+          return cPhone == cleanPhone;
+        }
+
+        return false;
       }).toList();
 
       state = AsyncValue.data(scopedOrders);

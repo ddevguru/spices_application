@@ -31,6 +31,15 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: isOnboarded ? '/main' : '/onboarding',
+    redirect: (context, state) {
+      final sku = state.uri.queryParameters['sku'] ?? state.uri.queryParameters['barcode'];
+      if (sku != null && sku.trim().isNotEmpty) {
+        if (state.matchedLocation != '/product' && !state.matchedLocation.startsWith('/product-detail') && state.matchedLocation != '/open') {
+          return '/product?sku=${sku.trim()}';
+        }
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/onboarding',
@@ -99,14 +108,31 @@ final routerProvider = Provider<GoRouter>((ref) {
           final sku = state.uri.queryParameters['sku'] ??
               state.uri.queryParameters['barcode'] ??
               state.uri.queryParameters['id'] ??
-              'p_almonds';
+              'DF-ALM-101';
           return ProductDetailScreen(productId: sku);
+        },
+      ),
+      GoRoute(
+        path: '/open',
+        builder: (context, state) {
+          final sku = state.uri.queryParameters['sku'] ??
+              state.uri.queryParameters['barcode'] ??
+              state.uri.queryParameters['id'] ??
+              'DF-ALM-101';
+          return ProductDetailScreen(productId: sku);
+        },
+      ),
+      GoRoute(
+        path: '/product/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? 'DF-ALM-101';
+          return ProductDetailScreen(productId: id);
         },
       ),
       GoRoute(
         path: '/product-detail/:id',
         builder: (context, state) {
-          final id = state.pathParameters['id'] ?? 'p_almonds';
+          final id = state.pathParameters['id'] ?? 'DF-ALM-101';
           return ProductDetailScreen(productId: id);
         },
       ),

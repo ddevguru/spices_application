@@ -27,13 +27,21 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- Deep linking for https://naturale.app/product and naturale://product -->
-            <intent-filter android:autoVerify="true">
+            <!-- Deep linking for naturale:// custom scheme -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="naturale.app" android:pathPrefix="/product" />
-                <data android:scheme="naturale" android:host="product" />
+                <data android:scheme="naturale" />
+            </intent-filter>
+
+            <!-- Deep linking for https://dryfruits-api.onrender.com -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="dryfruits-api.onrender.com" android:pathPrefix="/open" />
+                <data android:scheme="https" android:host="dryfruits-api.onrender.com" android:pathPrefix="/product" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

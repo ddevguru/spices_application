@@ -675,93 +675,116 @@ async function seedPostgres(poolInstance) {
     }
 
     // 3. Insert / Update Products & Weight Variants
-    for (const prod of COMPREHENSIVE_PRODUCTS) {
+    const fallbackPath = path.join(__dirname, '..', 'data', 'db.json');
+    let productsToSeed = COMPREHENSIVE_PRODUCTS;
+    let existingOrders = [];
+    let existingCustomers = [];
+
+    try {
+      if (fs.existsSync(fallbackPath)) {
+        const existing = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+        if (Array.isArray(existing.products) && existing.products.length > 0) {
+          productsToSeed = existing.products;
+        }
+        if (Array.isArray(existing.orders)) existingOrders = existing.orders;
+        if (Array.isArray(existing.customers)) existingCustomers = existing.customers;
+      }
+    } catch (_) {}
+
+    for (const prod of productsToSeed) {
+      const prodSku = prod.sku || `DF-${(prod.id || '').toUpperCase().slice(0, 8)}`;
+      const prodBarcode = prod.barcode || `8907${String(Math.abs(prodSku.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0))).slice(0, 8).padStart(8, '0')}`;
+
       await pool.query(`
         INSERT INTO products (
           id, name, brand, category_id, category_name, subcategory_id, subcategory_name,
+          sku, barcode,
           short_description, description, rating, review_count, image, gallery_images,
           origin, ingredients, nutrition_facts, storage_instructions, specifications,
           allow_custom_weight, is_featured, is_best_seller, is_trending, is_special_offer, is_new_arrival
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
+          sku = COALESCE(EXCLUDED.sku, products.sku),
+          barcode = COALESCE(EXCLUDED.barcode, products.barcode),
           description = EXCLUDED.description,
           image = EXCLUDED.image
       `, [
         prod.id,
         prod.name,
-        prod.brand,
-        prod.categoryId,
-        prod.categoryName,
-        prod.subcategoryId,
-        prod.subcategoryName,
-        prod.shortDescription,
-        prod.description,
-        prod.rating,
-        prod.reviewCount,
-        prod.image,
-        JSON.stringify(prod.galleryImages || []),
-        prod.origin,
-        prod.ingredients,
-        JSON.stringify(prod.nutritionFacts || {}),
-        prod.storageInstructions,
+        prod.brand || 'Naturale Pure',
+        prod.categoryId || prod.category_id,
+        prod.categoryName || prod.category_name,
+        prod.subcategoryId || prod.subcategory_id,
+        prod.subcategoryName || prod.subcategory_name,
+        prodSku,
+        prodBarcode,
+        prod.shortDescription || prod.short_description || '',
+        prod.description || '',
+        prod.rating || 4.8,
+        prod.reviewCount || prod.review_count || 0,
+        prod.image || '',
+        JSON.stringify(prod.galleryImages || prod.gallery_images || []),
+        prod.origin || 'India',
+        prod.ingredients || '',
+        JSON.stringify(prod.nutritionFacts || prod.nutrition_facts || {}),
+        prod.storageInstructions || prod.storage_instructions || '',
         JSON.stringify(prod.specifications || {}),
-        prod.allowCustomWeight,
-        prod.isFeatured,
-        prod.isBestSeller,
-        prod.isTrending,
-        prod.isSpecialOffer,
-        prod.isNewArrival,
+        prod.allowCustomWeight !== false,
+        !!prod.isFeatured,
+        !!prod.isBestSeller,
+        !!prod.isTrending,
+        !!prod.isSpecialOffer,
+        !!prod.isNewArrival,
       ]);
 
       // Seed Variants
-      for (const v of prod.variants) {
-        await pool.query(`
-          INSERT INTO product_variants (
-            id, product_id, weight_in_grams, unit, title, price, original_price,
-            stock_quantity, sku, min_order_quantity, max_order_quantity, is_available
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-          ON CONFLICT (id) DO UPDATE SET
-            price = EXCLUDED.price,
-            original_price = EXCLUDED.original_price,
-            stock_quantity = EXCLUDED.stock_quantity
-        `, [
-          v.id,
-          prod.id,
-          v.weightInGrams,
-          v.unit,
-          v.title,
-          v.price,
-          v.originalPrice,
-          v.stockQuantity,
-          v.sku,
-          1,
-          20,
-          true,
-        ]);
+      if (Array.isArray(prod.variants)) {
+        for (const v of prod.variants) {
+          await pool.query(`
+            INSERT INTO product_variants (
+              id, product_id, weight_in_grams, unit, title, price, original_price,
+              stock_quantity, sku, min_order_quantity, max_order_quantity, is_available
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            ON CONFLICT (id) DO UPDATE SET
+              price = EXCLUDED.price,
+              original_price = EXCLUDED.original_price,
+              stock_quantity = EXCLUDED.stock_quantity
+          `, [
+            v.id,
+            prod.id,
+            v.weightInGrams || v.weight_in_grams || 100,
+            v.unit || 'GM',
+            v.title || `${v.weightInGrams || 100} GM`,
+            v.price,
+            v.originalPrice || v.original_price || v.price,
+            v.stockQuantity || v.stock_quantity || 100,
+            v.sku || `${prodSku}-${v.weightInGrams || 100}G`,
+            1,
+            20,
+            true,
+          ]);
+        }
       }
     }
 
-    // 4. Save to fallback json as well (strictly clean orders & customers)
-    const fallbackPath = path.join(__dirname, '..', 'data', 'db.json');
-    let fbData = { categories, products: COMPREHENSIVE_PRODUCTS, orders: [], customers: [], coupons: [], banners: [], settings: {} };
+    // 4. Save to fallback json preserving all products, orders, and customers
     try {
-      if (fs.existsSync(fallbackPath)) {
-        const existing = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-        fbData = {
-          ...existing,
-          categories,
-          products: COMPREHENSIVE_PRODUCTS,
-          orders: Array.isArray(existing.orders) ? existing.orders : [],
-          customers: Array.isArray(existing.customers) ? existing.customers : [],
-        };
-      }
+      const fbData = {
+        categories,
+        products: productsToSeed,
+        orders: existingOrders,
+        customers: existingCustomers,
+        coupons: [],
+        banners: [],
+        settings: {},
+      };
       fs.writeFileSync(fallbackPath, JSON.stringify(fbData, null, 2), 'utf8');
     } catch (_) {}
 
-    console.log(`✅ PostgreSQL Database successfully populated with ${COMPREHENSIVE_PRODUCTS.length} products and all weight variants!`);
+    console.log(`✅ PostgreSQL Database successfully populated with ${productsToSeed.length} products and all weight variants!`);
   } catch (err) {
     console.error('❌ Seeding error:', err.message);
   }

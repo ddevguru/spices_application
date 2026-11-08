@@ -55,9 +55,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   Future<void> _loadSavedBusinessProfile() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final savedStr = prefs.getString('saved_shop_business_profile');
       final user = ref.read(authProvider).user;
+      final userKey = (user != null && user.id.isNotEmpty) ? user.id : 'guest';
+      final prefs = await SharedPreferences.getInstance();
+      final savedStr = prefs.getString('saved_shop_business_profile_$userKey');
 
       if (savedStr != null && savedStr.isNotEmpty) {
         final data = jsonDecode(savedStr) as Map<String, dynamic>;
@@ -69,7 +70,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           _addressController.text = data['shopAddress'] ?? '';
           _cityController.text = data['city'] ?? 'Mumbai';
           _pincodeController.text = data['pincode'] ?? '';
-          _phoneController.text = data['phone'] ?? '';
+          _phoneController.text = data['phone'] ?? (user?.phone ?? '');
           _isFirstTime = false;
         });
         return;
@@ -115,6 +116,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final cartState = ref.read(cartProvider);
     if (cartState.items.isEmpty) return;
 
+    final authState = ref.read(authProvider);
+    if (!authState.isAuthenticated || authState.user == null) {
+      _showError('Please sign in to complete and place your order.');
+      if (mounted) {
+        context.push('/login');
+      }
+      return;
+    }
+    final authUser = authState.user!;
+
     final ownerName = _ownerNameController.text.trim();
     final businessName = _businessNameController.text.trim();
     final shopName = _shopNameController.text.trim();
@@ -156,24 +167,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         'pincode': pincode,
         'phone': phone,
       };
-      await prefs.setString('saved_shop_business_profile', jsonEncode(profileMap));
+      await prefs.setString('saved_shop_business_profile_${authUser.id}', jsonEncode(profileMap));
 
       // 2. Sync to auth user state & backend
-      final authUser = ref.read(authProvider).user;
-      if (authUser != null) {
-        final updatedUser = authUser.copyWith(
-          ownerName: ownerName,
-          businessName: businessName,
-          shopName: shopName,
-          gstNumber: gstNumber,
-          phone: phone,
-        );
-        ref.read(authProvider.notifier).updateProfile(updatedUser);
-      }
+      final updatedUser = authUser.copyWith(
+        ownerName: ownerName,
+        businessName: businessName,
+        shopName: shopName,
+        gstNumber: gstNumber,
+        phone: phone,
+      );
+      ref.read(authProvider.notifier).updateProfile(updatedUser);
     } catch (_) {}
-
-    final authUser = ref.read(authProvider).user;
-    final user = authUser ?? MockDataService().getProfile();
 
     final orderAddress = OrderAddress(
       label: shopName.isNotEmpty ? shopName : 'Store Outlet',
@@ -185,11 +190,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
 
     final orderCustomer = OrderCustomer(
-      name: ownerName,
+      name: ownerName.isNotEmpty ? ownerName : authUser.name,
       businessName: businessName.isNotEmpty ? businessName : shopName,
       gstNumber: gstNumber,
-      phone: phone.isNotEmpty ? phone : user.phone,
-      email: user.email,
+      phone: phone.isNotEmpty ? phone : authUser.phone,
+      email: authUser.email.toLowerCase().trim(),
       address: orderAddress,
     );
 

@@ -1063,7 +1063,7 @@ export default function Products() {
                   <input
                     type="text"
                     readOnly
-                    value={`https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`}
+                    value={`https://dryfruits-api.onrender.com/open?sku=${shareProduct.sku || shareProduct.id}`}
                     className="form-input"
                     style={{ fontSize: '12px', color: '#2563EB', fontWeight: 600 }}
                   />
@@ -1071,7 +1071,7 @@ export default function Products() {
                     type="button"
                     className="btn-secondary"
                     onClick={() => {
-                      navigator.clipboard.writeText(`https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`);
+                      navigator.clipboard.writeText(`https://dryfruits-api.onrender.com/open?sku=${shareProduct.sku || shareProduct.id}`);
                       setCopiedLink(true);
                       setTimeout(() => setCopiedLink(false), 2000);
                     }}
@@ -1089,7 +1089,7 @@ export default function Products() {
                   href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
                     `🌿 Check out ${shareProduct.name} on Naturale App!\n\n` +
                     `📦 SKU: ${shareProduct.sku || shareProduct.id}\n` +
-                    `🔗 Tap to Open in App: https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`
+                    `🔗 Tap to Open in App: https://dryfruits-api.onrender.com/open?sku=${shareProduct.sku || shareProduct.id}`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -1144,7 +1144,7 @@ export default function Products() {
                 >
                   <QRCodeSVG
                     id="product-qr-svg"
-                    value={`https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`}
+                    value={`https://dryfruits-api.onrender.com/open?sku=${shareProduct.sku || shareProduct.id}`}
                     size={175}
                     level="H"
                     includeMargin={true}
@@ -1187,7 +1187,7 @@ export default function Products() {
                     <Download size={14} /> Download High-Res QR
                   </button>
                   <a
-                    href={`https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`}
+                    href={`https://dryfruits-api.onrender.com/open?sku=${shareProduct.sku || shareProduct.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-secondary"

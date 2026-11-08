@@ -2,22 +2,11 @@
 -- NATURALE E-COMMERCE: POSTGRESQL DATABASE SCHEMA
 -- Focus: Premium Dry Fruits, Whole Spices, Blended Spices & Cereals
 -- Features: Weight-based variants, order timelines, inventory, coupons, banners
+-- Note: Tables are preserved across deployments using IF NOT EXISTS
 -- ==============================================================================
 
--- Drop tables if needed for clean re-runs
-DROP TABLE IF EXISTS order_items CASCADE;
-DROP TABLE IF EXISTS orders CASCADE;
-DROP TABLE IF EXISTS product_variants CASCADE;
-DROP TABLE IF EXISTS products CASCADE;
-DROP TABLE IF EXISTS categories CASCADE;
-DROP TABLE IF EXISTS customers CASCADE;
-DROP TABLE IF EXISTS coupons CASCADE;
-DROP TABLE IF EXISTS banners CASCADE;
-DROP TABLE IF EXISTS store_settings CASCADE;
-DROP TABLE IF EXISTS admin_users CASCADE;
-
 -- 1. ADMIN USERS TABLE
-CREATE TABLE admin_users (
+CREATE TABLE IF NOT EXISTS admin_users (
     id VARCHAR(64) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -28,7 +17,7 @@ CREATE TABLE admin_users (
 );
 
 -- 2. CATEGORIES TABLE
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id VARCHAR(64) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
@@ -42,7 +31,7 @@ CREATE TABLE categories (
 );
 
 -- 3. PRODUCTS TABLE
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
     id VARCHAR(64) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     brand VARCHAR(255) NOT NULL DEFAULT 'Naturale Pure',
@@ -50,6 +39,8 @@ CREATE TABLE products (
     category_name VARCHAR(255),
     subcategory_id VARCHAR(255),
     subcategory_name VARCHAR(255),
+    sku VARCHAR(100),
+    barcode VARCHAR(100),
     short_description TEXT,
     description TEXT,
     rating DECIMAL(3, 2) DEFAULT 4.8,
@@ -77,7 +68,7 @@ CREATE INDEX idx_products_featured ON products(is_featured);
 CREATE INDEX idx_products_best_seller ON products(is_best_seller);
 
 -- 4. PRODUCT WEIGHT VARIANTS TABLE (Critical Gram-based shopping)
-CREATE TABLE product_variants (
+CREATE TABLE IF NOT EXISTS product_variants (
     id VARCHAR(64) PRIMARY KEY,
     product_id VARCHAR(64) NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     weight_in_grams INT NOT NULL,
@@ -94,17 +85,22 @@ CREATE TABLE product_variants (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_variants_product ON product_variants(product_id);
-CREATE INDEX idx_variants_weight ON product_variants(weight_in_grams);
+CREATE INDEX IF NOT EXISTS idx_variants_product ON product_variants(product_id);
+CREATE INDEX IF NOT EXISTS idx_variants_weight ON product_variants(weight_in_grams);
 
 -- 5. CUSTOMERS TABLE
-CREATE TABLE customers (
+CREATE TABLE IF NOT EXISTS customers (
     id VARCHAR(64) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255),
     phone VARCHAR(50),
     city VARCHAR(100),
+    business_name VARCHAR(255),
+    shop_name VARCHAR(255),
+    owner_name VARCHAR(255),
+    gst_number VARCHAR(100),
+    license_number VARCHAR(100),
     registered_date DATE DEFAULT CURRENT_DATE,
     total_orders INT DEFAULT 0,
     total_spent DECIMAL(12, 2) DEFAULT 0.00,
@@ -114,7 +110,7 @@ CREATE TABLE customers (
 );
 
 -- 6. ORDERS TABLE
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id VARCHAR(64) PRIMARY KEY,
     customer_id VARCHAR(64) REFERENCES customers(id) ON DELETE SET NULL,
     customer_name VARCHAR(255) NOT NULL,
@@ -135,12 +131,12 @@ CREATE TABLE orders (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_orders_customer ON orders(customer_id);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_created ON orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at DESC);
 
 -- 7. ORDER ITEMS TABLE (Purchased product weights & variants)
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
     id SERIAL PRIMARY KEY,
     order_id VARCHAR(64) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     product_id VARCHAR(64) REFERENCES products(id) ON DELETE SET NULL,
@@ -153,10 +149,10 @@ CREATE TABLE order_items (
     image TEXT
 );
 
-CREATE INDEX idx_order_items_order ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 
 -- 8. COUPONS TABLE
-CREATE TABLE coupons (
+CREATE TABLE IF NOT EXISTS coupons (
     id VARCHAR(64) PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
@@ -170,7 +166,7 @@ CREATE TABLE coupons (
 );
 
 -- 9. PROMOTIONAL BANNERS TABLE
-CREATE TABLE banners (
+CREATE TABLE IF NOT EXISTS banners (
     id VARCHAR(64) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     subtitle TEXT,
@@ -185,9 +181,18 @@ CREATE TABLE banners (
 );
 
 -- 10. STORE SETTINGS TABLE
-CREATE TABLE store_settings (
+CREATE TABLE IF NOT EXISTS store_settings (
     key VARCHAR(100) PRIMARY KEY,
     value JSONB NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Safe Schema Alterations (Ensure columns exist on live PostgreSQL without losing records)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sku VARCHAR(100);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS barcode VARCHAR(100);
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS business_name VARCHAR(255);
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS shop_name VARCHAR(255);
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS owner_name VARCHAR(255);
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS gst_number VARCHAR(100);
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS license_number VARCHAR(100);
 

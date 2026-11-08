@@ -13,7 +13,23 @@ export default function Customers() {
   const load = async () => {
     try {
       setLoading(true);
-      const data = await mockApi.getCustomers();
+      let data = [];
+      try {
+        const res = await fetch('https://dryfruits-api.onrender.com/api/customers', {
+          headers: { 'Accept': 'application/json' },
+        });
+        if (res.ok) {
+          const apiData = await res.json();
+          if (Array.isArray(apiData) && apiData.length > 0) {
+            data = apiData;
+          }
+        }
+      } catch (_) {}
+
+      if (!data || data.length === 0) {
+        data = await mockApi.getCustomers();
+      }
+
       if (data && Array.isArray(data)) {
         setCustomers(data);
       }
