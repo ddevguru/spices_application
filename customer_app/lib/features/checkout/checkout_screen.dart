@@ -261,7 +261,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           children: [
             // 1. Business / Shop Delivery Details
             Row(
-              mainAxisAlignment: MainAxisAlignment.between,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   '1. Business & Shop Details',

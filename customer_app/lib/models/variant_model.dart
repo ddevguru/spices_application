@@ -77,4 +77,36 @@ class ProductVariant {
       'isAvailable': isAvailable,
     };
   }
+
+  // Helper factory for dynamic/custom weight in grams
+  factory ProductVariant.custom({
+    required int grams,
+    required double basePricePer100g,
+    required double baseOriginalPricePer100g,
+    int stock = 100,
+  }) {
+    final double calculatedPrice = (basePricePer100g / 100.0) * grams;
+    final double calculatedOriginal = (baseOriginalPricePer100g / 100.0) * grams;
+    final String title = grams >= 1000
+        ? '${(grams / 1000).toStringAsFixed(grams % 1000 == 0 ? 0 : 2)} KG'
+        : '$grams GM';
+    final String unit = grams >= 1000 ? 'KG' : 'GM';
+    final String sku = 'CUSTOM-${grams}G';
+    final String barcode = '890${(sku.hashCode.abs() % 900000000 + 100000000)}';
+
+    return ProductVariant(
+      id: 'custom_${grams}g',
+      weightInGrams: grams,
+      unit: unit,
+      title: title,
+      price: calculatedPrice.roundToDouble(),
+      originalPrice: calculatedOriginal.roundToDouble(),
+      stockQuantity: stock,
+      sku: sku,
+      barcode: barcode,
+      minOrderQuantity: 1,
+      maxOrderQuantity: 10,
+      isAvailable: stock > 0,
+    );
+  }
 }

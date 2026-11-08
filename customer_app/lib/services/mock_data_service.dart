@@ -1415,7 +1415,7 @@ class MockDataService {
     try {
       return _products.firstWhere((p) => p.id == id);
     } catch (_) {
-      return getProductBySkuOrBarcode(id);
+      return null;
     }
   }
 

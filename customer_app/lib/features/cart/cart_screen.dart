@@ -53,7 +53,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 width: 64,
                 height: 64,
                 decoration: const BoxDecoration(
-                  color: AppColors.peach,
+                  color: AppColors.lightPeach,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -70,7 +70,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.darkBrown,
+                color: AppColors.darkText,
               ),
             ),
             const SizedBox(height: 8),
