@@ -69,6 +69,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       if (user != null) {
         MockDataService().updateProfile(user);
+        syncCustomerToBackend(user);
+        syncCustomerToBackend(user);
       }
 
       state = state.copyWith(
@@ -140,6 +142,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await prefs.setString('user_profile', jsonEncode(user.toJson()));
         await prefs.setBool('is_logged_in', true);
         MockDataService().updateProfile(user);
+        syncCustomerToBackend(user);
 
         state = state.copyWith(
           isLoading: false,
@@ -214,6 +217,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         await prefs.setString('user_profile', jsonEncode(user.toJson()));
         await prefs.setBool('is_logged_in', true);
         MockDataService().updateProfile(user);
+        syncCustomerToBackend(user);
 
         state = state.copyWith(
           isLoading: false,
@@ -350,10 +354,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> syncCustomerToBackend(UserProfile user) async {
+    try {
+      await http.post(
+        Uri.parse('$_apiBase/customers/sync'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'id': user.id,
+          'name': user.name,
+          'email': user.email,
+          'phone': user.phone,
+          'ownerName': user.ownerName,
+          'businessName': user.businessName,
+          'shopName': user.shopName,
+          'gstNumber': user.gstNumber,
+          'licenseNumber': user.effectiveLicenseNumber,
+          'city': user.addresses.isNotEmpty ? user.addresses.first.city : 'India',
+        }),
+      ).timeout(const Duration(seconds: 5));
+    } catch (_) {}
+  }
+
   Future<void> updateProfile(UserProfile updatedUser) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_profile', jsonEncode(updatedUser.toJson()));
     MockDataService().updateProfile(updatedUser);
+    syncCustomerToBackend(updatedUser);
     state = state.copyWith(user: updatedUser);
   }
 

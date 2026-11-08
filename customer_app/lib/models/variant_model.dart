@@ -7,6 +7,7 @@ class ProductVariant {
   final double originalPrice;
   final int stockQuantity;
   final String sku;
+  final String barcode;
   final int minOrderQuantity;
   final int maxOrderQuantity;
   final bool isAvailable;
@@ -20,10 +21,17 @@ class ProductVariant {
     required this.originalPrice,
     required this.stockQuantity,
     required this.sku,
+    this.barcode = '',
     this.minOrderQuantity = 1,
     this.maxOrderQuantity = 20,
     this.isAvailable = true,
   });
+
+  String get effectiveBarcode {
+    if (barcode.isNotEmpty) return barcode;
+    final hashVal = (id.hashCode.abs() % 900000000 + 100000000).toString();
+    return '890$hashVal';
+  }
 
   int get discountPercentage {
     if (originalPrice <= price) return 0;
@@ -31,15 +39,22 @@ class ProductVariant {
   }
 
   factory ProductVariant.fromJson(Map<String, dynamic> json) {
+    final idStr = json['id'] as String? ?? 'v_${DateTime.now().millisecondsSinceEpoch}';
+    final savedBarcode = json['barcode'] as String? ?? '';
+    final defaultBarcode = savedBarcode.isNotEmpty
+        ? savedBarcode
+        : '890${(idStr.hashCode.abs() % 900000000 + 100000000)}';
+
     return ProductVariant(
-      id: json['id'] as String,
-      weightInGrams: (json['weightInGrams'] as num).toInt(),
+      id: idStr,
+      weightInGrams: (json['weightInGrams'] as num?)?.toInt() ?? 250,
       unit: json['unit'] as String? ?? 'GM',
-      title: json['title'] as String? ?? '${json['weightInGrams']} GM',
-      price: (json['price'] as num).toDouble(),
-      originalPrice: (json['originalPrice'] as num?)?.toDouble() ?? (json['price'] as num).toDouble(),
+      title: json['title'] as String? ?? '${json['weightInGrams'] ?? 250} GM',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      originalPrice: (json['originalPrice'] as num?)?.toDouble() ?? (json['price'] as num?)?.toDouble() ?? 0.0,
       stockQuantity: (json['stockQuantity'] as num?)?.toInt() ?? 10,
       sku: json['sku'] as String? ?? '',
+      barcode: defaultBarcode,
       minOrderQuantity: (json['minOrderQuantity'] as num?)?.toInt() ?? 1,
       maxOrderQuantity: (json['maxOrderQuantity'] as num?)?.toInt() ?? 20,
       isAvailable: json['isAvailable'] as bool? ?? true,
@@ -56,39 +71,10 @@ class ProductVariant {
       'originalPrice': originalPrice,
       'stockQuantity': stockQuantity,
       'sku': sku,
+      'barcode': effectiveBarcode,
       'minOrderQuantity': minOrderQuantity,
       'maxOrderQuantity': maxOrderQuantity,
       'isAvailable': isAvailable,
     };
   }
-
-  // Helper factory for dynamic/custom weight in grams
-  factory ProductVariant.custom({
-    required int grams,
-    required double basePricePer100g,
-    required double baseOriginalPricePer100g,
-    int stock = 100,
-  }) {
-    final double calculatedPrice = (basePricePer100g / 100.0) * grams;
-    final double calculatedOriginal = (baseOriginalPricePer100g / 100.0) * grams;
-    final String title = grams >= 1000 
-        ? '${(grams / 1000).toStringAsFixed(grams % 1000 == 0 ? 0 : 2)} KG'
-        : '$grams GM';
-    final String unit = grams >= 1000 ? 'KG' : 'GM';
-
-    return ProductVariant(
-      id: 'custom_${grams}g',
-      weightInGrams: grams,
-      unit: unit,
-      title: title,
-      price: calculatedPrice.roundToDouble(),
-      originalPrice: calculatedOriginal.roundToDouble(),
-      stockQuantity: stock,
-      sku: 'CUSTOM-${grams}G',
-      minOrderQuantity: 1,
-      maxOrderQuantity: 10,
-      isAvailable: stock > 0,
-    );
-  }
 }
-

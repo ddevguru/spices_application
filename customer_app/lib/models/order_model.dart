@@ -42,12 +42,16 @@ class OrderAddress {
 
 class OrderCustomer {
   final String name;
+  final String businessName;
+  final String gstNumber;
   final String phone;
   final String email;
   final OrderAddress address;
 
   const OrderCustomer({
     required this.name,
+    this.businessName = '',
+    this.gstNumber = '',
     required this.phone,
     required this.email,
     required this.address,
@@ -56,6 +60,8 @@ class OrderCustomer {
   factory OrderCustomer.fromJson(Map<String, dynamic> json) {
     return OrderCustomer(
       name: json['name'] as String? ?? '',
+      businessName: json['businessName'] as String? ?? json['business_name'] as String? ?? '',
+      gstNumber: json['gstNumber'] as String? ?? json['gst_number'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String? ?? '',
       address: OrderAddress.fromJson(json['address'] as Map<String, dynamic>? ?? {}),
@@ -65,6 +71,8 @@ class OrderCustomer {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
+      'businessName': businessName,
+      'gstNumber': gstNumber,
       'phone': phone,
       'email': email,
       'address': address.toJson(),

@@ -7,6 +7,7 @@ import '../../core/constants/app_dimensions.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../models/cart_item_model.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/app_image.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,111 @@ class CartScreen extends ConsumerStatefulWidget {
 class _CartScreenState extends ConsumerState<CartScreen> {
   final TextEditingController _couponController = TextEditingController();
   String? _couponError;
+
+  void _showLoginRequiredSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: Container(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(
+                  color: AppColors.peach,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: AppColors.primaryOrange,
+                  size: 32,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Sign In Required to Place Order',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkBrown,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please login or create your shop profile to confirm billing, GST details, and place your order.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.push('/login');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryOrange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                'Login to Account',
+                style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.push('/signup');
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryOrange,
+                side: const BorderSide(color: AppColors.primaryOrange, width: 1.5),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                'Create New Account / Register',
+                style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -416,7 +522,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         child: SizedBox(
                           height: 48,
                           child: ElevatedButton(
-                            onPressed: () => context.push('/checkout'),
+                            onPressed: () {
+                              final isAuth = ref.read(authProvider).isAuthenticated;
+                              if (!isAuth) {
+                                _showLoginRequiredSheet(context);
+                              } else {
+                                context.push('/checkout');
+                              }
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primaryOrange,
                               foregroundColor: Colors.white,

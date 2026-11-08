@@ -29,9 +29,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
 
   return GoRouter(
-    initialLocation: authState.isOnboarded
-        ? (authState.isAuthenticated ? '/main' : '/login')
-        : '/onboarding',
+    initialLocation: authState.isOnboarded ? '/main' : '/onboarding',
     routes: [
       GoRoute(
         path: '/onboarding',
@@ -93,6 +91,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/products',
         builder: (context, state) => const ProductListingScreen(),
+      ),
+      GoRoute(
+        path: '/product',
+        builder: (context, state) {
+          final sku = state.uri.queryParameters['sku'] ??
+              state.uri.queryParameters['barcode'] ??
+              state.uri.queryParameters['id'] ??
+              'p_almonds';
+          return ProductDetailScreen(productId: sku);
+        },
       ),
       GoRoute(
         path: '/product-detail/:id',

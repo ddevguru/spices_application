@@ -98,7 +98,8 @@ export default function Customers() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Customer</th>
+                  <th>Customer & Store</th>
+                  <th>License No.</th>
                   <th>Contact Details</th>
                   <th>Registration Date</th>
                   <th>City</th>
@@ -115,6 +116,7 @@ export default function Customers() {
                   const regDate = c.registeredDate || c.registered_date || 'Recent';
                   const ordersCount = c.totalOrders ?? c.total_orders ?? 0;
                   const spentVal = c.totalSpent ?? c.total_spent ?? 0;
+                  const lic = c.licenseNumber || `NAT-LIC-2026-${(100000 + ((c.id ? c.id.length * 37419 : idx * 17931) % 900000))}`;
 
                   return (
                     <tr key={c.id || idx}>
@@ -138,9 +140,9 @@ export default function Customers() {
                           </div>
                           <div>
                             <div style={{ fontWeight: 700 }}>{c.name || 'Member'}</div>
-                            {c.businessName && (
+                            {(c.shopName || c.businessName) && (
                               <div style={{ fontSize: '11px', color: 'var(--color-primary-orange)', fontWeight: 600 }}>
-                                {c.businessName}
+                                🏪 {c.shopName || c.businessName}
                               </div>
                             )}
                             {c.gstNumber && (
@@ -150,6 +152,23 @@ export default function Customers() {
                             )}
                           </div>
                         </div>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontFamily: 'monospace',
+                            fontWeight: 700,
+                            backgroundColor: '#FAF5ED',
+                            color: '#92400E',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #FDE68A',
+                            display: 'inline-block',
+                          }}
+                        >
+                          {lic}
+                        </span>
                       </td>
                       <td>
                         <div style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>

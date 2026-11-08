@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -144,6 +145,188 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            if (isLoggedIn) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2C1810), Color(0xFF1A0F0A)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: AppDimensions.roundedLarge,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2C1810).withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                  border: Border.all(color: const Color(0xFFE5A93C), width: 1.2),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.between,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE5A93C).withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.verified_user_rounded, color: Color(0xFFE5A93C), size: 18),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'MERCHANT LICENSE',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
+                                color: const Color(0xFFE5A93C),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF27865F).withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFF27865F), width: 1),
+                          ),
+                          child: Text(
+                            'Active Tier-1',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF4ADE80),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Official Application License No.',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.between,
+                      children: [
+                        Text(
+                          user.effectiveLicenseNumber,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                            color: Colors.white,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: user.effectiveLicenseNumber));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('License Number copied to clipboard!')),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.copy_rounded, color: Colors.white, size: 13),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Copy',
+                                  style: GoogleFonts.inter(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Divider(color: Colors.white.withOpacity(0.12), height: 1),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'STORE / BUSINESS',
+                                style: GoogleFonts.inter(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white.withOpacity(0.5),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                user.shopName.isNotEmpty
+                                    ? user.shopName
+                                    : (user.businessName.isNotEmpty ? user.businessName : 'Registered Merchant'),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (user.gstNumber.isNotEmpty)
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'GST NUMBER',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white.withOpacity(0.5),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  user.gstNumber,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
 
             // Account Options Menu
@@ -303,22 +486,33 @@ class ProfileScreen extends ConsumerWidget {
     final nameCtrl = TextEditingController(text: user.name);
     final emailCtrl = TextEditingController(text: user.email);
     final phoneCtrl = TextEditingController(text: user.phone);
+    final shopCtrl = TextEditingController(text: user.shopName);
+    final bizCtrl = TextEditingController(text: user.businessName);
+    final gstCtrl = TextEditingController(text: user.gstNumber);
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Edit Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name')),
-            const SizedBox(height: 12),
-            TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email Address')),
-            const SizedBox(height: 12),
-            TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Phone Number')),
-          ],
+        title: Text('Edit Profile & Store', style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name / Owner Name')),
+              const SizedBox(height: 12),
+              TextField(controller: shopCtrl, decoration: const InputDecoration(labelText: 'Shop / Store Name')),
+              const SizedBox(height: 12),
+              TextField(controller: bizCtrl, decoration: const InputDecoration(labelText: 'Business / Firm Name')),
+              const SizedBox(height: 12),
+              TextField(controller: gstCtrl, decoration: const InputDecoration(labelText: 'GST Number (Optional)')),
+              const SizedBox(height: 12),
+              TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email Address')),
+              const SizedBox(height: 12),
+              TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Phone Number')),
+            ],
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -327,6 +521,9 @@ class ProfileScreen extends ConsumerWidget {
               ref.read(authProvider.notifier).updateProfile(
                 user.copyWith(
                   name: nameCtrl.text.trim(),
+                  shopName: shopCtrl.text.trim(),
+                  businessName: bizCtrl.text.trim(),
+                  gstNumber: gstCtrl.text.trim().toUpperCase(),
                   email: emailCtrl.text.trim(),
                   phone: phoneCtrl.text.trim(),
                 ),

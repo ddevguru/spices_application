@@ -104,7 +104,7 @@ exports.getProductById = async (req, res, next) => {
           ) as variants
         FROM products p
         LEFT JOIN product_variants v ON p.id = v.product_id
-        WHERE p.id = $1
+        WHERE p.id = $1 OR p.sku = $1 OR p.barcode = $1 OR v.sku = $1
         GROUP BY p.id
       `;
       const result = await db.query(query, [id]);
@@ -112,7 +112,13 @@ exports.getProductById = async (req, res, next) => {
       return res.json(mapProductRow(result.rows[0]));
     } else {
       const fb = db.getFallbackDb();
-      const product = fb.products.find((p) => p.id === id);
+      const product = (fb.products || []).find(
+        (p) =>
+          p.id === id ||
+          p.sku === id ||
+          p.barcode === id ||
+          p.variants?.some((v) => v.sku === id || v.barcode === id)
+      );
       if (!product) return res.status(404).json({ error: 'Product not found' });
       return res.json(product);
     }
@@ -187,14 +193,30 @@ exports.createProduct = async (req, res, next) => {
       return res.status(201).json(fullProd);
     } else {
       const fb = db.getFallbackDb();
+      const catPrefix = (prod.categoryId?.includes('spice') || prod.categoryName?.includes('Whole')) ? 'WS'
+        : (prod.categoryId?.includes('blend') || prod.categoryName?.includes('Blend')) ? 'BS'
+        : (prod.categoryId?.includes('cereal') || prod.categoryName?.includes('Cereal')) ? 'CR'
+        : 'DF';
+      const subPrefix = String(prod.subcategoryName || prod.subcategoryId || prod.name || 'PRD').replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase() || 'PRD';
+      const autoSku = prod.sku || `${catPrefix}-${subPrefix}-${Math.floor(100 + Math.random() * 900)}`;
+      const autoBarcode = prod.barcode || `890${Math.floor(100000000 + Math.random() * 900000000)}`;
+
+      const variants = (prod.variants || [
+        { id: `v_${Date.now()}`, weightInGrams: 250, unit: 'GM', title: '250 GM', price: 250, originalPrice: 300, stockQuantity: 50, sku: `${autoSku}-250G`, isAvailable: true }
+      ]).map((v, i) => ({
+        ...v,
+        sku: v.sku || `${autoSku}-${v.weightInGrams || (i + 1) * 250}G`,
+        barcode: v.barcode || `${autoBarcode.slice(0, -3)}${String(v.weightInGrams || (i + 1) * 100).padStart(3, '0')}`,
+      }));
+
       const newProduct = {
         id: prodId,
         rating: 4.8,
         reviewCount: 1,
-        variants: prod.variants || [
-          { id: `v_${Date.now()}`, weightInGrams: 250, unit: 'GM', title: '250 GM', price: 250, originalPrice: 300, stockQuantity: 50, sku: 'NEW-250G', isAvailable: true }
-        ],
         ...prod,
+        sku: autoSku,
+        barcode: autoBarcode,
+        variants,
       };
       fb.products.push(newProduct);
       db.saveFallbackDb(fb);

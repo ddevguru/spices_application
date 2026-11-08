@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { mockApi } from '../services/mockApi';
-import { Plus, Search, Edit3, Trash2, Layers, CheckCircle2, XCircle, Download, Upload, FileSpreadsheet, CheckCircle, Check } from 'lucide-react';
+import { Plus, Search, Edit3, Trash2, Layers, CheckCircle2, XCircle, Download, Upload, FileSpreadsheet, CheckCircle, Check, Share2, Copy } from 'lucide-react';
 import VariantsModal from './VariantsModal';
 import * as XLSX from 'xlsx';
 
@@ -17,6 +17,9 @@ export default function Products() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [variantProduct, setVariantProduct] = useState(null);
+  const [shareProduct, setShareProduct] = useState(null);
+  const [copiedSku, setCopiedSku] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Excel Import States
   const fileInputRef = useRef(null);
@@ -567,6 +570,14 @@ export default function Products() {
                         <div>
                           <div style={{ fontWeight: 700, fontSize: '14px' }}>{p.name}</div>
                           <div style={{ fontSize: '11px', color: 'var(--color-secondary-text)' }}>{p.brand}</div>
+                          <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '10.5px', background: '#F3F4F6', color: '#1F2937', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 600 }}>
+                              SKU: {p.sku || p.id}
+                            </span>
+                            <span style={{ fontSize: '10.5px', background: '#FEF3C7', color: '#92400E', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 600 }}>
+                              BAR: {p.barcode || '890700100101'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -600,6 +611,13 @@ export default function Products() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => setShareProduct(p)}
+                          style={{ background: 'none', color: '#2563EB', cursor: 'pointer' }}
+                          title="Share Product (SKU / Barcode Link)"
+                        >
+                          <Share2 size={16} />
+                        </button>
                         <button
                           onClick={() => openEditModal(p)}
                           style={{ background: 'none', color: 'var(--color-primary-orange)' }}
@@ -942,6 +960,209 @@ export default function Products() {
           onClose={() => setVariantProduct(null)}
           onRefresh={loadData}
         />
+      )}
+
+      {/* Share Product (SKU / Barcode) Modal */}
+      {shareProduct && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '520px' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Share2 size={20} color="var(--color-primary-orange)" />
+                <h3 style={{ fontSize: '18px', fontWeight: 800 }}>Share Product (SKU Link & Barcode)</h3>
+              </div>
+              <button onClick={() => setShareProduct(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}>
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              {/* Product Info Card */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '14px',
+                  alignItems: 'center',
+                  padding: '12px 14px',
+                  backgroundColor: '#FAF5ED',
+                  borderRadius: '12px',
+                  marginBottom: '18px',
+                  border: '1px solid #F3EAE0',
+                }}
+              >
+                <img
+                  src={shareProduct.image}
+                  alt={shareProduct.name}
+                  style={{ width: '56px', height: '56px', borderRadius: '10px', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.target.src = '/assets/images/onboarding_dryfruits.jpg';
+                  }}
+                />
+                <div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--color-dark-text)' }}>
+                    {shareProduct.name}
+                  </h4>
+                  <p style={{ fontSize: '12px', color: 'var(--color-secondary-text)', margin: '2px 0 0' }}>
+                    {shareProduct.categoryName} • {shareProduct.subcategoryId}
+                  </p>
+                </div>
+              </div>
+
+              {/* SKU Box */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-dark-text)', display: 'block', marginBottom: '6px' }}>
+                  PRODUCT SKU (Unique Identifier)
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={shareProduct.sku || shareProduct.id}
+                    className="form-input"
+                    style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.5px' }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      navigator.clipboard.writeText(shareProduct.sku || shareProduct.id);
+                      setCopiedSku(true);
+                      setTimeout(() => setCopiedSku(false), 2000);
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+                  >
+                    {copiedSku ? <Check size={14} color="#10B981" /> : <Copy size={14} />}
+                    {copiedSku ? 'Copied' : 'Copy SKU'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile App Deep-Link */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-dark-text)', display: 'block', marginBottom: '6px' }}>
+                  DIRECT APPLICATION LINK (Opens exact product in Naturale App)
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={`https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`}
+                    className="form-input"
+                    style={{ fontSize: '12px', color: '#2563EB', fontWeight: 600 }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`);
+                      setCopiedLink(true);
+                      setTimeout(() => setCopiedLink(false), 2000);
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+                  >
+                    {copiedLink ? <Check size={14} color="#10B981" /> : <Copy size={14} />}
+                    {copiedLink ? 'Copied' : 'Copy Link'}
+                  </button>
+                </div>
+              </div>
+
+              {/* WhatsApp Share Button */}
+              <div style={{ marginBottom: '20px' }}>
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                    `🌿 Check out ${shareProduct.name} on Naturale App!\n\n` +
+                    `📦 SKU: ${shareProduct.sku || shareProduct.id}\n` +
+                    `🏷️ Barcode: ${shareProduct.barcode || '890700100101'}\n` +
+                    `🔗 Open Product: https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    backgroundColor: '#25D366',
+                    borderColor: '#25D366',
+                    width: '100%',
+                    padding: '12px',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    borderRadius: '10px',
+                  }}
+                >
+                  Share on WhatsApp (Direct Link & SKU)
+                </a>
+              </div>
+
+              {/* Visual Barcode Display */}
+              <div
+                style={{
+                  padding: '16px',
+                  backgroundColor: '#F9FAFB',
+                  borderRadius: '12px',
+                  border: '1px solid #E5E7EB',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#6B7280', letterSpacing: '1px', marginBottom: '10px' }}>
+                  OFFICIAL 12-DIGIT PRODUCT BARCODE
+                </div>
+                {/* Clean Simulated Barcode */}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    height: '52px',
+                    alignItems: 'flex-end',
+                    gap: '2.5px',
+                    backgroundColor: 'white',
+                    padding: '8px 18px',
+                    borderRadius: '6px',
+                    border: '1px solid #D1D5DB',
+                  }}
+                >
+                  {[3, 1, 4, 2, 1, 3, 2, 4, 1, 2, 3, 1, 4, 2, 3, 1, 2, 4, 3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 3, 2].map(
+                    (h, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: h % 2 === 0 ? '3px' : '2px',
+                          height: `${30 + h * 4}px`,
+                          backgroundColor: '#111827',
+                        }}
+                      />
+                    )
+                  )}
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'monospace',
+                    fontWeight: 800,
+                    fontSize: '14px',
+                    letterSpacing: '3px',
+                    marginTop: '8px',
+                    color: '#111827',
+                  }}
+                >
+                  {shareProduct.barcode || '890700100101'}
+                </div>
+                <p style={{ fontSize: '11.5px', color: '#6B7280', margin: '6px 0 0' }}>
+                  Scanning this barcode or entering it in the Naturale mobile app opens this product immediately.
+                </p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setShareProduct(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

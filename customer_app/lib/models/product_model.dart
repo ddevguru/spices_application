@@ -19,6 +19,8 @@ class Product {
   final Map<String, String> nutritionFacts;
   final String storageInstructions;
   final Map<String, String> specifications;
+  final String sku;
+  final String barcode;
   final bool allowCustomWeight;
   final bool isFeatured;
   final bool isBestSeller;
@@ -46,6 +48,8 @@ class Product {
     required this.nutritionFacts,
     required this.storageInstructions,
     required this.specifications,
+    this.sku = '',
+    this.barcode = '',
     this.allowCustomWeight = true,
     this.isFeatured = false,
     this.isBestSeller = false,
@@ -55,9 +59,23 @@ class Product {
     required this.variants,
   });
 
+  String get effectiveSku {
+    if (sku.isNotEmpty) return sku;
+    final catCode = categoryId.contains('dry') ? 'DF' : (categoryId.contains('whole') ? 'WS' : (categoryId.contains('blend') ? 'BS' : 'CR'));
+    final subCode = subcategoryId.isNotEmpty ? subcategoryId.substring(0, subcategoryId.length.clamp(0, 3)).toUpperCase() : 'PRD';
+    final idPart = id.replaceAll('p_', '').replaceAll('gen_', '').substring(0, id.replaceAll('p_', '').replaceAll('gen_', '').length.clamp(0, 4)).toUpperCase();
+    return '$catCode-$subCode-$idPart';
+  }
+
+  String get effectiveBarcode {
+    if (barcode.isNotEmpty) return barcode;
+    final hashVal = (id.hashCode.abs() % 900000000 + 100000000).toString();
+    return '890$hashVal';
+  }
+
   ProductVariant get defaultVariant {
     if (variants.isEmpty) {
-      return const ProductVariant(
+      return ProductVariant(
         id: 'default',
         weightInGrams: 250,
         unit: 'GM',
@@ -65,7 +83,8 @@ class Product {
         price: 250,
         originalPrice: 300,
         stockQuantity: 10,
-        sku: 'DEFAULT',
+        sku: effectiveSku,
+        barcode: effectiveBarcode,
       );
     }
     // Prefer 250 GM or first available
@@ -76,12 +95,16 @@ class Product {
   }
 
   factory Product.fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? 'p_${DateTime.now().millisecondsSinceEpoch}';
+    final savedSku = json['sku'] as String? ?? '';
+    final savedBarcode = json['barcode'] as String? ?? '';
+
     return Product(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: id,
+      name: json['name'] as String? ?? '',
       brand: json['brand'] as String? ?? 'Naturale Pure',
-      categoryId: json['categoryId'] as String,
-      categoryName: json['categoryName'] as String,
+      categoryId: json['categoryId'] as String? ?? 'cat_dry_fruits',
+      categoryName: json['categoryName'] as String? ?? 'Dry Fruits',
       subcategoryId: json['subcategoryId'] as String? ?? '',
       subcategoryName: json['subcategoryName'] as String? ?? '',
       shortDescription: json['shortDescription'] as String? ?? '',
@@ -104,6 +127,8 @@ class Product {
             (k, v) => MapEntry(k, v.toString()),
           ) ??
           {},
+      sku: savedSku,
+      barcode: savedBarcode,
       allowCustomWeight: json['allowCustomWeight'] as bool? ?? true,
       isFeatured: json['isFeatured'] as bool? ?? false,
       isBestSeller: json['isBestSeller'] as bool? ?? false,
@@ -137,6 +162,8 @@ class Product {
       'nutritionFacts': nutritionFacts,
       'storageInstructions': storageInstructions,
       'specifications': specifications,
+      'sku': effectiveSku,
+      'barcode': effectiveBarcode,
       'allowCustomWeight': allowCustomWeight,
       'isFeatured': isFeatured,
       'isBestSeller': isBestSeller,
@@ -147,4 +174,3 @@ class Product {
     };
   }
 }
-

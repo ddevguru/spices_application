@@ -1368,7 +1368,10 @@ class MockDataService {
         p.name.toLowerCase().contains(q) ||
         p.shortDescription.toLowerCase().contains(q) ||
         p.categoryName.toLowerCase().contains(q) ||
-        p.subcategoryId.toLowerCase().contains(q)
+        p.subcategoryId.toLowerCase().contains(q) ||
+        p.effectiveSku.toLowerCase().contains(q) ||
+        p.effectiveBarcode.contains(q) ||
+        p.variants.any((v) => v.sku.toLowerCase().contains(q) || v.effectiveBarcode.contains(q))
       ).toList();
     }
 
@@ -1411,6 +1414,55 @@ class MockDataService {
     await init();
     try {
       return _products.firstWhere((p) => p.id == id);
+    } catch (_) {
+      return getProductBySkuOrBarcode(id);
+    }
+  }
+
+  Future<Product?> getProductBySkuOrBarcode(String query) async {
+    await init();
+    final clean = query.trim().toUpperCase();
+    if (clean.isEmpty) return null;
+
+    try {
+      // 1. Check direct SKU or barcode match in products
+      return _products.firstWhere(
+        (p) =>
+            p.id.toUpperCase() == clean ||
+            p.sku.toUpperCase() == clean ||
+            p.effectiveSku.toUpperCase() == clean ||
+            p.barcode == clean ||
+            p.effectiveBarcode == clean ||
+            p.variants.any((v) =>
+                v.sku.toUpperCase() == clean ||
+                v.barcode == clean ||
+                v.effectiveBarcode == clean),
+      );
+    } catch (_) {}
+
+    // 2. Check if it matches any subcategory variety
+    for (final cat in _categories) {
+      for (final sub in cat.subcategories) {
+        final vars = _generateVarietiesForSubcategory(cat.id, sub);
+        for (final p in vars) {
+          if (p.id.toUpperCase() == clean ||
+              p.sku.toUpperCase() == clean ||
+              p.effectiveSku.toUpperCase() == clean ||
+              p.barcode == clean ||
+              p.effectiveBarcode == clean ||
+              p.variants.any((v) =>
+                  v.sku.toUpperCase() == clean ||
+                  v.barcode == clean ||
+                  v.effectiveBarcode == clean)) {
+            return p;
+          }
+        }
+      }
+    }
+
+    // 3. Fallback: search by name
+    try {
+      return _products.firstWhere((p) => p.name.toUpperCase().contains(clean));
     } catch (_) {
       return null;
     }
