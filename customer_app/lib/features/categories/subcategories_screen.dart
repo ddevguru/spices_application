@@ -90,24 +90,19 @@ class SubcategoriesScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // 3. Subcategories Compact 2-Column Grid
-                GridView.builder(
+                // 3. Subcategories Single-Line Horizontal Cards (Matching Category Card Layout with Real Images)
+                ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: subcategories.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.32,
-                  ),
+                  separatorBuilder: (context, index) => const SizedBox(height: 14),
                   itemBuilder: (context, index) {
                     final sub = subcategories[index];
                     return _buildSubcategoryCard(context, cat, sub, index);
                   },
                 ),
 
-                const SizedBox(height: 90),
+                const SizedBox(height: 100),
               ],
             ),
           );
@@ -126,7 +121,7 @@ class SubcategoriesScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -152,9 +147,9 @@ class SubcategoriesScreen extends ConsumerWidget {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    Colors.black.withOpacity(0.85),
-                    Colors.black.withOpacity(0.55),
-                    Colors.black.withOpacity(0.15),
+                    Colors.black.withValues(alpha: 0.85),
+                    Colors.black.withValues(alpha: 0.55),
+                    Colors.black.withValues(alpha: 0.15),
                   ],
                   stops: const [0.0, 0.58, 1.0],
                 ),
@@ -200,7 +195,7 @@ class SubcategoriesScreen extends ConsumerWidget {
                       cat.description,
                       style: GoogleFonts.inter(
                         fontSize: 11.5,
-                        color: Colors.white.withOpacity(0.92),
+                        color: Colors.white.withValues(alpha: 0.92),
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -216,7 +211,11 @@ class SubcategoriesScreen extends ConsumerWidget {
     );
   }
 
+  // Single-line horizontal card with matching image & ShaderMask fade, identical to Category Card design
   Widget _buildSubcategoryCard(BuildContext context, Category cat, String subcategory, int index) {
+    final imagePath = _getSubcategoryImage(subcategory, cat.id);
+    final description = _getSubcategoryDescription(subcategory);
+
     return InkWell(
       onTap: () {
         context.push(
@@ -228,122 +227,270 @@ class SubcategoriesScreen extends ConsumerWidget {
           },
         );
       },
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        height: 125,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.lightBorder, width: 1.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.lightBorder, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.025),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+              color: Colors.black.withValues(alpha: 0.035),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Top Row: Icon + Arrow
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFDEEE3),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      _getSubcategoryIcon(subcategory),
-                      color: AppColors.primaryOrange,
-                      size: 18,
-                    ),
-                  ),
-                ),
-                Container(
-                  width: 22,
-                  height: 22,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFAF5ED),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 12,
-                      color: AppColors.secondaryText,
-                    ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              // 1. Right Side Matching Image with ShaderMask gradient fade
+              Positioned(
+                right: -10,
+                top: 0,
+                bottom: 0,
+                width: 145,
+                child: ShaderMask(
+                  shaderCallback: (rect) {
+                    return const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [Colors.transparent, Colors.black],
+                      stops: [0.0, 0.40],
+                    ).createShader(rect);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: AppImage(
+                    imagePath: imagePath,
+                    fit: BoxFit.cover,
+                    width: 145,
+                    height: 125,
                   ),
                 ),
-              ],
-            ),
+              ),
 
-            // Bottom Column: Name & Varieties Link
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subcategory,
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.darkText,
-                    height: 1.2,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 3),
-                Row(
+              // 2. Left Side Info (Single line horizontal layout matching Categories Screen)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 130, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'View Varieties',
-                      style: GoogleFonts.inter(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primaryOrange,
+                    // Badge: Category Chip
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFDEEE3),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        cat.name.toUpperCase(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryOrange,
+                          letterSpacing: 0.4,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 2),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 13,
-                      color: AppColors.primaryOrange,
+
+                    // Subcategory Name & Short Description
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          subcategory,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.darkText,
+                            height: 1.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          description,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: AppColors.secondaryText,
+                            height: 1.25,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+
+                    // Action Link
+                    Row(
+                      children: [
+                        Text(
+                          'View Varieties',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryOrange,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          width: 18,
+                          height: 18,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFDEEE3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 11,
+                              color: AppColors.primaryOrange,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  IconData _getSubcategoryIcon(String sub) {
-    final s = sub.toLowerCase();
-    if (s.contains('almond') || s.contains('cashew') || s.contains('nut') || s.contains('walnut') || s.contains('pista')) {
-      return Icons.eco_rounded;
+  // Helper to map each subcategory to its matching high-resolution asset image
+  String _getSubcategoryImage(String subcategory, String categoryId) {
+    final s = subcategory.toLowerCase();
+
+    // 1. Dry Fruits
+    if (s.contains('almond')) return 'assets/images/prod_almonds.jpg';
+    if (s.contains('cashew')) return 'assets/images/prod_cashews.jpg';
+    if (s.contains('pista')) return 'assets/images/prod_pistachios.jpg';
+    if (s.contains('walnut')) return 'assets/images/prod_walnuts.jpg';
+    if (s.contains('raisin') || s.contains('date') || s.contains('fig') ||
+        s.contains('anjeer') || s.contains('apricot') || s.contains('nut') ||
+        s.contains('seed') || s.contains('dry fruit')) {
+      return 'assets/images/cat_dryfruits.jpg';
     }
-    if (s.contains('date') || s.contains('fig') || s.contains('raisin') || s.contains('fruit')) {
-      return Icons.spa_rounded;
+
+    // 2. Whole Spices
+    if (s.contains('cardamom')) return 'assets/images/prod_cardamom.jpg';
+    if (s.contains('cinnamon') || s.contains('clove') || s.contains('bay leave')) {
+      return 'assets/images/prod_cinnamon.jpg';
     }
-    if (s.contains('cardamom') || s.contains('clove') || s.contains('cinnamon') || s.contains('pepper') || s.contains('seed') || s.contains('spice')) {
-      return Icons.local_florist_rounded;
+    if (s.contains('pepper') || s.contains('cumin') || s.contains('coriander') ||
+        s.contains('fennel') || s.contains('mustard') || s.contains('star anise') ||
+        s.contains('fenugreek') || s.contains('chilli') || s.contains('spice')) {
+      return 'assets/images/cat_wholespices.jpg';
     }
-    if (s.contains('masala') || s.contains('powder') || s.contains('blend')) {
-      return Icons.grain_rounded;
+
+    // 3. Blended Spices
+    if (s.contains('turmeric') || s.contains('haldi') || s.contains('red chilli powder') ||
+        s.contains('coriander powder') || s.contains('cumin powder')) {
+      return 'assets/images/prod_turmeric.jpg';
     }
-    if (s.contains('oat') || s.contains('rice') || s.contains('quinoa') || s.contains('millet') || s.contains('cereal')) {
-      return Icons.grass_rounded;
+    if (s.contains('garam') || s.contains('masala') || s.contains('kitchen king') ||
+        s.contains('biryani') || s.contains('chole') || s.contains('pav bhaji') ||
+        s.contains('paneer') || s.contains('chicken') || s.contains('meat') ||
+        s.contains('sambhar') || s.contains('tandoori')) {
+      return 'assets/images/prod_garammasala.jpg';
     }
-    return Icons.all_inclusive_rounded;
+
+    // 4. Cereals
+    if (s.contains('oat') || s.contains('corn') || s.contains('muesli') || s.contains('dalia')) {
+      return 'assets/images/prod_oats.jpg';
+    }
+    if (s.contains('quinoa') || s.contains('millet') || s.contains('ragi') ||
+        s.contains('jowar') || s.contains('bajra') || s.contains('barley') ||
+        s.contains('rice') || s.contains('wheat') || s.contains('grain')) {
+      return 'assets/images/prod_quinoa.jpg';
+    }
+
+    // Category default fallbacks
+    switch (categoryId) {
+      case 'cat_dry_fruits':
+        return 'assets/images/cat_dryfruits.jpg';
+      case 'cat_whole_spices':
+        return 'assets/images/cat_wholespices.jpg';
+      case 'cat_blended_spices':
+        return 'assets/images/cat_blendedspices.jpg';
+      case 'cat_cereals':
+        return 'assets/images/cat_cereals.jpg';
+      default:
+        return 'assets/images/cat_dryfruits.jpg';
+    }
+  }
+
+  // Descriptive subtitle for each subcategory
+  String _getSubcategoryDescription(String subcategory) {
+    final s = subcategory.toLowerCase();
+
+    // Dry Fruits
+    if (s.contains('almond')) return 'California, Mamra, Gurbandi & Regular varieties';
+    if (s.contains('cashew')) return 'W180 King, W240, W320 & Roasted varieties';
+    if (s.contains('pista')) return 'Salted California, Irani & Plain Kernels';
+    if (s.contains('walnut')) return 'Kashmiri Halves, Whole Inshell & Broken pieces';
+    if (s.contains('raisin')) return 'Indian Golden, Afghan Black & Green Kishmish';
+    if (s.contains('date')) return 'Medjool Royal, Kimia Soft & Arabian Ajwa dates';
+    if (s.contains('fig') || s.contains('anjeer')) return 'Afghani Premium & Sun-dried Jumbo Anjeer';
+    if (s.contains('apricot')) return 'Turkish Dried, Ladakhi Khubani & Seedless sweet';
+    if (s.contains('mixed')) return 'Royal Panchmeva & Premium Daily Health Mix';
+    if (s.contains('seed')) return 'Chia, Flax, Pumpkin, Sunflower & Watermelon seeds';
+
+    // Whole Spices
+    if (s.contains('green cardamom')) return '7mm & 8mm Bold green pods from Idukki, Kerala';
+    if (s.contains('black cardamom')) return 'Smoky aromatic large pods for gravies & biryani';
+    if (s.contains('cinnamon')) return 'True Ceylon Sri Lankan rolls & authentic cassia bark';
+    if (s.contains('clove')) return 'Handpicked aromatic Zanzibar & Madagascan cloves';
+    if (s.contains('pepper')) return 'Tellicherry Garbled bold black peppercorns';
+    if (s.contains('cumin seed')) return 'Unpolished aromatic Gujarat & Rajasthan jeera';
+    if (s.contains('coriander seed')) return 'Crisp fragrant dhaniya seeds for fresh blends';
+    if (s.contains('fennel')) return 'Lucknowi sweet saunf & cooking fennel seeds';
+    if (s.contains('mustard')) return 'Small black sarson & traditional yellow rai seeds';
+    if (s.contains('star anise')) return 'Whole intact 8-pointed star anise flowers';
+    if (s.contains('bay leave')) return 'Whole dried aromatic Indian tejpatta leaves';
+    if (s.contains('fenugreek')) return 'Golden methi seeds with rich digestive properties';
+    if (s.contains('chilli')) return 'Guntur Sannam, Byadgi wrinkle & Kashmiri chillies';
+
+    // Blended Spices
+    if (s.contains('garam masala')) return 'Classic royal 15-spice blend for aromatic dishes';
+    if (s.contains('kitchen king')) return 'All-purpose master curry blend for daily sabzis';
+    if (s.contains('biryani')) return 'Nawabi dum biryani blend with saffron & whole mace';
+    if (s.contains('chole')) return 'Delhi-style tangy amchur & anardana chana masala';
+    if (s.contains('pav bhaji')) return 'Mumbai street-style rich fragrant bhaji seasoning';
+    if (s.contains('paneer')) return 'Smooth creamy shahi & butter paneer spice mix';
+    if (s.contains('chicken')) return 'Rich savory blend for authentic chicken curries';
+    if (s.contains('meat')) return 'Hearty traditional spice blend for slow-cooked meats';
+    if (s.contains('sambhar')) return 'Udupi-style roasted lentils & coriander sambhar mix';
+    if (s.contains('tandoori')) return 'Vibrant smokey tandoor & tikka marinade seasoning';
+    if (s.contains('turmeric')) return 'High-curcumin Lakadong & Salem pure haldi powder';
+    if (s.contains('red chilli')) return 'Mild Kashmiri vibrant red & spicy Tikhalal powder';
+    if (s.contains('coriander powder')) return 'Cold-ground aromatic pure dhaniya powder';
+    if (s.contains('cumin powder')) return 'Roasted & freshly ground fragrant jeera powder';
+
+    // Cereals
+    if (s.contains('rolled oats')) return 'Jumbo rolled oats for oatmeal, bowls & baking';
+    if (s.contains('oat')) return 'Whole grain instant & steel-cut breakfast oats';
+    if (s.contains('quinoa')) return 'Triple-washed white, red & tri-color super grain';
+    if (s.contains('millet')) return 'Foxtail, Little, Kodo & Barnyard millets';
+    if (s.contains('ragi')) return 'Calcium-rich whole red finger millet grains & flour';
+    if (s.contains('jowar')) return 'Gluten-free white sorghum grains for healthy diets';
+    if (s.contains('bajra')) return 'Iron-rich pearl millet grains for winter rotis';
+    if (s.contains('barley')) return 'Fiber-packed pearl jau grains for soups & drinks';
+    if (s.contains('brown rice')) return 'Unpolished long-grain fiber-rich brown basmati';
+    if (s.contains('dalia')) return 'Broken wheat grain for savory & sweet porridge';
+    if (s.contains('corn flake')) return 'Crispy golden toasted corn breakfast cereal';
+    if (s.contains('muesli')) return 'Fruit & nut crunchy muesli with seeds & rolled oats';
+    if (s.contains('wheat')) return 'Sharbati golden MP whole wheat grains';
+    if (s.contains('multigrain')) return 'Nutritious 7-grain composite super mix';
+
+    return 'Multiple weights (100g, 250g, 500g, 1kg) available';
   }
 
   String _getCategoryName(String id) {

@@ -1,15 +1,24 @@
+import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
+
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../models/order_model.dart';
 import '../../providers/order_provider.dart';
 
-class OrderReceiptScreen extends ConsumerWidget {
+class OrderReceiptScreen extends ConsumerStatefulWidget {
   final String orderId;
   final CustomerOrder? order;
 
@@ -20,14 +29,22 @@ class OrderReceiptScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    CustomerOrder? displayOrder = order;
+  ConsumerState<OrderReceiptScreen> createState() => _OrderReceiptScreenState();
+}
+
+class _OrderReceiptScreenState extends ConsumerState<OrderReceiptScreen> {
+  final GlobalKey _receiptKey = GlobalKey();
+  bool _isProcessing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    CustomerOrder? displayOrder = widget.order;
 
     if (displayOrder == null) {
       final ordersAsync = ref.watch(orderProvider);
       ordersAsync.whenData((orders) {
         try {
-          displayOrder = orders.firstWhere((o) => o.id == orderId);
+          displayOrder = orders.firstWhere((o) => o.id == widget.orderId);
         } catch (_) {}
       });
     }
@@ -53,7 +70,7 @@ class OrderReceiptScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Order #$orderId could not be found.',
+                'Order #${widget.orderId} could not be found.',
                 style: GoogleFonts.inter(fontSize: 13, color: AppColors.secondaryText),
               ),
               const SizedBox(height: 16),
@@ -84,13 +101,13 @@ class OrderReceiptScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
-            tooltip: 'Share Receipt',
-            onPressed: () => _shareReceipt(context, ord),
+            tooltip: 'Share as Image to WhatsApp',
+            onPressed: _isProcessing ? null : () => _shareReceiptAsImage(context, ord),
           ),
           IconButton(
             icon: const Icon(Icons.download_rounded),
-            tooltip: 'Download Invoice',
-            onPressed: () => _downloadReceipt(context, ord),
+            tooltip: 'Download Invoice PDF',
+            onPressed: _isProcessing ? null : () => _downloadReceiptAsPdf(context, ord),
           ),
         ],
       ),
@@ -99,479 +116,482 @@ class OrderReceiptScreen extends ConsumerWidget {
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            // RECEIPT SHEET
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.lightBorder, width: 1.2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 1. BRAND HEADER
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFF7ED),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
+            // RECEIPT SHEET WITH REPAINT BOUNDARY FOR HIGH-RES EXPORT
+            RepaintBoundary(
+              key: _receiptKey,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.lightBorder, width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 1. BRAND HEADER
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFF7ED),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryOrange,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'NATURALE',
-                              style: GoogleFonts.poppins(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
-                                color: AppColors.primaryOrange,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Pure Dry Fruits, Heritage Spices & Organic Cereals',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.darkText,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'GSTIN: 07AAACN1234F1Z5 • FSSAI Lic: 10020011000452\nNaturale Agrotech Ltd., Sector 62, Noida, UP - 201309',
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            color: AppColors.secondaryText,
-                            height: 1.3,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFFDBA74)),
-                          ),
-                          child: Text(
-                            'RETAIL TAX INVOICE / CASH MEMO',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.8,
-                              color: const Color(0xFFC2410C),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Zig-zag / Perforated visual bar
-                  _buildPerforatedDivider(),
-
-                  Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 2. INVOICE META
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'INVOICE NO',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.6,
-                                    color: AppColors.secondaryText,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'INV-${ord.id}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.darkText,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'DATE & TIME',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.6,
-                                    color: AppColors.secondaryText,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  dateFormat.format(ord.createdAt),
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.darkText,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'STATUS',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.6,
-                                    color: AppColors.secondaryText,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(ord.status).withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    ord.status.toUpperCase(),
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: _getStatusColor(ord.status),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'PAYMENT',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.6,
-                                    color: AppColors.secondaryText,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  ord.paymentMethod,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF16A34A),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-
-                        const Divider(height: 24, color: AppColors.lightBorder),
-
-                        // 3. BILLED / DELIVERED TO
-                        Text(
-                          'BILLED & DELIVERED TO:',
-                          style: GoogleFonts.inter(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                            color: AppColors.secondaryText,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          ord.customer.name,
-                          style: GoogleFonts.poppins(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.darkText,
-                          ),
-                        ),
-                        Text(
-                          ord.customer.address.fullAddress,
-                          style: GoogleFonts.inter(
-                            fontSize: 11.5,
-                            color: AppColors.darkText,
-                            height: 1.35,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Phone: ${ord.customer.phone} • Email: ${ord.customer.email}',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.secondaryText,
-                          ),
-                        ),
-
-                        const Divider(height: 24, color: AppColors.lightBorder),
-
-                        // 4. ITEMS TABLE
-                        Text(
-                          'ITEMS PURCHASED',
-                          style: GoogleFonts.inter(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                            color: AppColors.secondaryText,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Table Header
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF9FAFB),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.lightBorder),
-                          ),
-                          child: Row(
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Expanded(
-                                flex: 5,
-                                child: Text(
-                                  'Item & Variant',
-                                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondaryText),
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryOrange,
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
+                                child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
                               ),
-                              Expanded(
-                                flex: 2,
-                                child: Text(
-                                  'Qty',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondaryText),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Text(
-                                  'Rate',
-                                  textAlign: TextAlign.right,
-                                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondaryText),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 3,
-                                child: Text(
-                                  'Amount',
-                                  textAlign: TextAlign.right,
-                                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondaryText),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        // Table Rows
-                        ...ord.items.map((item) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 5,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.productName,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.darkText,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFFDEEE3),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          item.variantTitle,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 9.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.primaryOrange,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    '${item.quantity}',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    '₹${item.price.toInt()}',
-                                    textAlign: TextAlign.right,
-                                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.secondaryText),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    '₹${item.total.toInt()}',
-                                    textAlign: TextAlign.right,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.darkText,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-
-                        const Divider(height: 20, color: AppColors.lightBorder),
-
-                        // 5. BILLING SUMMARY
-                        _buildSummaryRow('Items Subtotal (MRP)', CurrencyFormatter.format(ord.subtotal)),
-                        if (ord.discount > 0)
-                          _buildSummaryRow(
-                            'Coupon Discount (${ord.couponCode.isNotEmpty ? ord.couponCode : "PROMO"})',
-                            '-${CurrencyFormatter.format(ord.discount)}',
-                            isGreen: true,
-                          ),
-                        _buildSummaryRow(
-                          'Delivery Charges',
-                          ord.deliveryFee == 0 ? 'FREE' : CurrencyFormatter.format(ord.deliveryFee),
-                          isGreen: ord.deliveryFee == 0,
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        // Total Row
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF7ED),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFFED7AA)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'GRAND TOTAL',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.6,
-                                      color: const Color(0xFF9A3412),
-                                    ),
-                                  ),
-                                  Text(
-                                    'Inclusive of all applicable taxes',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 9.5,
-                                      color: AppColors.secondaryText,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              const SizedBox(width: 8),
                               Text(
-                                CurrencyFormatter.format(ord.totalAmount),
+                                'NATURALE',
                                 style: GoogleFonts.poppins(
-                                  fontSize: 19,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.2,
                                   color: AppColors.primaryOrange,
                                 ),
                               ),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Pure Dry Fruits, Heritage Spices & Organic Cereals',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.darkText,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'GSTIN: 07AAACN1234F1Z5 • FSSAI Lic: 10020011000452\nNaturale Agrotech Ltd., Sector 62, Noida, UP - 201309',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              color: AppColors.secondaryText,
+                              height: 1.3,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFFFDBA74)),
+                            ),
+                            child: Text(
+                              'RETAIL TAX INVOICE / CASH MEMO',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: const Color(0xFFC2410C),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-                        const SizedBox(height: 18),
+                    // Zig-zag / Perforated visual bar
+                    _buildPerforatedDivider(),
 
-                        // 6. FOOTER DECLARATION
-                        Center(
-                          child: Column(
+                    Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 2. INVOICE META
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '• This is a computer-generated tax invoice •',
-                                style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.secondaryText,
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'INVOICE NO',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.6,
+                                      color: AppColors.secondaryText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'INV-${ord.id}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.darkText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'DATE & TIME',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.6,
+                                      color: AppColors.secondaryText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    dateFormat.format(ord.createdAt),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.darkText,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Thank you for choosing pure, chemical-free Naturale harvest!',
-                                style: GoogleFonts.inter(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.darkText,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Customer Support: care@naturale.com | WhatsApp: +91 98765 43210',
-                                style: GoogleFonts.inter(
-                                  fontSize: 9.5,
-                                  color: AppColors.secondaryText,
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'STATUS',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.6,
+                                      color: AppColors.secondaryText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(ord.status).withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      ord.status.toUpperCase(),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: _getStatusColor(ord.status),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'PAYMENT',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.6,
+                                      color: AppColors.secondaryText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    ord.paymentMethod,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF16A34A),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ),
-                      ],
+
+                          const Divider(height: 24, color: AppColors.lightBorder),
+
+                          // 3. BILLED / DELIVERED TO
+                          Text(
+                            'BILLED & DELIVERED TO:',
+                            style: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: AppColors.secondaryText,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            ord.customer.name,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.darkText,
+                            ),
+                          ),
+                          Text(
+                            ord.customer.address.fullAddress,
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: AppColors.darkText,
+                              height: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Phone: ${ord.customer.phone} • Email: ${ord.customer.email}',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.secondaryText,
+                            ),
+                          ),
+
+                          const Divider(height: 24, color: AppColors.lightBorder),
+
+                          // 4. ITEMS TABLE
+                          Text(
+                            'ITEMS PURCHASED',
+                            style: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: AppColors.secondaryText,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Table Header
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9FAFB),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.lightBorder),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 5,
+                                  child: Text(
+                                    'Item & Variant',
+                                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondaryText),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    'Qty',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondaryText),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    'Rate',
+                                    textAlign: TextAlign.right,
+                                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondaryText),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                    'Amount',
+                                    textAlign: TextAlign.right,
+                                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondaryText),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 4),
+
+                          // Table Rows
+                          ...ord.items.map((item) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 5,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.productName,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.darkText,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFDEEE3),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            item.variantTitle,
+                                            style: GoogleFonts.inter(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.primaryOrange,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text(
+                                      '${item.quantity}',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text(
+                                      '₹${item.price.toInt()}',
+                                      textAlign: TextAlign.right,
+                                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.secondaryText),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(
+                                      '₹${item.total.toInt()}',
+                                      textAlign: TextAlign.right,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.darkText,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+
+                          const Divider(height: 20, color: AppColors.lightBorder),
+
+                          // 5. BILLING SUMMARY
+                          _buildSummaryRow('Items Subtotal (MRP)', CurrencyFormatter.format(ord.subtotal)),
+                          if (ord.discount > 0)
+                            _buildSummaryRow(
+                              'Coupon Discount (${ord.couponCode.isNotEmpty ? ord.couponCode : "PROMO"})',
+                              '-${CurrencyFormatter.format(ord.discount)}',
+                              isGreen: true,
+                            ),
+                          _buildSummaryRow(
+                            'Delivery Charges',
+                            ord.deliveryFee == 0 ? 'FREE' : CurrencyFormatter.format(ord.deliveryFee),
+                            isGreen: ord.deliveryFee == 0,
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // Total Row
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF7ED),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFFED7AA)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'GRAND TOTAL',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.6,
+                                        color: const Color(0xFF9A3412),
+                                      ),
+                                    ),
+                                    Text(
+                                      'Inclusive of all applicable taxes',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 9.5,
+                                        color: AppColors.secondaryText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  CurrencyFormatter.format(ord.totalAmount),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.primaryOrange,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 18),
+
+                          // 6. FOOTER DECLARATION
+                          Center(
+                            child: Column(
+                              children: [
+                                Text(
+                                  '• This is a computer-generated tax invoice •',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.secondaryText,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Thank you for choosing pure, chemical-free Naturale harvest!',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.darkText,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Customer Support: care@naturale.com | WhatsApp: +91 98765 43210',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9.5,
+                                    color: AppColors.secondaryText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
@@ -582,10 +602,12 @@ class OrderReceiptScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _shareReceipt(context, ord),
-                    icon: const Icon(Icons.share_rounded, size: 18, color: AppColors.primaryOrange),
+                    onPressed: _isProcessing ? null : () => _shareReceiptAsImage(context, ord),
+                    icon: _isProcessing
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.share_rounded, size: 18, color: AppColors.primaryOrange),
                     label: Text(
-                      'Share Receipt',
+                      'Share to WhatsApp',
                       style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primaryOrange),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -599,8 +621,10 @@ class OrderReceiptScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _downloadReceipt(context, ord),
-                    icon: const Icon(Icons.download_rounded, size: 18, color: Colors.white),
+                    onPressed: _isProcessing ? null : () => _downloadReceiptAsPdf(context, ord),
+                    icon: _isProcessing
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.picture_as_pdf_rounded, size: 18, color: Colors.white),
                     label: Text(
                       'Download PDF',
                       style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
@@ -704,7 +728,126 @@ class OrderReceiptScreen extends ConsumerWidget {
     }
   }
 
-  void _shareReceipt(BuildContext context, CustomerOrder ord) {
+  Future<Uint8List?> _captureReceiptImage() async {
+    try {
+      final boundary = _receiptKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List();
+    } catch (e) {
+      debugPrint('Receipt capture error: $e');
+      return null;
+    }
+  }
+
+  Future<void> _shareReceiptAsImage(BuildContext context, CustomerOrder ord) async {
+    setState(() => _isProcessing = true);
+    try {
+      final pngBytes = await _captureReceiptImage();
+      if (pngBytes == null) {
+        if (mounted) _shareFallbackText(context, ord);
+        return;
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/Naturale_Tax_Invoice_${ord.id}.png');
+      await file.writeAsBytes(pngBytes);
+
+      final box = mounted ? (context.findRenderObject() as RenderBox?) : null;
+      final origin = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'image/png', name: 'Naturale_Tax_Invoice_${ord.id}.png')],
+        text: '🧾 *NATURALE - TAX INVOICE & CASH MEMO*\n'
+            'Invoice: INV-${ord.id}\n'
+            'Customer: ${ord.customer.name}\n'
+            'Total: ${CurrencyFormatter.format(ord.totalAmount)} (${ord.status})\n'
+            'Thank you for shopping pure dry fruits & spices with Naturale!',
+        sharePositionOrigin: origin,
+      );
+    } catch (e) {
+      debugPrint('Share image error: $e');
+      if (context.mounted) {
+        _shareFallbackText(context, ord);
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _downloadReceiptAsPdf(BuildContext context, CustomerOrder ord) async {
+    setState(() => _isProcessing = true);
+    try {
+      final pngBytes = await _captureReceiptImage();
+      if (pngBytes == null) {
+        throw Exception('Could not capture receipt layout');
+      }
+
+      final pdf = pw.Document();
+      final pdfImage = pw.MemoryImage(pngBytes);
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          build: (pw.Context ctx) {
+            return pw.Center(
+              child: pw.Image(pdfImage, fit: pw.BoxFit.contain),
+            );
+          },
+        ),
+      );
+
+      final pdfBytes = await pdf.save();
+
+      // Save locally to cache/documents
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/Naturale_Tax_Invoice_${ord.id}.pdf');
+      await file.writeAsBytes(pdfBytes);
+
+      // Open native system print & "Save as PDF" dialog
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdfBytes,
+        name: 'Naturale_Tax_Invoice_${ord.id}.pdf',
+      );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'PDF Invoice INV-${ord.id}.pdf ready for download & printing!',
+                    style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('PDF download error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate PDF: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  void _shareFallbackText(BuildContext context, CustomerOrder ord) {
     final invoiceSummary = StringBuffer();
     invoiceSummary.writeln('🧾 *NATURALE - TAX INVOICE*');
     invoiceSummary.writeln('Invoice No: INV-${ord.id}');
@@ -724,31 +867,9 @@ class OrderReceiptScreen extends ConsumerWidget {
     Clipboard.setData(ClipboardData(text: invoiceSummary.toString()));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Invoice details copied to clipboard! Ready to share via WhatsApp / SMS.'),
+        content: Text('Invoice details copied to clipboard for WhatsApp!'),
         backgroundColor: Color(0xFF16A34A),
         behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _downloadReceipt(BuildContext context, CustomerOrder ord) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Receipt INV-${ord.id}.pdf generated & saved to Downloads!',
-                style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF16A34A),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
       ),
     );
   }
