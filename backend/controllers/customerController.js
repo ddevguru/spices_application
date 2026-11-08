@@ -127,16 +127,27 @@ exports.syncCustomer = async (req, res, next) => {
 
     if (db.isPostgresConnected()) {
       try {
-        await db.query(
-          `INSERT INTO customers (id, name, email, phone, city, registered_date, total_orders, total_spent, addresses)
-           VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, 0, 0.00, '[]'::jsonb)
-           ON CONFLICT (id) DO UPDATE SET
-             name = COALESCE(EXCLUDED.name, customers.name),
-             email = COALESCE(EXCLUDED.email, customers.email),
-             phone = COALESCE(EXCLUDED.phone, customers.phone),
-             city = COALESCE(EXCLUDED.city, customers.city);`,
-          [cleanId, cleanName, cleanEmail, cleanPhone, cleanCity]
-        );
+        if (cleanEmail) {
+          await db.query(
+            `INSERT INTO customers (id, name, email, phone, city, registered_date, total_orders, total_spent, addresses)
+             VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, 0, 0.00, '[]'::jsonb)
+             ON CONFLICT (email) DO UPDATE SET
+               name = COALESCE(NULLIF(EXCLUDED.name, ''), customers.name),
+               phone = COALESCE(NULLIF(EXCLUDED.phone, ''), customers.phone),
+               city = COALESCE(NULLIF(EXCLUDED.city, ''), customers.city);`,
+            [cleanId, cleanName, cleanEmail, cleanPhone, cleanCity]
+          );
+        } else {
+          await db.query(
+            `INSERT INTO customers (id, name, email, phone, city, registered_date, total_orders, total_spent, addresses)
+             VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, 0, 0.00, '[]'::jsonb)
+             ON CONFLICT (id) DO UPDATE SET
+               name = COALESCE(NULLIF(EXCLUDED.name, ''), customers.name),
+               phone = COALESCE(NULLIF(EXCLUDED.phone, ''), customers.phone),
+               city = COALESCE(NULLIF(EXCLUDED.city, ''), customers.city);`,
+            [cleanId, cleanName, cleanEmail, cleanPhone, cleanCity]
+          );
+        }
       } catch (dbErr) {
         console.warn('Postgres customer sync warning:', dbErr.message);
       }

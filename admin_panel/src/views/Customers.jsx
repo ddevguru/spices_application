@@ -94,7 +94,30 @@ export default function Customers() {
 
       <div className="card">
         <div className="table-container">
-          {filtered.length > 0 ? (
+          {loading && customers.length === 0 ? (
+            <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-secondary-text)' }}>
+              <div
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--color-light-peach)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}
+              >
+                <RefreshCw size={28} color="var(--color-primary-orange)" className="spin" />
+              </div>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-dark-text)', marginBottom: '8px' }}>
+                Connecting to Live Database...
+              </h3>
+              <p style={{ fontSize: '13.5px', maxWidth: '440px', margin: '0 auto', lineHeight: 1.5 }}>
+                Fetching registered customer accounts from PostgreSQL store. Please hold on.
+              </p>
+            </div>
+          ) : filtered.length > 0 ? (
             <table className="data-table">
               <thead>
                 <tr>

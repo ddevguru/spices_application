@@ -387,9 +387,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('user_profile');
+    await prefs.remove('saved_shop_business_profile');
+    await prefs.remove('local_orders');
     await prefs.setBool('is_logged_in', false);
-    MockDataService().updateProfile(const UserProfile(id: '', name: 'Member', email: '', phone: ''));
-    state = state.copyWith(isAuthenticated: false, token: null, user: null);
+    MockDataService().clearUserData();
+    state = const AuthState(
+      isOnboarded: true,
+      isAuthenticated: false,
+      token: null,
+      user: null,
+      isLoading: false,
+      error: null,
+    );
   }
 }
 

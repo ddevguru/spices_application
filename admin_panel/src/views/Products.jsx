@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { mockApi } from '../services/mockApi';
-import { Plus, Search, Edit3, Trash2, Layers, CheckCircle2, XCircle, Download, Upload, FileSpreadsheet, CheckCircle, Check, Share2, Copy } from 'lucide-react';
+import { Plus, Search, Edit3, Trash2, Layers, CheckCircle2, XCircle, Download, Upload, FileSpreadsheet, CheckCircle, Check, Share2, Copy, QrCode, ExternalLink } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import VariantsModal from './VariantsModal';
 import * as XLSX from 'xlsx';
 
@@ -568,15 +569,32 @@ export default function Products() {
                           }}
                         />
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '14px' }}>{p.name}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--color-secondary-text)' }}>{p.brand}</div>
-                          <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '10.5px', background: '#F3F4F6', color: '#1F2937', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 600 }}>
+                          <div style={{ fontWeight: 700, fontSize: '14px', color: '#111827' }}>{p.name}</div>
+                          <div style={{ fontSize: '11.5px', color: 'var(--color-secondary-text)', marginTop: '1px' }}>{p.brand}</div>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '11px', background: '#F1F5F9', color: '#334155', padding: '3px 7px', borderRadius: '5px', fontFamily: 'monospace', fontWeight: 700, border: '1px solid #E2E8F0' }}>
                               SKU: {p.sku || p.id}
                             </span>
-                            <span style={{ fontSize: '10.5px', background: '#FEF3C7', color: '#92400E', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 600 }}>
-                              BAR: {p.barcode || '890700100101'}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setShareProduct(p)}
+                              style={{
+                                fontSize: '11px',
+                                background: '#EEF2FF',
+                                color: '#4338CA',
+                                padding: '3px 8px',
+                                borderRadius: '5px',
+                                border: '1px solid #C7D2FE',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontWeight: 600,
+                              }}
+                              title="View & Share Product QR Code"
+                            >
+                              <QrCode size={12} /> QR Code
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -1066,13 +1084,12 @@ export default function Products() {
               </div>
 
               {/* WhatsApp Share Button */}
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '16px' }}>
                 <a
                   href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
                     `🌿 Check out ${shareProduct.name} on Naturale App!\n\n` +
                     `📦 SKU: ${shareProduct.sku || shareProduct.id}\n` +
-                    `🏷️ Barcode: ${shareProduct.barcode || '890700100101'}\n` +
-                    `🔗 Open Product: https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`
+                    `🔗 Tap to Open in App: https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -1096,60 +1113,89 @@ export default function Products() {
                 </a>
               </div>
 
-              {/* Visual Barcode Display */}
+              {/* Live Scannable Product QR Code */}
               <div
                 style={{
-                  padding: '16px',
+                  padding: '20px 16px',
                   backgroundColor: '#F9FAFB',
-                  borderRadius: '12px',
+                  borderRadius: '16px',
                   border: '1px solid #E5E7EB',
                   textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                 }}
               >
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#6B7280', letterSpacing: '1px', marginBottom: '10px' }}>
-                  OFFICIAL 12-DIGIT PRODUCT BARCODE
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#4B5563', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
+                  GENUINE SCANNABLE PRODUCT QR CODE
                 </div>
-                {/* Clean Simulated Barcode */}
+
                 <div
                   style={{
+                    padding: '14px',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '12px',
+                    border: '1px solid #E5E7EB',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                     display: 'inline-flex',
-                    height: '52px',
-                    alignItems: 'flex-end',
-                    gap: '2.5px',
-                    backgroundColor: 'white',
-                    padding: '8px 18px',
-                    borderRadius: '6px',
-                    border: '1px solid #D1D5DB',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                   }}
                 >
-                  {[3, 1, 4, 2, 1, 3, 2, 4, 1, 2, 3, 1, 4, 2, 3, 1, 2, 4, 3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 3, 1, 3, 2].map(
-                    (h, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          width: h % 2 === 0 ? '3px' : '2px',
-                          height: `${30 + h * 4}px`,
-                          backgroundColor: '#111827',
-                        }}
-                      />
-                    )
-                  )}
+                  <QRCodeSVG
+                    id="product-qr-svg"
+                    value={`https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`}
+                    size={175}
+                    level="H"
+                    includeMargin={true}
+                  />
+                  <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 700, fontFamily: 'monospace', color: '#111827' }}>
+                    SKU: {shareProduct.sku || shareProduct.id}
+                  </div>
                 </div>
-                <div
-                  style={{
-                    fontFamily: 'monospace',
-                    fontWeight: 800,
-                    fontSize: '14px',
-                    letterSpacing: '3px',
-                    marginTop: '8px',
-                    color: '#111827',
-                  }}
-                >
-                  {shareProduct.barcode || '890700100101'}
-                </div>
-                <p style={{ fontSize: '11.5px', color: '#6B7280', margin: '6px 0 0' }}>
-                  Scanning this barcode or entering it in the Naturale mobile app opens this product immediately.
+
+                <p style={{ fontSize: '12px', color: '#4B5563', margin: '12px 0 14px', maxWidth: '380px', lineHeight: 1.5 }}>
+                  Scan with mobile camera, Google Lens, or in-app QR scanner to open <strong>{shareProduct.name}</strong> immediately in the Naturale mobile app.
                 </p>
+
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      const svg = document.getElementById('product-qr-svg');
+                      if (!svg) return;
+                      const svgData = new XMLSerializer().serializeToString(svg);
+                      const canvas = document.createElement('canvas');
+                      canvas.width = 350;
+                      canvas.height = 350;
+                      const ctx = canvas.getContext('2d');
+                      const img = new Image();
+                      img.onload = () => {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, 350, 350);
+                        const a = document.createElement('a');
+                        a.download = `QR_${shareProduct.sku || shareProduct.id}.png`;
+                        a.href = canvas.toDataURL('image/png');
+                        a.click();
+                      };
+                      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                    }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 14px' }}
+                  >
+                    <Download size={14} /> Download High-Res QR
+                  </button>
+                  <a
+                    href={`https://naturale.app/product?sku=${shareProduct.sku || shareProduct.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 14px', textDecoration: 'none' }}
+                  >
+                    <ExternalLink size={14} /> Test Link in Browser
+                  </a>
+                </div>
               </div>
             </div>
             <div className="modal-footer">

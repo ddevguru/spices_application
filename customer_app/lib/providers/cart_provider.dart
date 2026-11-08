@@ -6,6 +6,7 @@ import '../models/coupon_model.dart';
 import '../models/product_model.dart';
 import '../models/variant_model.dart';
 import '../services/mock_data_service.dart';
+import 'auth_provider.dart';
 
 class CartState {
   final List<CartItem> items;
@@ -61,26 +62,46 @@ class CartState {
 }
 
 class CartNotifier extends StateNotifier<CartState> {
-  CartNotifier() : super(const CartState()) {
+  final Ref _ref;
+  String _currentUserId = 'guest';
+
+  CartNotifier(this._ref) : super(const CartState()) {
+    final user = _ref.read(authProvider).user;
+    _currentUserId = (user != null && user.id.isNotEmpty) ? user.id : 'guest';
     _loadFromStorage();
+  }
+
+  String _storageKey(String userId) => 'saved_cart_items_$userId';
+
+  Future<void> switchUser(String? newUserId) async {
+    final cleanNewId = (newUserId != null && newUserId.isNotEmpty) ? newUserId : 'guest';
+    if (_currentUserId == cleanNewId) return;
+
+    // Save previous state to old user key
+    await _saveToStorage();
+
+    _currentUserId = cleanNewId;
+    await _loadFromStorage();
   }
 
   Future<void> _loadFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString('saved_cart_items');
+    final jsonStr = prefs.getString(_storageKey(_currentUserId));
     if (jsonStr != null) {
       try {
         final list = jsonDecode(jsonStr) as List<dynamic>;
         final items = list.map((e) => CartItem.fromJson(e as Map<String, dynamic>)).toList();
         state = state.copyWith(items: items);
+        return;
       } catch (_) {}
     }
+    state = state.copyWith(items: []);
   }
 
   Future<void> _saveToStorage() async {
     final prefs = await SharedPreferences.getInstance();
     final list = state.items.map((i) => i.toJson()).toList();
-    await prefs.setString('saved_cart_items', jsonEncode(list));
+    await prefs.setString(_storageKey(_currentUserId), jsonEncode(list));
   }
 
   void addToCart({
@@ -196,6 +217,16 @@ class CartNotifier extends StateNotifier<CartState> {
 }
 
 final cartProvider = StateNotifierProvider<CartNotifier, CartState>((ref) {
-  return CartNotifier();
+  final notifier = CartNotifier(ref);
+
+  ref.listen<AuthState>(authProvider, (previous, next) {
+    final prevId = previous?.user?.id;
+    final nextId = next.user?.id;
+    if (prevId != nextId) {
+      notifier.switchUser(nextId);
+    }
+  });
+
+  return notifier;
 });
 

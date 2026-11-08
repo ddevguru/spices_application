@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../models/order_model.dart';
+import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
@@ -74,7 +75,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 28),
 
               // 6. SECTION D: ACCOUNT OVERVIEW
-              _buildAccountOverview(context),
+              _buildAccountOverview(context, user),
 
               const SizedBox(height: 28),
 
@@ -168,9 +169,25 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
 
-        // Right: Notification Bell & Profile Avatar
+        // Right: QR Scan, Notification Bell & Profile Avatar
         Row(
           children: [
+            // QR / SKU Quick Scan Button
+            GestureDetector(
+              onTap: () => _showSkuOrQrLookupDialog(context),
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: AppColors.lightBorder, width: 1),
+                ),
+                child: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.primaryOrange, size: 21),
+              ),
+            ),
+            const SizedBox(width: 8),
+
             // Notifications Icon
             GestureDetector(
               onTap: () {
@@ -986,7 +1003,16 @@ class HomeScreen extends ConsumerWidget {
   // -------------------------------------------------------------
   // SECTION D: ACCOUNT OVERVIEW
   // -------------------------------------------------------------
-  Widget _buildAccountOverview(BuildContext context) {
+  Widget _buildAccountOverview(BuildContext context, UserProfile? user) {
+    final addressCount = user?.addresses.length ?? 0;
+    final addressSubtitle = addressCount > 0
+        ? '$addressCount Saved Address${addressCount > 1 ? 'es' : ''} (${user!.addresses.first.city})'
+        : 'No address configured yet • Tap to add';
+
+    final kycSubtitle = user != null
+        ? 'Verified Customer (${user.effectiveLicenseNumber})'
+        : 'Sign in to access registered account';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1020,7 +1046,7 @@ class HomeScreen extends ConsumerWidget {
                 icon: Icons.location_on_outlined,
                 iconColor: const Color(0xFF2563EB),
                 title: 'Saved Delivery Addresses',
-                subtitle: '2 Addresses (Home & Office configured)',
+                subtitle: addressSubtitle,
                 onTap: () => context.push('/saved-addresses'),
               ),
               const Divider(height: 1, indent: 56, endIndent: 16, color: AppColors.lightBorder),
@@ -1030,7 +1056,7 @@ class HomeScreen extends ConsumerWidget {
                 icon: Icons.local_offer_outlined,
                 iconColor: const Color(0xFFD97706),
                 title: 'Available Coupons & Discounts',
-                subtitle: '3 Active Promos (WELCOME20, NATURALE50)',
+                subtitle: 'Active Promos (WELCOME20, NATURALE50)',
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Coupons: WELCOME20 applied at checkout for 20% savings!')),
@@ -1039,18 +1065,96 @@ class HomeScreen extends ConsumerWidget {
               ),
               const Divider(height: 1, indent: 56, endIndent: 16, color: AppColors.lightBorder),
 
-              // 3. Profile Completion
+              // 3. Profile Completion & License
               _buildOverviewTile(
                 icon: Icons.verified_user_outlined,
                 iconColor: const Color(0xFF16A34A),
-                title: 'Profile Completion & KYC',
-                subtitle: '100% Completed • Verified Member ⭐',
+                title: 'Profile & Merchant License',
+                subtitle: kycSubtitle,
                 onTap: () => context.push('/saved-addresses'),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  void _showSkuOrQrLookupDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.qr_code_scanner_rounded, color: AppColors.primaryOrange),
+              const SizedBox(width: 10),
+              Text(
+                'Scan QR / Enter SKU',
+                style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Enter product SKU code (e.g. DF-ALM-101), 12-digit barcode, or paste the link shared by Store Manager:',
+                style: GoogleFonts.inter(fontSize: 12.5, color: AppColors.secondaryText),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'e.g. DF-ALM-101 or 890700100000',
+                  hintStyle: GoogleFonts.inter(fontSize: 13, color: Colors.grey.shade400),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.lightBorder),
+                  ),
+                  prefixIcon: const Icon(Icons.search_rounded, color: AppColors.secondaryText),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: Text('Cancel', style: GoogleFonts.inter(color: AppColors.secondaryText)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryOrange,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                final raw = controller.text.trim();
+                if (raw.isEmpty) return;
+                Navigator.pop(dialogCtx);
+
+                String sku = raw;
+                if (raw.contains('sku=')) {
+                  final uri = Uri.tryParse(raw);
+                  sku = uri?.queryParameters['sku'] ?? raw.split('sku=').last.split('&').first;
+                } else if (raw.contains('barcode=')) {
+                  final uri = Uri.tryParse(raw);
+                  sku = uri?.queryParameters['barcode'] ?? raw.split('barcode=').last.split('&').first;
+                }
+
+                context.push('/product?sku=$sku');
+              },
+              child: Text('Open Product', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        );
+      },
     );
   }
 

@@ -1415,7 +1415,7 @@ class MockDataService {
     try {
       return _products.firstWhere((p) => p.id == id);
     } catch (_) {
-      return null;
+      return getProductBySkuOrBarcode(id);
     }
   }
 
@@ -1627,6 +1627,18 @@ class MockDataService {
       } catch (_) {}
     }
     return _orders;
+  }
+
+  void clearUserData() {
+    _orders = [];
+    _userProfile = const UserProfile(
+      id: 'cust_guest',
+      name: 'Valued Customer',
+      email: '',
+      phone: '',
+      avatarUrl: '',
+      addresses: [],
+    );
   }
 
   Future<CustomerOrder> placeOrder({

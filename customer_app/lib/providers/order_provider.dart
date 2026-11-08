@@ -1,19 +1,43 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/order_model.dart';
+import '../models/user_model.dart';
 import '../services/mock_data_service.dart';
+import 'auth_provider.dart';
 
 class OrderNotifier extends StateNotifier<AsyncValue<List<CustomerOrder>>> {
   final MockDataService _service;
+  final UserProfile? _currentUser;
 
-  OrderNotifier(this._service) : super(const AsyncValue.loading()) {
+  OrderNotifier(this._service, this._currentUser) : super(const AsyncValue.loading()) {
     loadOrders();
   }
 
   Future<void> loadOrders() async {
     state = const AsyncValue.loading();
     try {
-      final orders = await _service.getOrders();
-      state = AsyncValue.data(orders);
+      if (_currentUser == null || (_currentUser!.email.isEmpty && _currentUser!.phone.isEmpty)) {
+        // Guest user has zero order history
+        state = const AsyncValue.data([]);
+        return;
+      }
+
+      final allOrders = await _service.getOrders();
+      final cleanEmail = _currentUser!.email.toLowerCase().trim();
+      final cleanPhone = _currentUser!.phone.trim();
+      final cleanId = _currentUser!.id.trim();
+
+      final scopedOrders = allOrders.where((o) {
+        final cust = o.customer;
+        final cEmail = cust.email.toLowerCase().trim();
+        final cPhone = cust.phone.trim();
+
+        final matchEmail = cleanEmail.isNotEmpty && cEmail == cleanEmail;
+        final matchPhone = cleanPhone.isNotEmpty && cPhone == cleanPhone;
+
+        return matchEmail || matchPhone;
+      }).toList();
+
+      state = AsyncValue.data(scopedOrders);
     } catch (err, stack) {
       state = AsyncValue.error(err, stack);
     }
@@ -46,6 +70,7 @@ class OrderNotifier extends StateNotifier<AsyncValue<List<CustomerOrder>>> {
 
 final orderProvider = StateNotifierProvider<OrderNotifier, AsyncValue<List<CustomerOrder>>>((ref) {
   final service = MockDataService();
-  return OrderNotifier(service);
+  final authState = ref.watch(authProvider);
+  return OrderNotifier(service, authState.user);
 });
 

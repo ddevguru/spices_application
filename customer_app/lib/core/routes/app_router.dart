@@ -26,10 +26,11 @@ import '../../models/order_model.dart';
 import '../../providers/auth_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  // Read once so GoRouter is not destroyed and recreated on auth state mutations (e.g. login loading / errors)
+  final isOnboarded = ref.read(authProvider).isOnboarded;
 
   return GoRouter(
-    initialLocation: authState.isOnboarded ? '/main' : '/onboarding',
+    initialLocation: isOnboarded ? '/main' : '/onboarding',
     routes: [
       GoRoute(
         path: '/onboarding',

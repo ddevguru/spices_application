@@ -127,19 +127,33 @@ exports.createOrder = async (req, res, next) => {
         // 3. Upsert customer record
         if (customer && customer.name) {
           const custPhone = customer.phone || '';
-          const custEmail = customer.email || '';
+          const custEmail = (customer.email || '').toLowerCase().trim();
           const custCity = (customer.address && customer.address.city) || 'India';
-          const custId = 'cust_' + (custPhone || custEmail || Date.now());
+          const custId = 'cust_' + (custPhone || (custEmail ? custEmail.replace(/[^a-z0-9]/g, '_') : Date.now()));
           try {
-            await client.query(`
-              INSERT INTO customers (id, name, phone, email, city, total_orders, total_spent)
-              VALUES ($1, $2, $3, $4, $5, 1, $6)
-              ON CONFLICT (id) DO UPDATE SET
-                total_orders = customers.total_orders + 1,
-                total_spent = customers.total_spent + $6,
-                city = COALESCE(EXCLUDED.city, customers.city)
-            `, [custId, customer.name, custPhone, custEmail, custCity, totalAmount || 0]);
-          } catch (_) {}
+            if (custEmail) {
+              await client.query(`
+                INSERT INTO customers (id, name, phone, email, city, total_orders, total_spent)
+                VALUES ($1, $2, $3, $4, $5, 1, $6)
+                ON CONFLICT (email) DO UPDATE SET
+                  total_orders = customers.total_orders + 1,
+                  total_spent = customers.total_spent + $6,
+                  phone = COALESCE(NULLIF(EXCLUDED.phone, ''), customers.phone),
+                  city = COALESCE(NULLIF(EXCLUDED.city, ''), customers.city)
+              `, [custId, customer.name, custPhone, custEmail, custCity, totalAmount || 0]);
+            } else {
+              await client.query(`
+                INSERT INTO customers (id, name, phone, email, city, total_orders, total_spent)
+                VALUES ($1, $2, $3, $4, $5, 1, $6)
+                ON CONFLICT (id) DO UPDATE SET
+                  total_orders = customers.total_orders + 1,
+                  total_spent = customers.total_spent + $6,
+                  city = COALESCE(NULLIF(EXCLUDED.city, ''), customers.city)
+              `, [custId, customer.name, custPhone, custEmail, custCity, totalAmount || 0]);
+            }
+          } catch (e) {
+            console.warn('Customer upsert error during order:', e.message);
+          }
         }
 
         await client.query('COMMIT');

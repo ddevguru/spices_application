@@ -4106,7 +4106,7 @@ export const mockApi = {
   // Auth
   async login(email, password) {
     try {
-      const res = await axios.post(`${API_BASE}/auth/login`, { email, password }, { timeout: 6000 });
+      const res = await axios.post(`${API_BASE}/auth/login`, { email, password }, { timeout: 20000 });
       return res.data;
     } catch {
       if (email === 'admin@naturale.com' && password === 'admin123') {
@@ -4152,7 +4152,7 @@ export const mockApi = {
   async getProducts() {
     const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/products`, { timeout: 2500 });
+      const res = await axios.get(`${API_BASE}/products`, { timeout: 20000 });
       const products = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (products.length > 0) {
         db.products = products;
@@ -4192,7 +4192,7 @@ export const mockApi = {
     saveLocalDb(db);
 
     try {
-      const res = await axios.post(`${API_BASE}/products`, newProduct, { timeout: 3500 });
+      const res = await axios.post(`${API_BASE}/products`, newProduct, { timeout: 20000 });
       if (res.data?.id) {
         const idx = db.products.findIndex(p => p.id === newProduct.id);
         if (idx !== -1) {
@@ -4214,7 +4214,7 @@ export const mockApi = {
     }
 
     try {
-      const res = await axios.put(`${API_BASE}/products/${id}`, productData, { timeout: 3500 });
+      const res = await axios.put(`${API_BASE}/products/${id}`, productData, { timeout: 20000 });
       if (res.data) {
         if (idx !== -1) {
           db.products[idx] = { ...db.products[idx], ...res.data };
@@ -4233,7 +4233,7 @@ export const mockApi = {
     saveLocalDb(db);
 
     try {
-      await axios.delete(`${API_BASE}/products/${id}`, { timeout: 3500 });
+      await axios.delete(`${API_BASE}/products/${id}`, { timeout: 20000 });
     } catch (_) {}
     return true;
   },
@@ -4297,7 +4297,7 @@ export const mockApi = {
     saveLocalDb(db);
 
     try {
-      await axios.post(`${API_BASE}/products/bulk`, { products: imported }, { timeout: 3500 });
+      await axios.post(`${API_BASE}/products/bulk`, { products: imported }, { timeout: 20000 });
     } catch (_) {}
 
     return imported;
@@ -4318,7 +4318,7 @@ export const mockApi = {
     }
 
     try {
-      const res = await axios.put(`${API_BASE}/products/${productId}/variants/${variantId}`, variantData, { timeout: 3500 });
+      const res = await axios.put(`${API_BASE}/products/${productId}/variants/${variantId}`, variantData, { timeout: 20000 });
       return res.data || updatedV;
     } catch (_) {}
 
@@ -4335,7 +4335,7 @@ export const mockApi = {
     }
 
     try {
-      const res = await axios.post(`${API_BASE}/products/${productId}/variants`, variantData, { timeout: 3500 });
+      const res = await axios.post(`${API_BASE}/products/${productId}/variants`, variantData, { timeout: 20000 });
       return res.data || newV;
     } catch (_) {}
 
@@ -4351,7 +4351,7 @@ export const mockApi = {
     }
 
     try {
-      await axios.delete(`${API_BASE}/products/${productId}/variants/${variantId}`, { timeout: 3500 });
+      await axios.delete(`${API_BASE}/products/${productId}/variants/${variantId}`, { timeout: 20000 });
     } catch (_) {}
     return true;
   },
@@ -4360,7 +4360,7 @@ export const mockApi = {
   async getCategories() {
     const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/categories`, { timeout: 2500 });
+      const res = await axios.get(`${API_BASE}/categories`, { timeout: 20000 });
       const categories = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (categories.length > 0) {
         db.categories = categories;
@@ -4383,7 +4383,7 @@ export const mockApi = {
     saveLocalDb(db);
 
     try {
-      const res = await axios.post(`${API_BASE}/categories`, catData, { timeout: 3500 });
+      const res = await axios.post(`${API_BASE}/categories`, catData, { timeout: 20000 });
       if (res.data?.id) {
         const idx = db.categories.findIndex(c => c.id === newCat.id);
         if (idx !== -1) {
@@ -4405,7 +4405,7 @@ export const mockApi = {
     }
 
     try {
-      const res = await axios.put(`${API_BASE}/categories/${id}`, catData, { timeout: 3500 });
+      const res = await axios.put(`${API_BASE}/categories/${id}`, catData, { timeout: 20000 });
       if (res.data) {
         if (idx !== -1) {
           db.categories[idx] = { ...db.categories[idx], ...res.data };
@@ -4424,7 +4424,7 @@ export const mockApi = {
     saveLocalDb(db);
 
     try {
-      await axios.delete(`${API_BASE}/categories/${id}`, { timeout: 3500 });
+      await axios.delete(`${API_BASE}/categories/${id}`, { timeout: 20000 });
     } catch (_) {}
     return true;
   },
@@ -4472,7 +4472,7 @@ export const mockApi = {
     saveLocalDb(db);
 
     try {
-      await axios.post(`${API_BASE}/categories/bulk`, { categories: imported }, { timeout: 3500 });
+      await axios.post(`${API_BASE}/categories/bulk`, { categories: imported }, { timeout: 20000 });
     } catch (_) {}
 
     return imported;
@@ -4531,7 +4531,7 @@ export const mockApi = {
   // Orders
   async getOrders() {
     try {
-      const res = await axios.get(`${API_BASE}/orders`, { timeout: 3500 });
+      const res = await axios.get(`${API_BASE}/orders`, { timeout: 20000 });
       const orders = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (orders.length > 0) {
         const db = getLocalDb();
@@ -4557,7 +4557,7 @@ export const mockApi = {
     };
 
     try {
-      const res = await axios.post(`${API_BASE}/orders`, newOrder, { timeout: 5000 });
+      const res = await axios.post(`${API_BASE}/orders`, newOrder, { timeout: 20000 });
       if (res.data && res.data.id) {
         const db = getLocalDb();
         db.orders = [res.data, ...(db.orders || []).filter((o) => o.id !== res.data.id)];
@@ -4578,7 +4578,7 @@ export const mockApi = {
 
   async updateOrderStatus(id, status) {
     try {
-      const res = await axios.patch(`${API_BASE}/orders/${id}/status`, { status }, { timeout: 3500 });
+      const res = await axios.patch(`${API_BASE}/orders/${id}/status`, { status }, { timeout: 20000 });
       return res.data;
     } catch {
       return { id, status };
@@ -4589,7 +4589,7 @@ export const mockApi = {
   async getCustomers() {
     let customers = [];
     try {
-      const res = await axios.get(`${API_BASE}/customers`, { timeout: 3500 });
+      const res = await axios.get(`${API_BASE}/customers`, { timeout: 20000 });
       const apiCust = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (apiCust.length > 0) {
         customers = apiCust;
@@ -4615,7 +4615,7 @@ export const mockApi = {
   async getCoupons() {
     const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/coupons`, { timeout: 2500 });
+      const res = await axios.get(`${API_BASE}/coupons`, { timeout: 20000 });
       const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (list.length > 0) return list;
     } catch (_) {}
@@ -4641,7 +4641,7 @@ export const mockApi = {
   async getBanners() {
     const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/banners`, { timeout: 2500 });
+      const res = await axios.get(`${API_BASE}/banners`, { timeout: 20000 });
       const list = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       if (list.length > 0) return list;
     } catch (_) {}
@@ -4667,7 +4667,7 @@ export const mockApi = {
   async getSettings() {
     const db = getLocalDb();
     try {
-      const res = await axios.get(`${API_BASE}/settings`, { timeout: 2500 });
+      const res = await axios.get(`${API_BASE}/settings`, { timeout: 20000 });
       if (res.data) return res.data;
     } catch (_) {}
     return db.settings || {};
@@ -4736,7 +4736,7 @@ export const mockApi = {
   async getDashboardMetrics() {
     const local = this.getDashboardMetricsSync();
     try {
-      const res = await axios.get(`${API_BASE}/dashboard/metrics`, { timeout: 2500 });
+      const res = await axios.get(`${API_BASE}/dashboard/metrics`, { timeout: 20000 });
       if (res.data && res.data.totalProducts !== undefined) {
         return res.data;
       }
