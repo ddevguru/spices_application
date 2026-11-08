@@ -50,7 +50,54 @@ export default function ProtectedRoute({ children }) {
   }
 
   if (!adminUser) {
-    return null;
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#FAF5ED',
+          gap: '16px',
+          padding: '24px',
+        }}
+      >
+        <div
+          style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            backgroundColor: '#EA580C',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#FFFFFF',
+            fontWeight: 800,
+            fontSize: '24px',
+          }}
+        >
+          N
+        </div>
+        <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#2B2321' }}>
+          Please Sign In to Access Admin
+        </h2>
+        <a
+          href="/login"
+          style={{
+            padding: '10px 24px',
+            backgroundColor: '#EA580C',
+            color: '#FFFFFF',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: '14px',
+            textDecoration: 'none',
+          }}
+        >
+          Go to Login
+        </a>
+      </div>
+    );
   }
 
   return children;

@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { mockApi } from '../services/mockApi';
-import { Search, Mail, Phone, Calendar, ShoppingBag, Users, RefreshCw } from 'lucide-react';
+import { Search, Mail, Phone, Calendar, ShoppingBag, Users, RefreshCw, Plus, Building2 } from 'lucide-react';
 
 export default function Customers() {
   const [customers, setCustomers] = useState(() => mockApi.getCustomersSync());
@@ -47,16 +48,34 @@ export default function Customers() {
             Customer profiles, total spending, and lifetime order frequencies.
           </p>
         </div>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={load}
-          disabled={loading}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '13px' }}
-        >
-          <RefreshCw size={15} className={loading ? 'spin' : ''} />
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={load}
+            disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '13px' }}
+          >
+            <RefreshCw size={15} className={loading ? 'spin' : ''} />
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <Link
+            href="/create-order"
+            className="btn-primary"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              fontSize: '13px',
+              fontWeight: 700,
+              textDecoration: 'none',
+              borderRadius: '8px',
+            }}
+          >
+            <Plus size={15} /> Take Manual Order
+          </Link>
+        </div>
       </div>
 
       <div className="card" style={{ padding: '16px 20px', marginBottom: '24px' }}>
@@ -117,7 +136,19 @@ export default function Customers() {
                           >
                             {initial}
                           </div>
-                          <div style={{ fontWeight: 700 }}>{c.name || 'Member'}</div>
+                          <div>
+                            <div style={{ fontWeight: 700 }}>{c.name || 'Member'}</div>
+                            {c.businessName && (
+                              <div style={{ fontSize: '11px', color: 'var(--color-primary-orange)', fontWeight: 600 }}>
+                                {c.businessName}
+                              </div>
+                            )}
+                            {c.gstNumber && (
+                              <div style={{ fontSize: '10.5px', color: 'var(--color-secondary-text)' }}>
+                                GST: {c.gstNumber}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td>

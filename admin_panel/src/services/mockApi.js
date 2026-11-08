@@ -928,6 +928,56 @@ export const mockApi = {
     return imported;
   },
 
+  // Synchronize customers dynamically from all placed orders
+  syncCustomersFromOrders(orders = []) {
+    if (!Array.isArray(orders) || orders.length === 0) return [];
+    const db = getLocalDb();
+    if (!Array.isArray(db.customers)) db.customers = [];
+
+    const custMap = new Map();
+    // Pre-populate with existing customers
+    for (const c of db.customers) {
+      if (!c) continue;
+      const key = (c.phone || c.mobile || c.email || c.name || '').toLowerCase().trim();
+      if (key) custMap.set(key, { ...c });
+    }
+
+    // Aggregate from orders
+    for (const ord of orders) {
+      const c = ord.customer;
+      if (!c || !c.name) continue;
+      const key = (c.phone || c.mobile || c.email || c.name).toLowerCase().trim();
+      if (!custMap.has(key)) {
+        custMap.set(key, {
+          id: 'cust_' + (c.phone || Math.random().toString(36).slice(2, 8)),
+          name: c.name,
+          businessName: c.businessName || '',
+          gstNumber: c.gstNumber || '',
+          email: c.email || '',
+          mobile: c.phone || '',
+          phone: c.phone || '',
+          city: (c.address && c.address.city) || 'India',
+          registeredDate: ord.createdAt ? String(ord.createdAt).slice(0, 10) : 'Recent',
+          totalOrders: 0,
+          totalSpent: 0,
+          status: 'Active',
+        });
+      }
+      const existing = custMap.get(key);
+      existing.totalOrders = (existing.totalOrders || 0) + 1;
+      existing.totalSpent = (existing.totalSpent || 0) + (Number(ord.totalAmount) || 0);
+      if (c.address?.city && (!existing.city || existing.city === 'India')) {
+        existing.city = c.address.city;
+      }
+      if (c.businessName && !existing.businessName) existing.businessName = c.businessName;
+      if (c.gstNumber && !existing.gstNumber) existing.gstNumber = c.gstNumber;
+    }
+
+    db.customers = Array.from(custMap.values());
+    saveLocalDb(db);
+    return db.customers;
+  },
+
   // Orders
   async getOrders() {
     try {
@@ -937,10 +987,43 @@ export const mockApi = {
         const db = getLocalDb();
         db.orders = orders;
         saveLocalDb(db);
+        this.syncCustomersFromOrders(orders);
         return orders;
       }
     } catch (_) {}
-    return getLocalDb().orders || [];
+    const local = getLocalDb().orders || [];
+    this.syncCustomersFromOrders(local);
+    return local;
+  },
+
+  async createManualOrder(orderData) {
+    const orderId = orderData.id || `ORD-MAN-${Date.now().toString().slice(-6)}`;
+    const newOrder = {
+      ...orderData,
+      id: orderId,
+      createdAt: orderData.createdAt || new Date().toISOString(),
+      status: orderData.status || 'Confirmed',
+      paymentStatus: orderData.paymentStatus || 'Paid',
+    };
+
+    try {
+      const res = await axios.post(`${API_BASE}/orders`, newOrder, { timeout: 5000 });
+      if (res.data && res.data.id) {
+        const db = getLocalDb();
+        db.orders = [res.data, ...(db.orders || []).filter((o) => o.id !== res.data.id)];
+        saveLocalDb(db);
+        this.syncCustomersFromOrders(db.orders);
+        return res.data;
+      }
+    } catch (_) {}
+
+    // Local DB Fallback
+    const db = getLocalDb();
+    if (!Array.isArray(db.orders)) db.orders = [];
+    db.orders.unshift(newOrder);
+    saveLocalDb(db);
+    this.syncCustomersFromOrders(db.orders);
+    return newOrder;
   },
 
   async updateOrderStatus(id, status) {
@@ -954,17 +1037,28 @@ export const mockApi = {
 
   // Customers
   async getCustomers() {
+    let customers = [];
     try {
       const res = await axios.get(`${API_BASE}/customers`, { timeout: 3500 });
-      const customers = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      if (customers.length > 0) {
+      const apiCust = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      if (apiCust.length > 0) {
+        customers = apiCust;
         const db = getLocalDb();
         db.customers = customers;
         saveLocalDb(db);
         return customers;
       }
     } catch (_) {}
-    return getLocalDb().customers || [];
+
+    const db = getLocalDb();
+    customers = db.customers || [];
+    if (customers.length === 0) {
+      const ords = db.orders || [];
+      if (ords.length > 0) {
+        customers = this.syncCustomersFromOrders(ords) || [];
+      }
+    }
+    return customers;
   },
 
   // Coupons

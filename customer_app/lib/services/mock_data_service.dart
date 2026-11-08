@@ -1562,6 +1562,18 @@ class MockDataService {
   // Orders API
   Future<List<CustomerOrder>> getOrders() async {
     await init();
+    if (_serverAvailable) {
+      try {
+        final res = await http.get(Uri.parse('$_baseUrl/orders')).timeout(const Duration(seconds: 8));
+        if (res.statusCode == 200) {
+          final dynamic decoded = jsonDecode(res.body);
+          final List list = decoded is List ? decoded : (decoded['data'] ?? []);
+          if (list.isNotEmpty) {
+            _orders = list.map((e) => CustomerOrder.fromJson(e as Map<String, dynamic>)).toList();
+          }
+        }
+      } catch (_) {}
+    }
     return _orders;
   }
 
@@ -1652,16 +1664,17 @@ class MockDataService {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('local_orders', jsonEncode(_orders.map((o) => o.toJson()).toList()));
 
-    // Try posting to mock server if running
-    if (_serverAvailable) {
-      try {
-        await http.post(
-          Uri.parse('$_baseUrl/orders'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(newOrder.toJson()),
-        );
-      } catch (_) {}
-    }
+    // Always attempt posting to backend API so Admin Panel receives it live
+    try {
+      final res = await http.post(
+        Uri.parse('$_baseUrl/orders'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(newOrder.toJson()),
+      ).timeout(const Duration(seconds: 12));
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        _serverAvailable = true;
+      }
+    } catch (_) {}
 
     return newOrder;
   }

@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { mockApi } from '../services/mockApi';
-import { Search, Eye, Printer, XCircle, CheckCircle2, Truck, FileText, Download, Check, Copy } from 'lucide-react';
+import { Search, Eye, Printer, XCircle, CheckCircle2, Truck, FileText, Download, Check, Copy, Plus } from 'lucide-react';
 
 export default function Orders() {
   const [orders, setOrders] = useState(() => mockApi.getOrdersSync());
@@ -71,13 +72,29 @@ export default function Orders() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Customer Orders</h1>
           <p style={{ fontSize: '13px', color: 'var(--color-secondary-text)', marginTop: '4px' }}>
             Dispatch tracking, weight fulfillment, and customer invoices.
           </p>
         </div>
+        <Link
+          href="/create-order"
+          className="btn-primary"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 18px',
+            fontSize: '13.5px',
+            fontWeight: 700,
+            textDecoration: 'none',
+            borderRadius: '10px',
+          }}
+        >
+          <Plus size={16} /> Take Manual Order
+        </Link>
       </div>
 
       {/* Filter Bar */}

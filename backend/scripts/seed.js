@@ -750,7 +750,13 @@ async function seedPostgres(poolInstance) {
     try {
       if (fs.existsSync(fallbackPath)) {
         const existing = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-        fbData = { ...existing, categories, products: COMPREHENSIVE_PRODUCTS, orders: [], customers: [] };
+        fbData = {
+          ...existing,
+          categories,
+          products: COMPREHENSIVE_PRODUCTS,
+          orders: Array.isArray(existing.orders) ? existing.orders : [],
+          customers: Array.isArray(existing.customers) ? existing.customers : [],
+        };
       }
       fs.writeFileSync(fallbackPath, JSON.stringify(fbData, null, 2), 'utf8');
     } catch (_) {}

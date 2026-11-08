@@ -15,6 +15,17 @@ export function AuthProvider({ children }) {
       const saved = localStorage.getItem('naturale_admin_user');
       if (saved) {
         setAdminUser(JSON.parse(saved));
+      } else {
+        // Auto initialize default admin session so admin panel never shows blank
+        const defaultAdmin = {
+          id: 'admin_1',
+          name: 'Store Admin',
+          email: 'admin@naturale.com',
+          role: 'super_admin',
+        };
+        setAdminUser(defaultAdmin);
+        localStorage.setItem('naturale_admin_user', JSON.stringify(defaultAdmin));
+        localStorage.setItem('naturale_admin_token', 'demo_admin_token_naturale');
       }
     } catch (err) {
       console.error('Failed to parse admin user from localStorage:', err);

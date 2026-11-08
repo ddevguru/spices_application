@@ -18,7 +18,8 @@ import {
   Bell,
   Search,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  PlusCircle
 } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
@@ -37,6 +38,7 @@ export default function AdminLayout({ children }) {
     { label: 'Categories', path: '/categories', icon: Grid },
     { label: 'Inventory', path: '/inventory', icon: Boxes },
     { label: 'Orders', path: '/orders', icon: ShoppingCart },
+    { label: 'Create Order', path: '/create-order', icon: PlusCircle },
     { label: 'Customers', path: '/customers', icon: Users },
     { label: 'Coupons', path: '/coupons', icon: Ticket },
     { label: 'Banners', path: '/banners', icon: ImageIcon },

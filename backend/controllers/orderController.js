@@ -124,6 +124,24 @@ exports.createOrder = async (req, res, next) => {
           }
         }
 
+        // 3. Upsert customer record
+        if (customer && customer.name) {
+          const custPhone = customer.phone || '';
+          const custEmail = customer.email || '';
+          const custCity = (customer.address && customer.address.city) || 'India';
+          const custId = 'cust_' + (custPhone || custEmail || Date.now());
+          try {
+            await client.query(`
+              INSERT INTO customers (id, name, phone, email, city, total_orders, total_spent)
+              VALUES ($1, $2, $3, $4, $5, 1, $6)
+              ON CONFLICT (id) DO UPDATE SET
+                total_orders = customers.total_orders + 1,
+                total_spent = customers.total_spent + $6,
+                city = COALESCE(EXCLUDED.city, customers.city)
+            `, [custId, customer.name, custPhone, custEmail, custCity, totalAmount || 0]);
+          } catch (_) {}
+        }
+
         await client.query('COMMIT');
 
         const newOrder = {
@@ -175,6 +193,38 @@ exports.createOrder = async (req, res, next) => {
             const v = prod.variants.find((v) => v.id === item.variantId);
             if (v) v.stockQuantity = Math.max(0, (v.stockQuantity || 0) - item.quantity);
           }
+        }
+      }
+
+      if (!Array.isArray(fb.customers)) fb.customers = [];
+      if (customer && customer.name) {
+        const custPhone = customer.phone || '';
+        const custEmail = customer.email || '';
+        const custCity = (customer.address && customer.address.city) || 'India';
+        const existingCust = fb.customers.find((c) =>
+          (custPhone && (c.mobile === custPhone || c.phone === custPhone)) ||
+          (custEmail && c.email === custEmail) ||
+          c.name.toLowerCase() === customer.name.toLowerCase()
+        );
+        if (existingCust) {
+          existingCust.totalOrders = (existingCust.totalOrders || 0) + 1;
+          existingCust.totalSpent = (existingCust.totalSpent || 0) + (totalAmount || 0);
+          if (custCity) existingCust.city = custCity;
+        } else {
+          fb.customers.unshift({
+            id: 'cust_' + Date.now(),
+            name: customer.name,
+            businessName: customer.businessName || '',
+            gstNumber: customer.gstNumber || '',
+            email: custEmail,
+            mobile: custPhone,
+            phone: custPhone,
+            city: custCity,
+            registeredDate: new Date().toISOString().slice(0, 10),
+            totalOrders: 1,
+            totalSpent: totalAmount || 0,
+            status: 'Active',
+          });
         }
       }
 
