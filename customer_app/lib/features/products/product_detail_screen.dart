@@ -34,8 +34,70 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       body: productAsync.when(
         data: (product) {
           if (product == null) {
-            return const Scaffold(
-              body: Center(child: Text('Product not found')),
+            return Scaffold(
+              backgroundColor: AppColors.scaffoldBackground,
+              appBar: AppBar(
+                title: const Text('Product Details'),
+                backgroundColor: Colors.white,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.darkText),
+                  onPressed: () {
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    } else {
+                      ref.read(productFilterProvider.notifier).resetFilters();
+                      Navigator.pushReplacementNamed(context, '/main');
+                    }
+                  },
+                ),
+              ),
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFDEEE3),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.inventory_2_outlined, color: AppColors.primaryOrange, size: 36),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Product Not Found',
+                        style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.darkText),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Unable to find product matching "${widget.productId}". It may have been relocated or updated in the catalog.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.secondaryText),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.pushReplacementNamed(context, '/main');
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryOrange,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Back to Store', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
           }
 

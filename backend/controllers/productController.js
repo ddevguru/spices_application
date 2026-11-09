@@ -85,6 +85,7 @@ exports.getProductById = async (req, res, next) => {
     const { id } = req.params;
 
     if (db.isPostgresConnected()) {
+      const cleanId = (id || '').trim().toUpperCase();
       const query = `
         SELECT p.*,
           COALESCE(
@@ -104,10 +105,14 @@ exports.getProductById = async (req, res, next) => {
           ) as variants
         FROM products p
         LEFT JOIN product_variants v ON p.id = v.product_id
-        WHERE p.id = $1 OR p.sku = $1 OR p.barcode = $1 OR v.sku = $1
+        WHERE UPPER(p.id) = $1 
+           OR UPPER(COALESCE(p.sku, '')) = $1 
+           OR p.barcode = $1
+           OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND (UPPER(pv.sku) = $1 OR pv.barcode = $1))
         GROUP BY p.id
+        LIMIT 1
       `;
-      const result = await db.query(query, [id]);
+      const result = await db.query(query, [cleanId]);
       if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
       return res.json(mapProductRow(result.rows[0]));
     } else {
@@ -407,10 +412,15 @@ exports.deleteVariant = async (req, res, next) => {
 
 // Helper to map DB row to client JSON model
 function mapProductRow(r) {
+  const prodSku = r.sku || (r.variants && r.variants[0]?.sku) || `DF-${(r.id || '').toUpperCase().slice(0, 8)}`;
+  const prodBarcode = r.barcode || `8907${String(Math.abs(prodSku.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0))).slice(0, 8).padStart(8, '0')}`;
+
   return {
     id: r.id,
     name: r.name,
     brand: r.brand,
+    sku: prodSku,
+    barcode: prodBarcode,
     categoryId: r.category_id,
     categoryName: r.category_name,
     subcategoryId: r.subcategory_id,

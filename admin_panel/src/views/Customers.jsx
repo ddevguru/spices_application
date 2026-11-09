@@ -32,6 +32,13 @@ export default function Customers() {
 
       if (data && Array.isArray(data)) {
         setCustomers(data);
+        try {
+          const db = mockApi.getLocalDb ? mockApi.getLocalDb() : null;
+          if (db) {
+            db.customers = data;
+            mockApi.saveLocalDb(db);
+          }
+        } catch (_) {}
       }
     } catch (err) {
       console.error('Failed to load customers:', err);
@@ -42,6 +49,8 @@ export default function Customers() {
 
   useEffect(() => {
     load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const filtered = (customers || []).filter((c) => {
