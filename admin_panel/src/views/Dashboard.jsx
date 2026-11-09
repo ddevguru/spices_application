@@ -59,6 +59,20 @@ export default function Dashboard() {
         }
       } catch (_) {}
 
+      // 3. Fetch live orders directly (guarantees accurate order count & revenue)
+      let liveOrders = null;
+      try {
+        const ordRes = await fetch('https://dryfruits-api.onrender.com/api/orders', {
+          headers: { 'Accept': 'application/json' },
+        });
+        if (ordRes.ok) {
+          const apiOrd = await ordRes.json();
+          if (Array.isArray(apiOrd)) {
+            liveOrders = apiOrd;
+          }
+        }
+      } catch (_) {}
+
       if (!metricData) {
         metricData = await mockApi.getDashboardMetrics();
       }
@@ -66,6 +80,11 @@ export default function Dashboard() {
       if (metricData) {
         const custCount = liveCustomers ? liveCustomers.length : 0;
         metricData.totalCustomers = Math.max(metricData.totalCustomers || 0, custCount);
+        if (liveOrders && liveOrders.length > 0) {
+          metricData.totalOrders = Math.max(metricData.totalOrders || 0, liveOrders.length);
+          const rev = liveOrders.reduce((sum, o) => sum + (parseFloat(o.totalAmount) || 0), 0);
+          metricData.totalRevenue = Math.max(metricData.totalRevenue || 0, rev);
+        }
         if (!metricData.totalProducts || metricData.totalProducts < 57) {
           metricData.totalProducts = 57;
         }

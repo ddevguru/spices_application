@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { mockApi } from '../services/mockApi';
-import { Search, Eye, Printer, XCircle, CheckCircle2, Truck, FileText, Download, Check, Copy, Plus } from 'lucide-react';
+import { Search, Eye, Printer, XCircle, CheckCircle2, Truck, FileText, Download, Check, Copy, Plus, RefreshCw } from 'lucide-react';
 
 export default function Orders() {
   const [orders, setOrders] = useState(() => mockApi.getOrdersSync());
@@ -25,21 +25,55 @@ export default function Orders() {
     'Cancelled',
   ];
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     try {
-      const data = await mockApi.getOrders();
-      if (data) setOrders(data);
+      setLoading(true);
+      let data = [];
+
+      // 1. Direct resilient fetch from live Render backend
+      try {
+        const res = await fetch('https://dryfruits-api.onrender.com/api/orders', {
+          headers: { 'Accept': 'application/json' },
+        });
+        if (res.ok) {
+          const apiData = await res.json();
+          if (Array.isArray(apiData)) {
+            data = apiData;
+          }
+        }
+      } catch (_) {}
+
+      // 2. Fallback to mockApi if direct fetch was empty
+      if (!data || data.length === 0) {
+        data = await mockApi.getOrders();
+      }
+
+      if (Array.isArray(data)) {
+        setOrders(data);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load orders:', err);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadOrders();
-  }, []);
+    const interval = setInterval(loadOrders, 15000); // Live poll every 15 seconds
+    return () => clearInterval(interval);
+  }, [loadOrders]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
+      try {
+        await fetch(`https://dryfruits-api.onrender.com/api/orders/${orderId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        });
+      } catch (_) {}
+
       await mockApi.updateOrderStatus(orderId, newStatus);
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
@@ -61,12 +95,18 @@ export default function Orders() {
     setTimeout(() => setCopiedInvoice(false), 2000);
   };
 
-  const filteredOrders = orders.filter((o) => {
+  const filteredOrders = (orders || []).filter((o) => {
+    if (!o) return false;
     const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
-    const matchesSearch =
-      o.id.toLowerCase().includes(search.toLowerCase()) ||
-      o.customer?.name.toLowerCase().includes(search.toLowerCase()) ||
-      o.customer?.phone.toLowerCase().includes(search.toLowerCase());
+    const s = search.toLowerCase().trim();
+    if (!s) return matchesStatus;
+
+    const id = String(o.id || '').toLowerCase();
+    const custName = String(o.customer?.name || '').toLowerCase();
+    const custPhone = String(o.customer?.phone || '').toLowerCase();
+    const custEmail = String(o.customer?.email || '').toLowerCase();
+
+    const matchesSearch = id.includes(s) || custName.includes(s) || custPhone.includes(s) || custEmail.includes(s);
     return matchesStatus && matchesSearch;
   });
 
@@ -79,22 +119,34 @@ export default function Orders() {
             Dispatch tracking, weight fulfillment, and customer invoices.
           </p>
         </div>
-        <Link
-          href="/create-order"
-          className="btn-primary"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: 700,
-            textDecoration: 'none',
-            borderRadius: '10px',
-          }}
-        >
-          <Plus size={16} /> Take Manual Order
-        </Link>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={loadOrders}
+            disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', fontSize: '13px' }}
+          >
+            <RefreshCw size={15} className={loading ? 'spin' : ''} />
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <Link
+            href="/create-order"
+            className="btn-primary"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              fontSize: '13.5px',
+              fontWeight: 700,
+              textDecoration: 'none',
+              borderRadius: '10px',
+            }}
+          >
+            <Plus size={16} /> Take Manual Order
+          </Link>
+        </div>
       </div>
 
       {/* Filter Bar */}

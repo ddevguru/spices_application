@@ -4541,6 +4541,23 @@ export const mockApi = {
         return orders;
       }
     } catch (_) {}
+
+    try {
+      const fRes = await fetch('https://dryfruits-api.onrender.com/api/orders', {
+        headers: { 'Accept': 'application/json' },
+      });
+      if (fRes.ok) {
+        const fOrders = await fRes.json();
+        if (Array.isArray(fOrders) && fOrders.length > 0) {
+          const db = getLocalDb();
+          db.orders = fOrders;
+          saveLocalDb(db);
+          this.syncCustomersFromOrders(fOrders);
+          return fOrders;
+        }
+      }
+    } catch (_) {}
+
     const local = getLocalDb().orders || [];
     this.syncCustomersFromOrders(local);
     return local;
