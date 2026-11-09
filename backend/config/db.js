@@ -65,6 +65,26 @@ async function runAutoMigrations(p) {
       // Auto-seed
       const { seedPostgres } = require('../scripts/seed');
       await seedPostgres(p);
+    } else {
+      // Ensure required columns exist on live PostgreSQL
+      await p.query(`
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS sku VARCHAR(100);
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS barcode VARCHAR(100);
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS business_name VARCHAR(255);
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS shop_name VARCHAR(255);
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS owner_name VARCHAR(255);
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS gst_number VARCHAR(100);
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS license_number VARCHAR(100);
+      `);
+
+      // If catalog is partial (< 50 products), populate full 57-product database
+      const countRes = await p.query('SELECT COUNT(*) FROM products');
+      const prodCount = parseInt(countRes.rows[0].count, 10);
+      if (prodCount < 50) {
+        console.log(`📦 Upgrading PostgreSQL product catalog from ${prodCount} to full 57 products...`);
+        const { seedPostgres } = require('../scripts/seed');
+        await seedPostgres(p);
+      }
     }
   } catch (err) {
     console.warn('Migration check note:', err.message);

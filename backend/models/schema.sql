@@ -62,10 +62,10 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_products_category ON products(category_id);
-CREATE INDEX idx_products_subcategory ON products(subcategory_id);
-CREATE INDEX idx_products_featured ON products(is_featured);
-CREATE INDEX idx_products_best_seller ON products(is_best_seller);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products(subcategory_id);
+CREATE INDEX IF NOT EXISTS idx_products_featured ON products(is_featured);
+CREATE INDEX IF NOT EXISTS idx_products_best_seller ON products(is_best_seller);
 
 -- 4. PRODUCT WEIGHT VARIANTS TABLE (Critical Gram-based shopping)
 CREATE TABLE IF NOT EXISTS product_variants (
