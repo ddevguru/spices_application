@@ -4563,8 +4563,60 @@ export const mockApi = {
     return local;
   },
 
+  generateCustomOrderId(items) {
+    let shortName = 'dryfruit';
+    if (items && items.length > 0) {
+      const first = items[0];
+      const name = String(first.productName || first.name || first.productId || '').toLowerCase();
+      if (name.includes('almond') || name.includes('badam')) shortName = 'almond';
+      else if (name.includes('cashew') || name.includes('kaju')) shortName = 'cashew';
+      else if (name.includes('pista') || name.includes('pistachio')) shortName = 'pista';
+      else if (name.includes('walnut') || name.includes('akhrot')) shortName = 'walnut';
+      else if (name.includes('date') || name.includes('ajwa') || name.includes('khejur') || name.includes('khajoor')) shortName = 'dates';
+      else if (name.includes('raisin') || name.includes('kishmish')) shortName = 'raisins';
+      else if (name.includes('fig') || name.includes('anjeer')) shortName = 'anjeer';
+      else if (name.includes('apricot') || name.includes('jardalu')) shortName = 'apricot';
+      else if (name.includes('mixed') || name.includes('mix')) shortName = 'mixdryfruit';
+      else if (name.includes('cardamom') || name.includes('elaichi')) shortName = 'cardamom';
+      else if (name.includes('pepper') || name.includes('mirch')) shortName = 'blackpepper';
+      else if (name.includes('cinnamon') || name.includes('dalchini')) shortName = 'cinnamon';
+      else if (name.includes('clove') || name.includes('laung')) shortName = 'clove';
+      else if (name.includes('cumin') || name.includes('jeera')) shortName = 'cumin';
+      else if (name.includes('coriander') || name.includes('dhaniya')) shortName = 'coriander';
+      else if (name.includes('garam') || name.includes('masala')) shortName = 'garammasala';
+      else if (name.includes('turmeric') || name.includes('haldi')) shortName = 'turmeric';
+      else if (name.includes('chilli') || name.includes('mirchi')) shortName = 'chilli';
+      else if (name.includes('oat')) shortName = 'oats';
+      else if (name.includes('quinoa')) shortName = 'quinoa';
+      else if (name.includes('ragi')) shortName = 'ragi';
+      else if (name.includes('jowar')) shortName = 'jowar';
+      else if (name.includes('millet')) shortName = 'millets';
+      else {
+        const clean = name.replace(/[^a-z0-9]/g, '');
+        shortName = clean ? clean.slice(0, 10) : 'dryfruit';
+      }
+    }
+
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear());
+    const dateStr = `${day}${month}${year}`;
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const mins = String(now.getMinutes()).padStart(2, '0');
+    const secs = String(now.getSeconds()).padStart(2, '0');
+    const timeStr = `${hours}${mins}${secs}`;
+
+    const db = getLocalDb();
+    const count = (db.orders || []).filter((o) => o.id && o.id.toLowerCase().startsWith(`${shortName}-`)).length;
+    const numStr = String(count + 1).padStart(2, '0');
+
+    return `${shortName}-${numStr}-${dateStr}-${timeStr}`;
+  },
+
   async createManualOrder(orderData) {
-    const orderId = orderData.id || `ORD-MAN-${Date.now().toString().slice(-6)}`;
+    const orderId = orderData.id || this.generateCustomOrderId(orderData.items);
     const newOrder = {
       ...orderData,
       id: orderId,

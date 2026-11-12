@@ -536,43 +536,83 @@ export default function Products() {
       </div>
 
       {/* Products Table */}
-      <div className="card">
+      <div className="card" style={{ padding: '0', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #E5E7EB' }}>
         <div className="table-container">
-          <table className="data-table">
+          <table className="data-table" style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%' }}>
             <thead>
-              <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Subcategory</th>
-                <th>Weight Variants</th>
-                <th>Base Price</th>
-                <th>Stock Overview</th>
-                <th>Badges</th>
-                <th>Actions</th>
+              <tr style={{ backgroundColor: '#FAF5ED', borderBottom: '1.5px solid #F3EAE0' }}>
+                <th style={{ padding: '14px 18px', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#6B7280', fontWeight: 800 }}>Product</th>
+                <th style={{ padding: '14px 16px', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#6B7280', fontWeight: 800 }}>Category</th>
+                <th style={{ padding: '14px 16px', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#6B7280', fontWeight: 800 }}>Subcategory</th>
+                <th style={{ padding: '14px 16px', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#6B7280', fontWeight: 800 }}>Weight Variants</th>
+                <th style={{ padding: '14px 16px', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#6B7280', fontWeight: 800 }}>Base Price</th>
+                <th style={{ padding: '14px 16px', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#6B7280', fontWeight: 800 }}>Stock Overview</th>
+                <th style={{ padding: '14px 16px', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#6B7280', fontWeight: 800 }}>Badges</th>
+                <th style={{ padding: '14px 18px', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#6B7280', fontWeight: 800, textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredProducts.map((p) => {
                 const totalStock = (p.variants || []).reduce((sum, v) => sum + (v.stockQuantity || 0), 0);
                 const defaultVariant = p.variants?.[0];
+                const catName = p.categoryName || 'Dry Fruits';
+                const isDryFruit = catName.toLowerCase().includes('dry');
+                const isSpice = catName.toLowerCase().includes('spice');
+                const isCereal = catName.toLowerCase().includes('cereal');
+
+                const catStyle = isDryFruit
+                  ? { bg: '#FFF7ED', color: '#C2410C', border: '#FED7AA' }
+                  : isSpice
+                  ? { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0' }
+                  : isCereal
+                  ? { bg: '#F8FAFC', color: '#475569', border: '#E2E8F0' }
+                  : { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' };
 
                 return (
-                  <tr key={p.id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <img
-                          src={p.image}
-                          alt={p.name}
-                          style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover' }}
-                          onError={(e) => {
-                            e.target.src = '/assets/images/onboarding_dryfruits.jpg';
-                          }}
-                        />
+                  <tr key={p.id} style={{ borderBottom: '1px solid #F3F4F6', transition: 'background-color 0.15s ease' }}>
+                    <td style={{ padding: '16px 18px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              borderRadius: '12px',
+                              objectFit: 'cover',
+                              border: '1px solid #E5E7EB',
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                            }}
+                            onError={(e) => {
+                              e.target.src = '/assets/images/onboarding_dryfruits.jpg';
+                            }}
+                          />
+                        </div>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '14px', color: '#111827' }}>{p.name}</div>
-                          <div style={{ fontSize: '11.5px', color: 'var(--color-secondary-text)', marginTop: '1px' }}>{p.brand}</div>
-                          <div style={{ display: 'flex', gap: '8px', marginTop: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '11px', background: '#F1F5F9', color: '#334155', padding: '3px 7px', borderRadius: '5px', fontFamily: 'monospace', fontWeight: 700, border: '1px solid #E2E8F0' }}>
+                          <div style={{ fontWeight: 800, fontSize: '14.5px', color: '#111827', lineHeight: 1.3 }}>{p.name}</div>
+                          <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>{p.brand}</span>
+                            {p.origin && (
+                              <>
+                                <span>•</span>
+                                <span style={{ color: '#9CA3AF' }}>{p.origin}</span>
+                              </>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span
+                              style={{
+                                fontSize: '11px',
+                                background: '#F8FAFC',
+                                color: '#334155',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                border: '1px solid #CBD5E1',
+                              }}
+                            >
                               SKU: {p.sku || p.id}
                             </span>
                             <button
@@ -582,73 +622,209 @@ export default function Products() {
                                 fontSize: '11px',
                                 background: '#EEF2FF',
                                 color: '#4338CA',
-                                padding: '3px 8px',
-                                borderRadius: '5px',
+                                padding: '3px 9px',
+                                borderRadius: '6px',
                                 border: '1px solid #C7D2FE',
                                 cursor: 'pointer',
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: '4px',
-                                fontWeight: 600,
+                                gap: '5px',
+                                fontWeight: 700,
+                                transition: 'all 0.15s ease',
                               }}
                               title="View & Share Product QR Code"
                             >
-                              <QrCode size={12} /> QR Code
+                              <QrCode size={13} /> QR Code
                             </button>
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td>
-                      <span className="badge badge-info">{p.categoryName}</span>
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{p.subcategoryId || '-'}</td>
-                    <td>
-                      <button
-                        className="btn-secondary"
-                        onClick={() => setVariantProduct(p)}
-                        style={{ padding: '6px 12px', fontSize: '12px', gap: '6px' }}
+                    <td style={{ padding: '16px' }}>
+                      <span
+                        style={{
+                          backgroundColor: catStyle.bg,
+                          color: catStyle.color,
+                          border: `1px solid ${catStyle.border}`,
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                          fontSize: '11.5px',
+                          fontWeight: 700,
+                          display: 'inline-block',
+                          whiteSpace: 'nowrap',
+                        }}
                       >
-                        <Layers size={14} color="var(--color-primary-orange)" />
-                        <strong>{p.variants?.length || 0} Variants</strong>
-                      </button>
-                    </td>
-                    <td style={{ fontWeight: 700 }}>
-                      ₹{defaultVariant?.price || 0} <span style={{ fontSize: '11px', color: 'var(--color-secondary-text)' }}>({defaultVariant?.title})</span>
-                    </td>
-                    <td>
-                      <span className={`badge ${totalStock > 30 ? 'badge-success' : totalStock > 0 ? 'badge-warning' : 'badge-danger'}`}>
-                        {totalStock} units across variants
+                        {catName}
                       </span>
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        {p.isBestSeller && <span className="badge badge-warning">Best Seller</span>}
-                        {p.isFeatured && <span className="badge badge-success">Featured</span>}
+                    <td style={{ padding: '16px' }}>
+                      <span
+                        style={{
+                          backgroundColor: '#F3F4F6',
+                          color: '#374151',
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          display: 'inline-block',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {p.subcategoryId || '-'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setVariantProduct(p)}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          borderRadius: '8px',
+                          border: '1.2px solid #FED7AA',
+                          backgroundColor: '#FFF7ED',
+                          color: '#9A3412',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <Layers size={14} color="#EA580C" />
+                        <span>{p.variants?.length || 0} Variants</span>
+                      </button>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ fontWeight: 800, fontSize: '15px', color: '#111827' }}>
+                        ₹{defaultVariant?.price || 0}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#6B7280', fontWeight: 600, marginTop: '2px' }}>
+                        ({defaultVariant?.title || '100 GM'})
                       </div>
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                    <td style={{ padding: '16px' }}>
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '5px 10px',
+                          borderRadius: '20px',
+                          fontSize: '11.5px',
+                          fontWeight: 700,
+                          backgroundColor: totalStock > 30 ? '#F0FDF4' : totalStock > 0 ? '#FFFBEB' : '#FEF2F2',
+                          color: totalStock > 30 ? '#15803D' : totalStock > 0 ? '#B45309' : '#DC2626',
+                          border: `1px solid ${totalStock > 30 ? '#BBF7D0' : totalStock > 0 ? '#FDE68A' : '#FECACA'}`,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: '7px',
+                            height: '7px',
+                            borderRadius: '50%',
+                            backgroundColor: totalStock > 30 ? '#22C55E' : totalStock > 0 ? '#F59E0B' : '#EF4444',
+                          }}
+                        />
+                        <span>{totalStock} units across variants</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {p.isBestSeller && (
+                          <span
+                            style={{
+                              backgroundColor: '#FFFBEB',
+                              color: '#B45309',
+                              border: '1px solid #FDE68A',
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              fontSize: '10.5px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            ⭐ Best Seller
+                          </span>
+                        )}
+                        {p.isFeatured && (
+                          <span
+                            style={{
+                              backgroundColor: '#ECFDF5',
+                              color: '#047857',
+                              border: '1px solid #A7F3D0',
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              fontSize: '10.5px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            🌿 Featured
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px 18px', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
                         <button
+                          type="button"
                           onClick={() => setShareProduct(p)}
-                          style={{ background: 'none', color: '#2563EB', cursor: 'pointer' }}
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '8px',
+                            backgroundColor: '#EFF6FF',
+                            border: '1px solid #BFDBFE',
+                            color: '#2563EB',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                          }}
                           title="Share Product (SKU / Barcode Link)"
                         >
-                          <Share2 size={16} />
+                          <Share2 size={15} />
                         </button>
                         <button
+                          type="button"
                           onClick={() => openEditModal(p)}
-                          style={{ background: 'none', color: 'var(--color-primary-orange)' }}
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '8px',
+                            backgroundColor: '#FFF7ED',
+                            border: '1px solid #FED7AA',
+                            color: '#EA580C',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                          }}
                           title="Edit Product"
                         >
-                          <Edit3 size={16} />
+                          <Edit3 size={15} />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteProduct(p.id)}
-                          style={{ background: 'none', color: 'var(--color-danger-red)' }}
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '8px',
+                            backgroundColor: '#FEF2F2',
+                            border: '1px solid #FECACA',
+                            color: '#DC2626',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                          }}
                           title="Delete Product"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>

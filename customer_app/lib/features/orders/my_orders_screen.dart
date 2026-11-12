@@ -96,11 +96,12 @@ class MyOrdersScreen extends ConsumerWidget {
                 children: [
                   Text(
                     order.id,
-                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkText),
+                    style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.primaryOrange),
                   ),
+                  const SizedBox(height: 2),
                   Text(
-                    'Placed on ${order.createdAt.day}/${order.createdAt.month}/${order.createdAt.year}',
-                    style: GoogleFonts.inter(fontSize: 11, color: AppColors.secondaryText),
+                    'Placed on ${order.createdAt.day.toString().padLeft(2, '0')}/${order.createdAt.month.toString().padLeft(2, '0')}/${order.createdAt.year} at ${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}',
+                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.secondaryText),
                   ),
                 ],
               ),

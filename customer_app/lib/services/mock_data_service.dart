@@ -1709,6 +1709,75 @@ class MockDataService {
     );
   }
 
+  String _generateCustomOrderId(List<OrderItemRecord> items) {
+    String shortName = 'dryfruit';
+    if (items.isNotEmpty) {
+      final name = items.first.productName.toLowerCase();
+      if (name.contains('almond') || name.contains('badam')) {
+        shortName = 'almond';
+      } else if (name.contains('cashew') || name.contains('kaju')) {
+        shortName = 'cashew';
+      } else if (name.contains('pista') || name.contains('pistachio')) {
+        shortName = 'pista';
+      } else if (name.contains('walnut') || name.contains('akhrot')) {
+        shortName = 'walnut';
+      } else if (name.contains('date') || name.contains('ajwa') || name.contains('khejur') || name.contains('khajoor')) {
+        shortName = 'dates';
+      } else if (name.contains('raisin') || name.contains('kishmish')) {
+        shortName = 'raisins';
+      } else if (name.contains('fig') || name.contains('anjeer')) {
+        shortName = 'anjeer';
+      } else if (name.contains('apricot') || name.contains('jardalu')) {
+        shortName = 'apricot';
+      } else if (name.contains('mixed') || name.contains('mix')) {
+        shortName = 'mixdryfruit';
+      } else if (name.contains('cardamom') || name.contains('elaichi')) {
+        shortName = 'cardamom';
+      } else if (name.contains('pepper') || name.contains('mirch')) {
+        shortName = 'blackpepper';
+      } else if (name.contains('cinnamon') || name.contains('dalchini')) {
+        shortName = 'cinnamon';
+      } else if (name.contains('clove') || name.contains('laung')) {
+        shortName = 'clove';
+      } else if (name.contains('cumin') || name.contains('jeera')) {
+        shortName = 'cumin';
+      } else if (name.contains('garam') || name.contains('masala')) {
+        shortName = 'garammasala';
+      } else if (name.contains('turmeric') || name.contains('haldi')) {
+        shortName = 'turmeric';
+      } else if (name.contains('oat')) {
+        shortName = 'oats';
+      } else if (name.contains('quinoa')) {
+        shortName = 'quinoa';
+      } else if (name.contains('ragi')) {
+        shortName = 'ragi';
+      } else if (name.contains('jowar')) {
+        shortName = 'jowar';
+      } else if (name.contains('millet')) {
+        shortName = 'millets';
+      } else {
+        final clean = name.replaceAll(RegExp(r'[^a-z0-9]'), '');
+        shortName = clean.isNotEmpty ? clean.substring(0, clean.length.clamp(0, 10)) : 'dryfruit';
+      }
+    }
+
+    final now = DateTime.now();
+    final day = now.day.toString().padLeft(2, '0');
+    final month = now.month.toString().padLeft(2, '0');
+    final year = now.year.toString();
+    final dateStr = '$day$month$year';
+
+    final hour = now.hour.toString().padLeft(2, '0');
+    final min = now.minute.toString().padLeft(2, '0');
+    final sec = now.second.toString().padLeft(2, '0');
+    final timeStr = '$hour$min$sec';
+
+    final count = _orders.where((o) => o.id.toLowerCase().startsWith('$shortName-')).length;
+    final numStr = (count + 1).toString().padLeft(2, '0');
+
+    return '$shortName-$numStr-$dateStr-$timeStr';
+  }
+
   Future<CustomerOrder> placeOrder({
     required OrderCustomer customer,
     required List<OrderItemRecord> items,
@@ -1720,8 +1789,9 @@ class MockDataService {
     required String paymentMethod,
   }) async {
     await init();
+    final orderId = _generateCustomOrderId(items);
     final newOrder = CustomerOrder(
-      id: 'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+      id: orderId,
       createdAt: DateTime.now(),
       status: 'Confirmed',
       customer: customer,

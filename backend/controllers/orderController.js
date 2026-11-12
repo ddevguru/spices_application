@@ -1,5 +1,73 @@
 const db = require('../config/db');
 
+function extractProductShortName(items) {
+  if (!items || items.length === 0) return 'order';
+  const first = items[0];
+  const name = String(first.productName || first.name || first.productId || '').toLowerCase();
+  
+  if (name.includes('almond') || name.includes('badam')) return 'almond';
+  if (name.includes('cashew') || name.includes('kaju')) return 'cashew';
+  if (name.includes('pista') || name.includes('pistachio')) return 'pista';
+  if (name.includes('walnut') || name.includes('akhrot')) return 'walnut';
+  if (name.includes('date') || name.includes('ajwa') || name.includes('khejur') || name.includes('khajoor')) return 'dates';
+  if (name.includes('raisin') || name.includes('kishmish')) return 'raisins';
+  if (name.includes('fig') || name.includes('anjeer')) return 'anjeer';
+  if (name.includes('apricot') || name.includes('jardalu')) return 'apricot';
+  if (name.includes('mixed') || name.includes('mix')) return 'mixdryfruit';
+  if (name.includes('cardamom') || name.includes('elaichi')) return 'cardamom';
+  if (name.includes('pepper') || name.includes('mirch')) return 'blackpepper';
+  if (name.includes('cinnamon') || name.includes('dalchini')) return 'cinnamon';
+  if (name.includes('clove') || name.includes('laung')) return 'clove';
+  if (name.includes('cumin') || name.includes('jeera')) return 'cumin';
+  if (name.includes('coriander') || name.includes('dhaniya')) return 'coriander';
+  if (name.includes('star anise') || name.includes('chakraphool')) return 'staranise';
+  if (name.includes('garam') || name.includes('masala')) return 'garammasala';
+  if (name.includes('turmeric') || name.includes('haldi')) return 'turmeric';
+  if (name.includes('chilli') || name.includes('mirchi')) return 'chilli';
+  if (name.includes('oat')) return 'oats';
+  if (name.includes('quinoa')) return 'quinoa';
+  if (name.includes('ragi')) return 'ragi';
+  if (name.includes('jowar')) return 'jowar';
+  if (name.includes('millet')) return 'millets';
+
+  const clean = name.replace(/[^a-z0-9]/g, '');
+  return clean ? clean.slice(0, 10) : 'dryfruit';
+}
+
+async function generateCustomOrderId(items, dbInstance) {
+  const shortName = extractProductShortName(items);
+  const now = new Date();
+  
+  // Format DDMMYYYY
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = String(now.getFullYear());
+  const dateStr = `${day}${month}${year}`;
+
+  // Format HHMMSS
+  const hours = String(now.getHours()).padStart(2, '0');
+  const mins = String(now.getMinutes()).padStart(2, '0');
+  const secs = String(now.getSeconds()).padStart(2, '0');
+  const timeStr = `${hours}${mins}${secs}`;
+
+  let nextNum = 1;
+  try {
+    if (dbInstance && dbInstance.isPostgresConnected()) {
+      const res = await dbInstance.query(`SELECT COUNT(*) as count FROM orders WHERE id ILIKE $1`, [`${shortName}-%`]);
+      nextNum = (parseInt(res.rows[0].count, 10) || 0) + 1;
+    } else if (dbInstance) {
+      const fb = dbInstance.getFallbackDb();
+      const count = (fb.orders || []).filter(o => o.id && o.id.toLowerCase().startsWith(`${shortName}-`)).length;
+      nextNum = count + 1;
+    }
+  } catch (_) {
+    nextNum = 1;
+  }
+
+  const numStr = String(nextNum).padStart(2, '0');
+  return `${shortName}-${numStr}-${dateStr}-${timeStr}`;
+}
+
 exports.getOrders = async (req, res, next) => {
   try {
     if (db.isPostgresConnected()) {
@@ -58,7 +126,10 @@ exports.getOrders = async (req, res, next) => {
 exports.createOrder = async (req, res, next) => {
   try {
     const { customer, items, subtotal, discount, couponCode, deliveryFee, tax, totalAmount, paymentMethod, deliveryInstructions } = req.body;
-    const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+    let orderId = req.body.id;
+    if (!orderId || orderId.startsWith('ORD-') || orderId.startsWith('temp_')) {
+      orderId = await generateCustomOrderId(items, db);
+    }
 
     if (db.isPostgresConnected()) {
       const pool = db.getPool();

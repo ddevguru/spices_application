@@ -207,13 +207,39 @@ export default function Orders() {
               ) : (
                 filteredOrders.map((ord) => (
                 <tr key={ord.id}>
-                  <td style={{ fontWeight: 700 }}>{ord.id}</td>
+                  <td>
+                    <span
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: '12px',
+                        backgroundColor: '#FFF7ED',
+                        color: '#C2410C',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid #FED7AA',
+                        fontWeight: 800,
+                        display: 'inline-block',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {ord.id}
+                    </span>
+                  </td>
                   <td style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>
-                    {new Date(ord.createdAt).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
+                    <div style={{ fontWeight: 600, color: 'var(--color-dark-text)' }}>
+                      {new Date(ord.createdAt).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>
+                      {new Date(ord.createdAt).toLocaleTimeString('en-IN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}
+                    </div>
                   </td>
                   <td>
                     <div style={{ fontWeight: 600 }}>{ord.customer?.name}</div>
