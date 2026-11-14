@@ -5,51 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../config/db');
 
-// In-memory or fallback store for incoming bot calls
-const recentCalls = [
-  {
-    id: 'call_101',
-    callerPhone: '9820012345',
-    callerName: 'Ramesh Bhai Sharma',
-    businessName: 'Sharma Kirana & Dry Fruits Mart',
-    city: 'Navi Mumbai',
-    address: 'Shop No. 12, APMC Grain Market, Sector 19',
-    pincode: '400705',
-    gstNumber: '27AAACS1234A1Z5',
-    categoryName: 'Dry Fruits',
-    subcategoryId: 'Almonds',
-    targetPrice: 280,
-    matchedProductName: 'Iranian Mamra Almonds',
-    matchedProductId: 'p_almonds_2',
-    matchedVariantTitle: '250 GM',
-    weightInGrams: 250,
-    quantity: 2,
-    transcript: 'Namaste, main Ramesh Sharma bol raha hoon Sharma Kirana Mart se. Mujhe 280 rupaye wala Mamra badam chahiye, 250 gram ke 2 packet Navi Mumbai APMC market bhejna hai.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-    status: 'Ready to Feed',
-  },
-  {
-    id: 'call_102',
-    callerPhone: '9819123456',
-    callerName: 'Suresh Patel',
-    businessName: 'Patel Supermarket',
-    city: 'Pune',
-    address: 'Plot 45, Market Yard, Gultekdi',
-    pincode: '411037',
-    gstNumber: '27AABCP5678Q1Z2',
-    categoryName: 'Dry Fruits',
-    subcategoryId: 'Almonds',
-    targetPrice: 125,
-    matchedProductName: 'California Whole Almonds (Badam Giri)',
-    matchedProductId: 'p_almonds_1',
-    matchedVariantTitle: '100 GM',
-    weightInGrams: 100,
-    quantity: 5,
-    transcript: 'Hello, Patel Supermarket Pune se Suresh. California badam 120-130 ke rate wala 100g ke 5 packet order likh lo.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    status: 'Ready to Feed',
-  }
-];
+// In-memory or fallback store for incoming bot calls (starts empty for real customer calls)
+const recentCalls = [];
 
 // Helper to extract entities from natural language text
 function parseVoiceOrderText(text, allProducts = [], allCategories = []) {

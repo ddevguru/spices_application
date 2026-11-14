@@ -100,6 +100,8 @@ export default function CreateOrder() {
   const requestedVariantIdRef = useRef(null);
   const recognitionRef = useRef(null);
   const transcriptRef = useRef('');
+  const lastProcessedCallIdRef = useRef(null);
+  const [autoFeedIncomingCalls, setAutoFeedIncomingCalls] = useState(true);
 
   // 1. Fetch Categories, Products & Recent Voice Calls on Load
   useEffect(() => {
@@ -126,6 +128,29 @@ export default function CreateOrder() {
       setSpeechSupported(true);
     }
   }, []);
+
+  // 1.1 Real-Time Polling for incoming phone calls on user's real phone number (every 3 seconds)
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const calls = await mockApi.getRecentVoiceCalls();
+        if (Array.isArray(calls)) {
+          setRecentCalls(calls);
+          // If a new real incoming call arrives
+          if (calls.length > 0 && autoFeedIncomingCalls) {
+            const latest = calls[0];
+            if (latest.id && latest.id !== lastProcessedCallIdRef.current) {
+              lastProcessedCallIdRef.current = latest.id;
+              // Instantly auto-feed the real call directly into the form!
+              autoFeedFromCall(latest);
+            }
+          }
+        }
+      } catch (_) {}
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [autoFeedIncomingCalls, categories, products]);
 
   // 2. Cascading: Subcategories based on Selected Category
   const availableSubcategories = useMemo(() => {
@@ -709,29 +734,32 @@ export default function CreateOrder() {
 
               {/* Action buttons */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                {/* 1-Click Simulate Call */}
-                <button
-                  type="button"
-                  onClick={handleSimulateCall}
-                  disabled={loadingCalls}
+                {/* Auto-Feed Toggle */}
+                <label
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    backgroundColor: 'var(--color-primary-orange)',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    padding: '8px 14px',
-                    borderRadius: '10px',
-                    fontSize: '12.5px',
+                    fontSize: '11.5px',
                     fontWeight: 700,
+                    color: autoFeedIncomingCalls ? '#15803D' : '#6B7280',
                     cursor: 'pointer',
-                    boxShadow: '0 2px 6px rgba(255, 129, 46, 0.3)',
-                    transition: 'opacity 0.2s',
+                    backgroundColor: autoFeedIncomingCalls ? '#F0FDF4' : '#F3F4F6',
+                    padding: '8px 12px',
+                    borderRadius: '10px',
+                    border: autoFeedIncomingCalls ? '1px solid #86EFAC' : '1px solid #E5E7EB',
+                    userSelect: 'none',
                   }}
+                  title="When enabled, any customer calling your phone number will automatically feed this order form in real-time"
                 >
-                  <Zap size={14} /> ⚡ 1-Click Simulate Call
-                </button>
+                  <input
+                    type="checkbox"
+                    checked={autoFeedIncomingCalls}
+                    onChange={(e) => setAutoFeedIncomingCalls(e.target.checked)}
+                    style={{ accentColor: 'var(--color-primary-orange)' }}
+                  />
+                  Live Call Auto-Feed {autoFeedIncomingCalls ? 'ON' : 'OFF'}
+                </label>
 
                 {/* Live Mic Voice Bot Button */}
                 <button
@@ -781,7 +809,7 @@ export default function CreateOrder() {
                   }}
                 >
                   <PhoneIncoming size={13} color="var(--color-primary-orange)" />
-                  Calls ({recentCalls.length})
+                  Real Calls ({recentCalls.length})
                   {showCallsDrawer ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
 
@@ -792,17 +820,19 @@ export default function CreateOrder() {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '4px',
-                    background: 'transparent',
-                    color: 'var(--color-secondary-text)',
-                    border: 'none',
-                    padding: '6px',
-                    cursor: 'pointer',
+                    gap: '6px',
+                    backgroundColor: showSetupGuide ? '#EFF6FF' : '#FFFFFF',
+                    color: '#2563EB',
+                    border: '1px solid #BFDBFE',
+                    padding: '8px 12px',
+                    borderRadius: '10px',
                     fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
                   }}
-                  title="Free Phone Setup Info"
+                  title="How to connect your actual phone number for 100% Free"
                 >
-                  <Info size={16} />
+                  <Info size={14} /> Connect My Phone (Free)
                 </button>
               </div>
             </div>
@@ -908,37 +938,60 @@ export default function CreateOrder() {
               <div
                 style={{
                   marginTop: '14px',
-                  padding: '14px 18px',
+                  padding: '16px 20px',
                   backgroundColor: '#EFF6FF',
-                  borderRadius: '12px',
-                  border: '1px solid #BFDBFE',
-                  fontSize: '12.5px',
+                  borderRadius: '14px',
+                  border: '1.5px solid #BFDBFE',
+                  fontSize: '13px',
                   color: '#1E40AF',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <div style={{ fontWeight: 800, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Info size={16} /> How to connect your real phone number 100% Free (Zero Twilio, Zero Paid APIs):
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ fontWeight: 800, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Info size={18} /> Apne Real Phone Number ko Free me Connect karne ka Tareeka (Zero Twilio, Zero Cost):
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowSetupGuide(false)}
-                    style={{ background: 'none', border: 'none', color: '#1E40AF', cursor: 'pointer', fontWeight: 800 }}
+                    style={{ background: 'none', border: 'none', color: '#1E40AF', cursor: 'pointer', fontWeight: 800, fontSize: '15px' }}
                   >
                     ✕
                   </button>
                 </div>
-                <ul style={{ margin: '4px 0 0 16px', lineHeight: 1.6 }}>
-                  <li>
-                    <strong>Method 1 (Instant In-Browser):</strong> Keep this page open and click <strong>"🎙️ Start Live Voice Call"</strong>. Put your mobile on speaker or speak into mic. Speech recognition & voice response run directly in browser at <strong>zero cost</strong>.
-                  </li>
-                  <li>
-                    <strong>Method 2 (Android Free Call Webhook):</strong> Install free MacroDroid / Tasker on your phone. When a customer calls, it automatically sends caller ID & transcript to backend endpoint: <code>https://dryfruits-api.onrender.com/api/voice-bot/incoming-call</code>.
-                  </li>
-                  <li>
-                    <strong>Lightweight AI Engine (Zero Ollama):</strong> Deterministic slot filling & price-variety matching runs in Node.js within 5 milliseconds, consuming 0 extra RAM/GPU.
-                  </li>
-                </ul>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginTop: '10px' }}>
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '14px', borderRadius: '10px', border: '1px solid #DBEAFE' }}>
+                    <div style={{ fontWeight: 800, color: '#1E3A8A', marginBottom: '6px' }}>
+                      📱 Method 1: Android Phone Call Automation (100% Automatic)
+                    </div>
+                    <ol style={{ margin: '0 0 0 16px', padding: 0, fontSize: '12px', lineHeight: 1.6, color: '#374151' }}>
+                      <li>Google Play Store se free app <strong>"MacroDroid"</strong> install karein.</li>
+                      <li>Trigger: <strong>Call Incoming</strong> (Any Number).</li>
+                      <li>Actions: <strong>Answer Call</strong> → <strong>Speaker On</strong> → <strong>Text to Speech (Hindi)</strong>.</li>
+                      <li>Customer se naam, dukaan aur unka target price/budget pooch kar record karein.</li>
+                      <li>
+                        HTTP POST request karein is Live URL par:
+                        <div style={{ background: '#F1F5F9', padding: '6px 8px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '11px', marginTop: '4px', wordBreak: 'break-all', color: '#0F172A' }}>
+                          https://dryfruits-api.onrender.com/api/voice-bot/incoming-call
+                        </div>
+                      </li>
+                      <li>Payload Body: <code>{`{"caller": "{call_number}", "transcript": "{speech_result}"}`}</code></li>
+                    </ol>
+                  </div>
+
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '14px', borderRadius: '10px', border: '1px solid #DBEAFE' }}>
+                    <div style={{ fontWeight: 800, color: '#1E3A8A', marginBottom: '6px' }}>
+                      🎙️ Method 2: Live Counter Assistant (Zero App Install)
+                    </div>
+                    <ul style={{ margin: '0 0 0 16px', padding: 0, fontSize: '12px', lineHeight: 1.6, color: '#374151' }}>
+                      <li>Jab customer aapke mobile par call kare, call receive karke <strong>Speakerphone</strong> on karein ya Bluetooth headset lagayein.</li>
+                      <li>Upper <strong>"🎙️ Start Live Voice Call"</strong> button par click karein.</li>
+                      <li>Browser ka AI bot Hindi me customer se unka naam, dukaan aur <strong>target price/budget</strong> poochega.</li>
+                      <li>Target price ke according right variety (jaise ₹280 me Mamra Almonds) select ho kar screen par form auto-feed ho jayega.</li>
+                      <li>Admin sab kuch review karke <strong>"Add Product to Order"</strong> click karega.</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -955,7 +1008,7 @@ export default function CreateOrder() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--color-dark-text)' }}>
-                    📞 Recent Automated Customer Calls ({recentCalls.length})
+                    📞 Real Customer Phone Calls ({recentCalls.length})
                   </span>
                   <button
                     type="button"
@@ -979,73 +1032,85 @@ export default function CreateOrder() {
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto' }}>
-                  {recentCalls.map((call) => (
-                    <div
-                      key={call.id}
-                      style={{
-                        padding: '10px 14px',
-                        backgroundColor: '#FAF8F5',
-                        borderRadius: '10px',
-                        border: '1px solid #F0ECE4',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: '12px',
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontWeight: 800, fontSize: '13px', color: 'var(--color-dark-text)' }}>
-                            {call.callerName || call.customer?.name || 'Customer'}
-                          </span>
-                          <span style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>
-                            ({call.callerPhone || call.customer?.phone})
-                          </span>
-                          <span
-                            style={{
-                              fontSize: '10.5px',
-                              fontWeight: 700,
-                              padding: '1px 6px',
-                              borderRadius: '4px',
-                              backgroundColor: '#FEF3C7',
-                              color: '#92400E',
-                            }}
-                          >
-                            Target Price: ₹{call.targetPrice || call.selection?.targetPrice || 'N/A'}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '11.5px', color: 'var(--color-secondary-text)', marginTop: '2px' }}>
-                          {call.businessName || call.customer?.businessName} • {call.city || call.customer?.city} •{' '}
-                          <strong style={{ color: 'var(--color-primary-orange)' }}>
-                            Matched: {call.matchedProductName || call.selection?.productName} ({call.matchedVariantTitle || call.selection?.variantTitle} × {call.quantity || call.selection?.quantity || 1})
-                          </strong>
-                        </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
+                  {recentCalls.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--color-secondary-text)' }}>
+                      <PhoneIncoming size={36} color="var(--color-primary-orange)" style={{ margin: '0 auto 10px', opacity: 0.6 }} />
+                      <div style={{ fontWeight: 800, fontSize: '13.5px', color: 'var(--color-dark-text)' }}>
+                        Waiting for Real Customer Phone Calls...
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          autoFeedFromCall(call);
-                          setShowCallsDrawer(false);
-                        }}
+                      <p style={{ fontSize: '12px', marginTop: '4px', maxWidth: '440px', margin: '4px auto 0', lineHeight: 1.5 }}>
+                        Jab koi customer aapke number par call karega ya counter par Live Voice Assistant on hoga, unka call yahan real-time me auto-feed ho jayega!
+                      </p>
+                    </div>
+                  ) : (
+                    recentCalls.map((call) => (
+                      <div
+                        key={call.id}
                         style={{
-                          backgroundColor: 'var(--color-primary-orange)',
-                          color: '#FFFFFF',
-                          border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '8px',
-                          fontSize: '11.5px',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          boxShadow: '0 2px 5px rgba(255, 129, 46, 0.25)',
+                          padding: '10px 14px',
+                          backgroundColor: '#FAF8F5',
+                          borderRadius: '10px',
+                          border: '1px solid #F0ECE4',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '12px',
                         }}
                       >
-                        ⚡ Feed into Form
-                      </button>
-                    </div>
-                  ))}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontWeight: 800, fontSize: '13px', color: 'var(--color-dark-text)' }}>
+                              {call.callerName || call.customer?.name || 'Customer'}
+                            </span>
+                            <span style={{ fontSize: '12px', color: 'var(--color-secondary-text)' }}>
+                              ({call.callerPhone || call.customer?.phone})
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '10.5px',
+                                fontWeight: 700,
+                                padding: '1px 6px',
+                                borderRadius: '4px',
+                                backgroundColor: '#FEF3C7',
+                                color: '#92400E',
+                              }}
+                            >
+                              Target Price: ₹{call.targetPrice || call.selection?.targetPrice || 'N/A'}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '11.5px', color: 'var(--color-secondary-text)', marginTop: '2px' }}>
+                            {call.businessName || call.customer?.businessName} • {call.city || call.customer?.city} •{' '}
+                            <strong style={{ color: 'var(--color-primary-orange)' }}>
+                              Matched: {call.matchedProductName || call.selection?.productName} ({call.matchedVariantTitle || call.selection?.variantTitle} × {call.quantity || call.selection?.quantity || 1})
+                            </strong>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            autoFeedFromCall(call);
+                            setShowCallsDrawer(false);
+                          }}
+                          style={{
+                            backgroundColor: 'var(--color-primary-orange)',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            fontSize: '11.5px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0 2px 5px rgba(255, 129, 46, 0.25)',
+                          }}
+                        >
+                          ⚡ Feed into Form
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}

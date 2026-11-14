@@ -4817,33 +4817,11 @@ export const mockApi = {
   async getRecentVoiceCalls() {
     try {
       const res = await axios.get(`${API_BASE}/voice-bot/recent-calls`, { timeout: 10000 });
-      if (res.data && res.data.calls) {
+      if (res.data && Array.isArray(res.data.calls)) {
         return res.data.calls;
       }
     } catch (_) {}
-    return [
-      {
-        id: 'call_local_1',
-        callerPhone: '9820012345',
-        callerName: 'Ramesh Bhai Sharma',
-        businessName: 'Sharma Kirana & Dry Fruits Mart',
-        city: 'Navi Mumbai',
-        address: 'Shop No. 12, APMC Grain Market, Sector 19',
-        pincode: '400705',
-        gstNumber: '27AAACS1234A1Z5',
-        categoryName: 'Dry Fruits',
-        subcategoryId: 'Almonds',
-        targetPrice: 280,
-        matchedProductName: 'Iranian Mamra Almonds',
-        matchedProductId: 'p_almonds_2',
-        matchedVariantTitle: '250 GM',
-        weightInGrams: 250,
-        quantity: 2,
-        transcript: 'Namaste, Ramesh Bhai Sharma bol raha hoon Sharma Kirana & Dry Fruits Mart se Navi Mumbai. 280 rupaye wala Iranian Mamra badam chahiye 250g ke 2 packet.',
-        timestamp: new Date().toISOString(),
-        status: 'Ready to Feed'
-      }
-    ];
+    return [];
   },
 
   async parseVoiceOrder(transcript) {
