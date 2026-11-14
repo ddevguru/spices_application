@@ -20,6 +20,7 @@ const bannerRoutes = require('./routes/bannerRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const voiceBotRoutes = require('./routes/voiceBotRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -233,6 +234,7 @@ app.use('/api/banners', bannerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/voice-bot', voiceBotRoutes);
 
 // 404 Handler for undefined API routes
 app.use('/api/*', (req, res) => {

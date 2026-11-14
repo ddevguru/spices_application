@@ -4811,5 +4811,100 @@ export const mockApi = {
       }
     } catch (_) {}
     return local;
+  },
+
+  // Voice Bot APIs (Zero Twilio, Zero Ollama, Free & Lightweight)
+  async getRecentVoiceCalls() {
+    try {
+      const res = await axios.get(`${API_BASE}/voice-bot/recent-calls`, { timeout: 10000 });
+      if (res.data && res.data.calls) {
+        return res.data.calls;
+      }
+    } catch (_) {}
+    return [
+      {
+        id: 'call_local_1',
+        callerPhone: '9820012345',
+        callerName: 'Ramesh Bhai Sharma',
+        businessName: 'Sharma Kirana & Dry Fruits Mart',
+        city: 'Navi Mumbai',
+        address: 'Shop No. 12, APMC Grain Market, Sector 19',
+        pincode: '400705',
+        gstNumber: '27AAACS1234A1Z5',
+        categoryName: 'Dry Fruits',
+        subcategoryId: 'Almonds',
+        targetPrice: 280,
+        matchedProductName: 'Iranian Mamra Almonds',
+        matchedProductId: 'p_almonds_2',
+        matchedVariantTitle: '250 GM',
+        weightInGrams: 250,
+        quantity: 2,
+        transcript: 'Namaste, Ramesh Bhai Sharma bol raha hoon Sharma Kirana & Dry Fruits Mart se Navi Mumbai. 280 rupaye wala Iranian Mamra badam chahiye 250g ke 2 packet.',
+        timestamp: new Date().toISOString(),
+        status: 'Ready to Feed'
+      }
+    ];
+  },
+
+  async parseVoiceOrder(transcript) {
+    try {
+      const res = await axios.post(`${API_BASE}/voice-bot/parse-order`, { transcript }, { timeout: 10000 });
+      if (res.data && res.data.data) {
+        return res.data.data;
+      }
+    } catch (_) {}
+    return {
+      customer: {
+        name: 'Ramesh Bhai Sharma',
+        businessName: 'Sharma Kirana Mart',
+        phone: '9820012345',
+        street: 'Shop No. 12, APMC Grain Market, Sector 19',
+        city: 'Navi Mumbai',
+        state: 'Maharashtra',
+        pincode: '400705',
+        gstNumber: '27AAACS1234A1Z5'
+      },
+      selection: {
+        categoryId: 'cat_dry_fruits',
+        categoryName: 'Dry Fruits',
+        subcategoryId: 'Almonds',
+        productId: 'p_almonds_2',
+        productName: 'Iranian Mamra Almonds',
+        variantTitle: '250 GM',
+        weightInGrams: 250,
+        quantity: 2,
+        targetPrice: 280
+      }
+    };
+  },
+
+  async simulateVoiceCall() {
+    try {
+      const res = await axios.post(`${API_BASE}/voice-bot/simulate-call`, {}, { timeout: 10000 });
+      if (res.data && res.data.call) {
+        return res.data.call;
+      }
+    } catch (_) {}
+    return {
+      id: `call_${Date.now()}`,
+      callerPhone: '9819123456',
+      callerName: 'Suresh Patel',
+      businessName: 'Patel Supermarket',
+      city: 'Pune',
+      address: 'Plot 45, Market Yard, Gultekdi',
+      pincode: '411037',
+      gstNumber: '27AABCP5678Q1Z2',
+      categoryName: 'Dry Fruits',
+      subcategoryId: 'Almonds',
+      targetPrice: 125,
+      matchedProductName: 'California Whole Almonds (Badam Giri)',
+      matchedProductId: 'p_almonds_1',
+      matchedVariantTitle: '100 GM',
+      weightInGrams: 100,
+      quantity: 5,
+      transcript: 'Hello, Patel Supermarket Pune se Suresh. California badam 120-130 ke rate wala 100g ke 5 packet bhej do.',
+      timestamp: new Date().toISOString(),
+      status: 'Ready to Feed'
+    };
   }
 };
