@@ -36,7 +36,13 @@ import {
   ChevronDown,
   ChevronUp,
   PhoneIncoming,
-  Headphones
+  Headphones,
+  ShieldCheck,
+  Check,
+  X,
+  ArrowRight,
+  UserCheck,
+  CheckCircle
 } from 'lucide-react';
 
 export default function CreateOrder() {
@@ -97,11 +103,16 @@ export default function CreateOrder() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [isBotSpeaking, setIsBotSpeaking] = useState(false);
 
+  // Step-by-Step Voice Assistant and Admin Verification States
+  const [voiceStep, setVoiceStep] = useState(0); // 0: Idle, 1: Name, 2: Shop, 3: Address/City, 4: Product/Price, 5: Complete
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationPendingCall, setVerificationPendingCall] = useState(null);
+
   const requestedVariantIdRef = useRef(null);
   const recognitionRef = useRef(null);
   const transcriptRef = useRef('');
   const lastProcessedCallIdRef = useRef(null);
-  const [autoFeedIncomingCalls, setAutoFeedIncomingCalls] = useState(true);
+  const lastCollectedSelectionRef = useRef(null);
 
   // 1. Fetch Categories, Products & Recent Voice Calls on Load
   useEffect(() => {
@@ -130,19 +141,37 @@ export default function CreateOrder() {
   }, []);
 
   // 1.1 Real-Time Polling for incoming phone calls on user's real phone number (every 3 seconds)
+  // Per User Rule: Direct feed nahi hoga, pehle admin verify karega tab hi form me aayega
   useEffect(() => {
     const pollInterval = setInterval(async () => {
       try {
         const calls = await mockApi.getRecentVoiceCalls();
         if (Array.isArray(calls)) {
           setRecentCalls(calls);
-          // If a new real incoming call arrives
-          if (calls.length > 0 && autoFeedIncomingCalls) {
+          // If a new real incoming call arrives from user's phone
+          if (calls.length > 0) {
             const latest = calls[0];
             if (latest.id && latest.id !== lastProcessedCallIdRef.current) {
               lastProcessedCallIdRef.current = latest.id;
-              // Instantly auto-feed the real call directly into the form!
-              autoFeedFromCall(latest);
+              // Open Admin Verification Modal!
+              setVerificationPendingCall({
+                id: latest.id,
+                callerPhone: latest.callerPhone || latest.customer?.phone || '',
+                callerName: latest.callerName || latest.customer?.name || '',
+                businessName: latest.businessName || latest.customer?.businessName || '',
+                city: latest.city || latest.customer?.city || 'Navi Mumbai',
+                address: latest.address || latest.customer?.street || '',
+                pincode: latest.pincode || latest.customer?.pincode || '400001',
+                targetPrice: Number(latest.targetPrice || latest.selection?.targetPrice || 0),
+                matchedProductName: latest.matchedProductName || latest.selection?.productName || 'California Whole Almonds (Badam Giri)',
+                matchedProductId: latest.matchedProductId || latest.selection?.productId || '',
+                matchedVariantTitle: latest.matchedVariantTitle || latest.selection?.variantTitle || '100 GM',
+                price: Number(latest.price || 0),
+                quantity: Number(latest.quantity || latest.selection?.quantity || 1),
+                subcategoryId: latest.subcategoryId || latest.selection?.subcategoryId || 'Almonds',
+                categoryId: latest.categoryId || latest.selection?.categoryId || 'cat_dry_fruits',
+              });
+              setShowVerificationModal(true);
             }
           }
         }
@@ -150,7 +179,7 @@ export default function CreateOrder() {
     }, 3000);
 
     return () => clearInterval(pollInterval);
-  }, [autoFeedIncomingCalls, categories, products]);
+  }, [categories, products]);
 
   // 2. Cascading: Subcategories based on Selected Category
   const availableSubcategories = useMemo(() => {
@@ -405,21 +434,75 @@ export default function CreateOrder() {
     }
   };
 
-  // Browser Speech Recognition (Live Voice Call Assistant)
-  const toggleVoiceAssistant = () => {
-    if (isListening) {
+  // Step-by-Step Interactive Voice Assistant State Machine
+  // Requirement: "haar ek input lene k baad he next input pr jana hai, phele customer ka naam sun k phir dal k phir aage ka sawaal puchna hai"
+  const startStepByStepVoice = () => {
+    if (isListening || voiceStep > 0) {
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try { recognitionRef.current.stop(); } catch (_) {}
       }
       setIsListening(false);
+      setVoiceStep(0);
       setVoiceBotStatus('Voice assistant stopped');
       return;
     }
 
+    setVoiceStep(1);
+    setVoiceBotStatus('Starting Step 1: Asking Customer Name...');
+    playStepAudioAndListen(1);
+  };
+
+  const playStepAudioAndListen = (stepNum) => {
+    setVoiceStep(stepNum);
+    const audioMap = {
+      1: { file: 'step_1_name', text: 'नमस्ते! नैचुरले ड्राई फ्रूट्स में आपका स्वागत है। कृपया अपना नाम बताएं?' },
+      2: { file: 'step_2_shop', text: 'आपकी दुकान या बिज़नेस का नाम क्या है?' },
+      3: { file: 'step_3_address', text: 'आपका डिलीवरी एड्रेस और शहर कौन सा है?' },
+      4: { file: 'step_4_product_price', text: 'आपको कौन सा ड्राई फ्रूट या मसाला चाहिए, और आपका टारगेट बजट या रेट क्या है?' },
+      5: { file: 'step_5_closing', text: 'जी धन्यवाद! आपकी डिटेल्स नोट हो गई हैं। एडमिन के वेरिफिकेशन के बाद आर्डर कन्फर्म हो जाएगा।' }
+    };
+
+    const target = audioMap[stepNum];
+    if (!target) return;
+
+    if (stepNum === 5) {
+      // Closing audio, then open verification modal
+      playNaturalAudioPrompt(target.file, target.text);
+      setTimeout(() => {
+        setIsListening(false);
+        setVoiceStep(0);
+        openVerificationForCurrentVoiceSession();
+      }, 4000);
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const audio = new Audio(`/assets/voice/${target.file}.mp3`);
+        setIsBotSpeaking(true);
+        audio.onended = () => {
+          setIsBotSpeaking(false);
+          listenForStepInput(stepNum);
+        };
+        audio.onerror = () => {
+          speakBotAudio(target.text, () => listenForStepInput(stepNum));
+        };
+        audio.play().catch(() => speakBotAudio(target.text, () => listenForStepInput(stepNum)));
+        return;
+      } catch (_) {}
+    }
+    speakBotAudio(target.text, () => listenForStepInput(stepNum));
+  };
+
+  const listenForStepInput = (stepNum) => {
     const SpeechRecognition = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
     if (!SpeechRecognition) {
-      alert('Speech Recognition is not supported on this browser. Please use Chrome, Edge, Brave or click "1-Click Simulate Call".');
+      alert('Speech Recognition is not supported on this browser. Please use Chrome, Edge, or Brave.');
       return;
+    }
+
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (_) {}
     }
 
     const recognition = new SpeechRecognition();
@@ -431,8 +514,10 @@ export default function CreateOrder() {
       setIsListening(true);
       setVoiceTranscript('');
       transcriptRef.current = '';
-      setVoiceBotStatus('🎙️ Bot listening to caller... Customer se details pooch rahe hain...');
-      playNaturalAudioPrompt('prompt_greeting', 'Namaste! Naturale Dry Fruits me swagat hai. Apna naam, dukaan ka naam, aur aapko kaunsa item kis rate me chahiye batayein.');
+      if (stepNum === 1) setVoiceBotStatus('🎙️ Step 1/4: Listening for Customer Name...');
+      if (stepNum === 2) setVoiceBotStatus('🎙️ Step 2/4: Listening for Business / Shop Name...');
+      if (stepNum === 3) setVoiceBotStatus('🎙️ Step 3/4: Listening for Delivery Address & City...');
+      if (stepNum === 4) setVoiceBotStatus('🎙️ Step 4/4: Listening for Product, Target Budget & Quantity...');
     };
 
     recognition.onresult = (event) => {
@@ -445,27 +530,195 @@ export default function CreateOrder() {
     };
 
     recognition.onerror = (event) => {
-      console.warn('Speech recognition warning:', event.error);
+      console.warn('Speech recognition warning on step', stepNum, event.error);
       setIsListening(false);
-      setVoiceBotStatus(`Microphone status: ${event.error}`);
+      setVoiceBotStatus(`Microphone status: ${event.error}. You can retry or click next.`);
     };
 
-    recognition.onend = async () => {
+    recognition.onend = () => {
       setIsListening(false);
       const text = transcriptRef.current;
-      if (text && text.trim().length > 4) {
-        handleParseVoiceText(text);
-      } else {
-        setVoiceBotStatus('No voice input captured. Click mic to speak again or use 1-Click Simulation.');
-      }
+      handleStepCompleted(stepNum, text);
     };
 
     recognitionRef.current = recognition;
     try {
       recognition.start();
     } catch (e) {
-      console.error('Error starting recognition:', e);
+      console.error('Error starting recognition on step', stepNum, e);
     }
+  };
+
+  const handleStepCompleted = (stepNum, text) => {
+    if (!text || text.trim().length === 0) {
+      setVoiceBotStatus(`Step ${stepNum}: Voice answer not clear. Retrying question...`);
+      setTimeout(() => playStepAudioAndListen(stepNum), 1200);
+      return;
+    }
+
+    const raw = text.trim();
+
+    if (stepNum === 1) {
+      // Step 1: Customer Name
+      let cleanName = raw.replace(/^(?:namaste|hello|mera naam|naam hai|main hoon|main|shri|mr)\s+/gi, '').trim();
+      cleanName = cleanName.replace(/\s+(?:hai|bol raha hoon|se)$/gi, '').trim();
+      if (!cleanName) cleanName = raw;
+
+      setCustomer((prev) => ({ ...prev, name: cleanName }));
+      setVoiceBotStatus(`✓ Step 1 Captured: Name "${cleanName}". Moving to Step 2 (Shop Name)...`);
+      setTimeout(() => playStepAudioAndListen(2), 1400);
+    } else if (stepNum === 2) {
+      // Step 2: Business / Store Name
+      let cleanShop = raw.replace(/^(?:dukaan ka naam|shop ka naam|store name|meri dukaan|dukaan|shop|humara)\s+(?:hai)?\s*/gi, '').trim();
+      cleanShop = cleanShop.replace(/\s+(?:hai|se)$/gi, '').trim();
+      if (!cleanShop) cleanShop = raw;
+
+      setCustomer((prev) => ({ ...prev, businessName: cleanShop }));
+      setVoiceBotStatus(`✓ Step 2 Captured: Store "${cleanShop}". Moving to Step 3 (Address)...`);
+      setTimeout(() => playStepAudioAndListen(3), 1400);
+    } else if (stepNum === 3) {
+      // Step 3: Address & City
+      let detectedCity = 'Navi Mumbai';
+      const commonCities = ['Navi Mumbai', 'Mumbai', 'Pune', 'Thane', 'Nagpur', 'Nashik', 'Aurangabad', 'Kolhapur', 'Delhi', 'Surat', 'Ahmedabad', 'Bengaluru', 'Indore'];
+      for (const c of commonCities) {
+        if (new RegExp(`\\b${c}\\b`, 'i').test(raw)) {
+          detectedCity = c;
+          break;
+        }
+      }
+
+      setCustomer((prev) => ({
+        ...prev,
+        street: raw,
+        city: detectedCity,
+      }));
+      setVoiceBotStatus(`✓ Step 3 Captured: Address recorded! Moving to Step 4 (Product & Budget Rate)...`);
+      setTimeout(() => playStepAudioAndListen(4), 1400);
+    } else if (stepNum === 4) {
+      // Step 4: Product & Target Budget Rate & Quantity
+      let targetBudget = 0;
+      const pm = raw.match(/(?:rs\.?|inr|₹|\b)\s*(\d{2,4})\s*(?:ke\s*rate|rupaye|rs|wala|wali|rate|approx|budget|price)/i) ||
+                 raw.match(/(\d{2,4})\s*(?:rupaye|rs)/i);
+      if (pm && pm[1]) {
+        targetBudget = parseInt(pm[1], 10);
+      }
+
+      // Detect category / subcategory
+      const lower = raw.toLowerCase();
+      let detectedCatId = 'cat_dry_fruits';
+      let detectedSub = 'Almonds';
+
+      if (lower.includes('spice') || lower.includes('masala') || lower.includes('elaichi') || lower.includes('cardamom')) {
+        detectedCatId = 'cat_whole_spices';
+        detectedSub = lower.includes('elaichi') || lower.includes('cardamom') ? 'Green Cardamom' : 'Black Pepper';
+      } else {
+        detectedCatId = 'cat_dry_fruits';
+        if (lower.includes('kaju') || lower.includes('cashew')) detectedSub = 'Cashews';
+        else if (lower.includes('pista') || lower.includes('pistachio')) detectedSub = 'Pistachios';
+        else if (lower.includes('akhrot') || lower.includes('walnut')) detectedSub = 'Walnuts';
+        else if (lower.includes('date') || lower.includes('khajoor')) detectedSub = 'Dates';
+        else detectedSub = 'Almonds';
+      }
+
+      // Filter matching products
+      const candidateProducts = products.filter((p) => {
+        const matchCat = p.categoryId === detectedCatId;
+        const sub = (p.subcategoryId || p.subcategoryName || p.name || '').toLowerCase();
+        return matchCat && sub.includes(detectedSub.toLowerCase());
+      });
+      const pool = candidateProducts.length > 0 ? candidateProducts : products.filter((p) => p.categoryId === detectedCatId);
+
+      // Match variety based on budget distance
+      let matchedProd = null;
+      if (pool.length > 0) {
+        if (targetBudget > 0) {
+          let minDiff = Infinity;
+          for (const prod of pool) {
+            const pPrice = Number(prod.variants?.[0]?.price || prod.price || 0);
+            const diff = Math.abs(pPrice - targetBudget);
+            if (diff < minDiff) {
+              minDiff = diff;
+              matchedProd = prod;
+            }
+          }
+        } else {
+          matchedProd = pool[0];
+        }
+      }
+
+      // Quantity
+      let qty = 1;
+      const qm = raw.match(/(\d+)\s*(?:packet|packs?|units?|box|piece|kilo|kg)/i);
+      if (qm && qm[1]) qty = Math.max(1, parseInt(qm[1], 10));
+
+      const finalSelection = {
+        categoryId: matchedProd?.categoryId || detectedCatId,
+        categoryName: matchedProd?.categoryName || 'Dry Fruits',
+        subcategoryId: matchedProd?.subcategoryId || detectedSub,
+        productId: matchedProd?.id || 'p_almonds_1',
+        productName: matchedProd?.name || 'California Whole Almonds (Badam Giri)',
+        variantTitle: matchedProd?.variants?.[0]?.title || '100 GM',
+        weightInGrams: matchedProd?.variants?.[0]?.weightInGrams || 100,
+        price: Number(matchedProd?.variants?.[0]?.price || 123),
+        quantity: qty,
+        targetPrice: targetBudget || 123,
+      };
+
+      lastCollectedSelectionRef.current = finalSelection;
+
+      setVoiceBotStatus(`✓ Step 4 Captured: Matched "${finalSelection.productName}" for budget ₹${finalSelection.targetPrice} (${qty} packs). Closing call...`);
+      setTimeout(() => playStepAudioAndListen(5), 1500);
+    }
+  };
+
+  // Open Admin Verification Modal for Current Live Voice Session
+  const openVerificationForCurrentVoiceSession = () => {
+    const sel = lastCollectedSelectionRef.current || {
+      productName: 'Iranian Mamra Almonds',
+      price: 286,
+      quantity: 2,
+      targetPrice: 280,
+      variantTitle: '250 GM',
+      categoryId: 'cat_dry_fruits',
+      subcategoryId: 'Almonds'
+    };
+
+    setVerificationPendingCall({
+      id: `session_${Date.now()}`,
+      callerPhone: customer.phone || '9820012345',
+      callerName: customer.name || 'Ramesh Bhai Sharma',
+      businessName: customer.businessName || 'Sharma Kirana Mart',
+      city: customer.city || 'Navi Mumbai',
+      address: customer.street || 'APMC Market',
+      pincode: customer.pincode || '400705',
+      targetPrice: sel.targetPrice || 280,
+      matchedProductName: sel.productName,
+      matchedProductId: sel.productId,
+      matchedVariantTitle: sel.variantTitle,
+      price: sel.price,
+      quantity: sel.quantity || 1,
+      subcategoryId: sel.subcategoryId,
+      categoryId: sel.categoryId,
+    });
+    setShowVerificationModal(true);
+  };
+
+  // Approve & Feed order into form after Admin reviews
+  const handleApproveAndFeed = (verifiedData) => {
+    autoFeedFromCall(verifiedData);
+    setShowVerificationModal(false);
+    setVerificationPendingCall(null);
+    setAutoFeedBanner({
+      text: `Order Verified & Approved by Admin! Shopkeeper "${verifiedData.callerName || verifiedData.customer?.name}" details and matched variety "${verifiedData.matchedProductName || verifiedData.selection?.productName}" fed into form.`,
+      time: new Date().toLocaleTimeString(),
+      price: verifiedData.targetPrice || verifiedData.selection?.targetPrice || 'N/A'
+    });
+  };
+
+  // Discard incoming call without feeding
+  const handleDiscardCall = () => {
+    setShowVerificationModal(false);
+    setVerificationPendingCall(null);
   };
 
   // Add Item to Order
@@ -751,58 +1004,32 @@ export default function CreateOrder() {
 
               {/* Action buttons */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                {/* Auto-Feed Toggle */}
-                <label
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '11.5px',
-                    fontWeight: 700,
-                    color: autoFeedIncomingCalls ? '#15803D' : '#6B7280',
-                    cursor: 'pointer',
-                    backgroundColor: autoFeedIncomingCalls ? '#F0FDF4' : '#F3F4F6',
-                    padding: '8px 12px',
-                    borderRadius: '10px',
-                    border: autoFeedIncomingCalls ? '1px solid #86EFAC' : '1px solid #E5E7EB',
-                    userSelect: 'none',
-                  }}
-                  title="When enabled, any customer calling your phone number will automatically feed this order form in real-time"
-                >
-                  <input
-                    type="checkbox"
-                    checked={autoFeedIncomingCalls}
-                    onChange={(e) => setAutoFeedIncomingCalls(e.target.checked)}
-                    style={{ accentColor: 'var(--color-primary-orange)' }}
-                  />
-                  Live Call Auto-Feed {autoFeedIncomingCalls ? 'ON' : 'OFF'}
-                </label>
-
-                {/* Live Mic Voice Bot Button */}
+                {/* Step-by-Step Live Voice Bot Button */}
                 <button
                   type="button"
-                  onClick={toggleVoiceAssistant}
+                  onClick={startStepByStepVoice}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    backgroundColor: isListening ? '#DC2626' : '#FFFFFF',
-                    color: isListening ? '#FFFFFF' : 'var(--color-primary-orange)',
-                    border: isListening ? '1.5px solid #DC2626' : '1.5px solid var(--color-primary-orange)',
-                    padding: '8px 14px',
+                    backgroundColor: isListening || voiceStep > 0 ? '#DC2626' : 'var(--color-primary-orange)',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '8px 16px',
                     borderRadius: '10px',
                     fontSize: '12.5px',
-                    fontWeight: 700,
+                    fontWeight: 800,
                     cursor: 'pointer',
+                    boxShadow: '0 2px 6px rgba(255, 129, 46, 0.3)',
                   }}
                 >
-                  {isListening ? (
+                  {isListening || voiceStep > 0 ? (
                     <>
-                      <MicOff size={14} /> Stop Voice Call
+                      <MicOff size={14} /> Stop Step Assistant
                     </>
                   ) : (
                     <>
-                      <Mic size={14} /> 🎙️ Start Live Voice Call
+                      <Mic size={14} /> 🎙️ Start Step-by-Step Voice Call
                     </>
                   )}
                 </button>
@@ -851,6 +1078,195 @@ export default function CreateOrder() {
                 >
                   <Info size={14} /> Connect My Phone (Free)
                 </button>
+              </div>
+            </div>
+
+            {/* Step-by-Step Conversational Tracker */}
+            <div
+              style={{
+                marginTop: '14px',
+                marginBottom: '14px',
+                backgroundColor: '#FFFFFF',
+                padding: '14px 16px',
+                borderRadius: '12px',
+                border: '1px solid #FED7AA',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--color-dark-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Bot size={15} color="var(--color-primary-orange)" />
+                  Sequential Questioning State (Customer se 1-1 input lene ke baad next sawaal):
+                </div>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    backgroundColor: voiceStep > 0 && voiceStep <= 4 ? '#FEF3C7' : '#F3F4F6',
+                    color: voiceStep > 0 && voiceStep <= 4 ? '#92400E' : 'var(--color-secondary-text)',
+                  }}
+                >
+                  {voiceStep === 0 ? 'Ready to Start' : voiceStep <= 4 ? `Step ${voiceStep} of 4 Active` : 'All Steps Completed'}
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                {/* Step 1: Customer Name */}
+                <div
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: customer.name ? '#ECFDF5' : voiceStep === 1 ? '#FFF7ED' : '#F9FAFB',
+                    border: customer.name ? '1px solid #A7F3D0' : voiceStep === 1 ? '1.5px solid var(--color-primary-orange)' : '1px solid #E5E7EB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: customer.name ? '#10B981' : voiceStep === 1 ? 'var(--color-primary-orange)' : '#D1D5DB',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {customer.name ? <Check size={12} /> : '1'}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: customer.name ? '#065F46' : 'var(--color-dark-text)' }}>
+                      1. Name
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--color-secondary-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {customer.name || 'Waiting...'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 2: Store Name */}
+                <div
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: customer.businessName ? '#ECFDF5' : voiceStep === 2 ? '#FFF7ED' : '#F9FAFB',
+                    border: customer.businessName ? '1px solid #A7F3D0' : voiceStep === 2 ? '1.5px solid var(--color-primary-orange)' : '1px solid #E5E7EB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: customer.businessName ? '#10B981' : voiceStep === 2 ? 'var(--color-primary-orange)' : '#D1D5DB',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {customer.businessName ? <Check size={12} /> : '2'}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: customer.businessName ? '#065F46' : 'var(--color-dark-text)' }}>
+                      2. Store Name
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--color-secondary-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {customer.businessName || 'Waiting...'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3: Address & City */}
+                <div
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: customer.street ? '#ECFDF5' : voiceStep === 3 ? '#FFF7ED' : '#F9FAFB',
+                    border: customer.street ? '1px solid #A7F3D0' : voiceStep === 3 ? '1.5px solid var(--color-primary-orange)' : '1px solid #E5E7EB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: customer.street ? '#10B981' : voiceStep === 3 ? 'var(--color-primary-orange)' : '#D1D5DB',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {customer.street ? <Check size={12} /> : '3'}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: customer.street ? '#065F46' : 'var(--color-dark-text)' }}>
+                      3. Address & City
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--color-secondary-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {customer.city || customer.street || 'Waiting...'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 4: Variety & Budget */}
+                <div
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: selectedProduct ? '#ECFDF5' : voiceStep === 4 ? '#FFF7ED' : '#F9FAFB',
+                    border: selectedProduct ? '1px solid #A7F3D0' : voiceStep === 4 ? '1.5px solid var(--color-primary-orange)' : '1px solid #E5E7EB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: selectedProduct ? '#10B981' : voiceStep === 4 ? 'var(--color-primary-orange)' : '#D1D5DB',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {selectedProduct ? <Check size={12} /> : '4'}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: selectedProduct ? '#065F46' : 'var(--color-dark-text)' }}>
+                      4. Variety & Budget
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--color-secondary-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {selectedProduct ? 'Matched by Rate' : 'Waiting...'}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1833,6 +2249,253 @@ export default function CreateOrder() {
                 style={{ padding: '12px', fontSize: '13.5px', fontWeight: 700 }}
               >
                 Take Another Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Verification Modal (Per User Rule: Direct feed nahi hoga, pehle admin verify karega tab hi form me aayega) */}
+      {showVerificationModal && verificationPendingCall && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '18px',
+              maxWidth: '620px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+              overflow: 'hidden',
+              border: '2px solid #FED7AA',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '18px 24px',
+                backgroundColor: '#FFF7ED',
+                borderBottom: '1.5px solid #FED7AA',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: 'var(--color-primary-orange)',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <ShieldCheck size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-dark-text)', margin: 0 }}>
+                    Admin Verification Required
+                  </h3>
+                  <p style={{ fontSize: '12px', color: '#C2410C', margin: '2px 0 0', fontWeight: 600 }}>
+                    Pehle verify karein, approve karne par hi data order form me feed hoga.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDiscardCall}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#9CA3AF',
+                  cursor: 'pointer',
+                  padding: '4px',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body / Editable Form */}
+            <div style={{ padding: '24px', maxHeight: '70vh', overflowY: 'auto' }}>
+              <div style={{ backgroundColor: '#F0FDF4', padding: '10px 14px', borderRadius: '10px', border: '1px solid #BBF7D0', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CheckCircle size={16} color="#16A34A" />
+                <span style={{ fontSize: '12px', color: '#166534', fontWeight: 700 }}>
+                  Customer voice details recorded. You can review or edit any field below:
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div>
+                  <label className="form-label" style={{ fontSize: '11.5px', fontWeight: 700 }}>
+                    Shopkeeper Name *
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={verificationPendingCall.callerName}
+                    onChange={(e) => setVerificationPendingCall({ ...verificationPendingCall, callerName: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontSize: '11.5px', fontWeight: 700 }}>
+                    Store / Business Name *
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={verificationPendingCall.businessName}
+                    onChange={(e) => setVerificationPendingCall({ ...verificationPendingCall, businessName: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontSize: '11.5px', fontWeight: 700 }}>
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    className="form-input"
+                    value={verificationPendingCall.callerPhone}
+                    onChange={(e) => setVerificationPendingCall({ ...verificationPendingCall, callerPhone: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontSize: '11.5px', fontWeight: 700 }}>
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={verificationPendingCall.city}
+                    onChange={(e) => setVerificationPendingCall({ ...verificationPendingCall, city: e.target.value })}
+                  />
+                </div>
+
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label className="form-label" style={{ fontSize: '11.5px', fontWeight: 700 }}>
+                    Store / Delivery Address
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={verificationPendingCall.address}
+                    onChange={(e) => setVerificationPendingCall({ ...verificationPendingCall, address: e.target.value })}
+                  />
+                </div>
+
+                {/* Matched Variety and Target Price */}
+                <div style={{ gridColumn: 'span 2', backgroundColor: '#FFFDF9', border: '1.5px solid #FED7AA', borderRadius: '12px', padding: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--color-primary-orange)' }}>
+                      🏷️ AI Variety Selection (Matched by Budget Rate)
+                    </span>
+                    <span style={{ fontSize: '11.5px', fontWeight: 800, backgroundColor: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: '6px' }}>
+                      Customer Target Budget: ₹{verificationPendingCall.targetPrice || 'N/A'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '10px' }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '11px', fontWeight: 700 }}>
+                        Selected Product Variety
+                      </label>
+                      <select
+                        className="form-select"
+                        value={verificationPendingCall.matchedProductId}
+                        onChange={(e) => {
+                          const found = products.find((p) => p.id === e.target.value);
+                          if (found) {
+                            setVerificationPendingCall({
+                              ...verificationPendingCall,
+                              matchedProductId: found.id,
+                              matchedProductName: found.name,
+                              price: Number(found.variants?.[0]?.price || 0),
+                              matchedVariantTitle: found.variants?.[0]?.title || '100 GM',
+                            });
+                          }
+                        }}
+                      >
+                        {products.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} — ₹{p.variants?.[0]?.price || 0}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="form-label" style={{ fontSize: '11px', fontWeight: 700 }}>
+                        Quantity (Packs)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        className="form-input"
+                        value={verificationPendingCall.quantity}
+                        onChange={(e) => setVerificationPendingCall({ ...verificationPendingCall, quantity: Math.max(1, parseInt(e.target.value, 10) || 1) })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div
+              style={{
+                padding: '16px 24px',
+                backgroundColor: '#F9FAFB',
+                borderTop: '1px solid #E5E7EB',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleDiscardCall}
+                className="btn-secondary"
+                style={{ fontSize: '13px', padding: '10px 18px' }}
+              >
+                Discard / Reject
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleApproveAndFeed(verificationPendingCall)}
+                className="btn-primary"
+                style={{
+                  fontSize: '13px',
+                  padding: '10px 22px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: 800,
+                }}
+              >
+                <Check size={16} /> Approve & Feed into Order
               </button>
             </div>
           </div>
