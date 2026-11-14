@@ -239,7 +239,24 @@ export default function CreateOrder() {
     return Number(currentVariant.price || 0) * Number(customWeightQty || 1);
   }, [currentVariant, customWeightQty]);
 
-  // Speak audio using browser speech synthesis (100% Free - Zero Twilio)
+  // Play natural studio audio prompt or fallback to SpeechSynthesis (Zero Twilio, 100% Free)
+  const playNaturalAudioPrompt = (promptType, fallbackText) => {
+    if (typeof window !== 'undefined') {
+      try {
+        const audio = new Audio(`/assets/voice/${promptType}.mp3`);
+        setIsBotSpeaking(true);
+        audio.onended = () => setIsBotSpeaking(false);
+        audio.onerror = () => {
+          speakBotAudio(fallbackText);
+        };
+        audio.play().catch(() => speakBotAudio(fallbackText));
+        return;
+      } catch (_) {}
+    }
+    speakBotAudio(fallbackText);
+  };
+
+  // Speak audio using browser speech synthesis fallback
   const speakBotAudio = (text) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
@@ -379,7 +396,7 @@ export default function CreateOrder() {
       const parsed = await mockApi.parseVoiceOrder(textToParse);
       autoFeedFromCall(parsed);
       setVoiceBotStatus('✅ Voice order parsed and auto-fed successfully!');
-      speakBotAudio(`Order details feed ho gayi hain. ${parsed.selection?.productName || 'Variety'} select kar diya hai.`);
+      playNaturalAudioPrompt('prompt_closing', `Order details note ho gayi hain. ${parsed.selection?.productName || 'Variety'} select kar diya hai.`);
     } catch (err) {
       console.error('Failed to parse text:', err);
       setVoiceBotStatus('Error parsing voice text');
@@ -415,7 +432,7 @@ export default function CreateOrder() {
       setVoiceTranscript('');
       transcriptRef.current = '';
       setVoiceBotStatus('🎙️ Bot listening to caller... Customer se details pooch rahe hain...');
-      speakBotAudio('Namaste! Naturale Dry Fruits me swagat hai. Apna naam, dukaan ka naam, aur aapko kaunsa item kis rate me chahiye batayein.');
+      playNaturalAudioPrompt('prompt_greeting', 'Namaste! Naturale Dry Fruits me swagat hai. Apna naam, dukaan ka naam, aur aapko kaunsa item kis rate me chahiye batayein.');
     };
 
     recognition.onresult = (event) => {
