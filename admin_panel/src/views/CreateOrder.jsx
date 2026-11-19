@@ -683,7 +683,7 @@ export default function CreateOrder() {
       subcategoryId: 'Almonds'
     };
 
-    setVerificationPendingCall({
+    const callRecord = {
       id: `session_${Date.now()}`,
       callerPhone: customer.phone || '9820012345',
       callerName: customer.name || 'Ramesh Bhai Sharma',
@@ -699,8 +699,12 @@ export default function CreateOrder() {
       quantity: sel.quantity || 1,
       subcategoryId: sel.subcategoryId,
       categoryId: sel.categoryId,
-    });
+    };
+
+    setVerificationPendingCall(callRecord);
     setShowVerificationModal(true);
+    // Sync call to backend recent-calls store
+    mockApi.sendIncomingCallRecord(callRecord);
   };
 
   // Approve & Feed order into form after Admin reviews

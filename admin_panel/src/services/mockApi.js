@@ -4824,6 +4824,18 @@ export const mockApi = {
     return [];
   },
 
+  async sendIncomingCallRecord(callData) {
+    try {
+      const res = await axios.post(`${API_BASE}/voice-bot/incoming-call`, callData, { timeout: 10000 });
+      if (res.data && res.data.call) {
+        return res.data.call;
+      }
+    } catch (err) {
+      console.warn('Failed to send incoming call record to backend:', err);
+    }
+    return null;
+  },
+
   async parseVoiceOrder(transcript) {
     try {
       const res = await axios.post(`${API_BASE}/voice-bot/parse-order`, { transcript }, { timeout: 10000 });

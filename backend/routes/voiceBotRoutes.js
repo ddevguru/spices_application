@@ -73,31 +73,93 @@ router.get('/recent-calls', (req, res) => {
   });
 });
 
-// 3. Webhook for incoming call notifications from phone / free SIP / free call bridge
+// 3. Webhook for incoming call notifications from phone / custom call assistant
 router.post('/incoming-call', async (req, res) => {
   try {
-    const { caller, text, transcript, audioUrl } = req.body;
-    const callText = transcript || text || 'Incoming customer inquiry';
+    const {
+      caller,
+      text,
+      transcript,
+      audioUrl,
+      callerName,
+      businessName,
+      city,
+      address,
+      pincode,
+      gstNumber,
+      targetPrice,
+      matchedProductName,
+      matchedProductId,
+      matchedVariantTitle,
+      weightInGrams,
+      quantity,
+      categoryName,
+      subcategoryId,
+      price,
+    } = req.body;
+
+    const callText = transcript || text || (callerName ? `Call from ${callerName} (${businessName || 'Store'})` : 'Incoming customer call');
     const products = await getAllProducts();
-    const parsed = voiceBotService.parseVoiceOrderText(callText, products);
+    const parsed = voiceBotService.parseVoiceOrderText(callText, products) || { customer: {}, selection: {} };
+
+    // Resolve matched product if targetPrice or matchedProductId is provided
+    let finalProductId = matchedProductId || parsed.selection?.productId || '';
+    let finalProductName = matchedProductName || parsed.selection?.productName || '';
+    let finalVariantTitle = matchedVariantTitle || parsed.selection?.variantTitle || '100 GM';
+    let finalPrice = Number(price || 0);
+
+    const resolvedTargetPrice = Number(targetPrice !== undefined ? targetPrice : (parsed.selection?.targetPrice || 0));
+
+    if (products.length > 0) {
+      if (finalProductId) {
+        const found = products.find((p) => p.id === finalProductId);
+        if (found) {
+          finalProductName = found.name;
+          finalVariantTitle = found.variants?.[0]?.title || '100 GM';
+          finalPrice = Number(found.variants?.[0]?.price || 0);
+        }
+      } else if (resolvedTargetPrice > 0) {
+        // Find closest product by price
+        let minDiff = Infinity;
+        let bestProd = products[0];
+        for (const p of products) {
+          const pPrice = Number(p.variants?.[0]?.price || p.price || 0);
+          const diff = Math.abs(pPrice - resolvedTargetPrice);
+          if (diff < minDiff) {
+            minDiff = diff;
+            bestProd = p;
+          }
+        }
+        finalProductId = bestProd.id;
+        finalProductName = bestProd.name;
+        finalVariantTitle = bestProd.variants?.[0]?.title || '100 GM';
+        finalPrice = Number(bestProd.variants?.[0]?.price || 0);
+      } else if (parsed.selection?.productName) {
+        finalProductId = parsed.selection.productId;
+        finalProductName = parsed.selection.productName;
+        finalVariantTitle = parsed.selection.variantTitle;
+        finalPrice = Number(parsed.selection.price || 0);
+      }
+    }
 
     const newCall = {
       id: `call_${Date.now()}`,
-      callerPhone: caller || parsed.customer.phone || '9820012345',
-      callerName: parsed.customer.name,
-      businessName: parsed.customer.businessName,
-      city: parsed.customer.city,
-      address: parsed.customer.street,
-      pincode: parsed.customer.pincode,
-      gstNumber: parsed.customer.gstNumber,
-      categoryName: parsed.selection.categoryName,
-      subcategoryId: parsed.selection.subcategoryId,
-      targetPrice: parsed.selection.targetPrice,
-      matchedProductName: parsed.selection.productName,
-      matchedProductId: parsed.selection.productId,
-      matchedVariantTitle: parsed.selection.variantTitle,
-      weightInGrams: parsed.selection.weightInGrams,
-      quantity: parsed.selection.quantity,
+      callerPhone: caller || req.body.phone || parsed.customer?.phone || '9820012345',
+      callerName: callerName || parsed.customer?.name || 'Customer',
+      businessName: businessName || parsed.customer?.businessName || 'Kirana Store',
+      city: city || parsed.customer?.city || 'Navi Mumbai',
+      address: address || parsed.customer?.street || 'APMC Market',
+      pincode: pincode || parsed.customer?.pincode || '400705',
+      gstNumber: gstNumber || parsed.customer?.gstNumber || '',
+      categoryName: categoryName || parsed.selection?.categoryName || 'Dry Fruits',
+      subcategoryId: subcategoryId || parsed.selection?.subcategoryId || 'Almonds',
+      targetPrice: resolvedTargetPrice,
+      matchedProductName: finalProductName || 'California Whole Almonds (Badam Giri)',
+      matchedProductId: finalProductId || 'p_almonds_1',
+      matchedVariantTitle: finalVariantTitle || '100 GM',
+      price: finalPrice || 123,
+      weightInGrams: weightInGrams || parsed.selection?.weightInGrams || 100,
+      quantity: Number(quantity || parsed.selection?.quantity || 1),
       transcript: callText,
       audioUrl: audioUrl || null,
       timestamp: new Date().toISOString(),
