@@ -4814,6 +4814,56 @@ export const mockApi = {
   },
 
   // Voice Bot APIs (Zero Twilio, Zero Ollama, Free & Lightweight)
+  async getVoiceDashboardMetrics() {
+    try {
+      const res = await axios.get(`${API_BASE}/voice-orders/metrics`, { timeout: 10000 });
+      if (res.data && res.data.metrics) {
+        return res.data;
+      }
+    } catch (_) {}
+    return {
+      metrics: {
+        totalCalls: 0,
+        successfulCalls: 0,
+        failedCalls: 0,
+        draftOrdersGenerated: 0,
+        ordersAwaitingReview: 0,
+        callsRequiringHumanIntervention: 0
+      },
+      calls: []
+    };
+  },
+
+  async getVoiceDraftOrders(status = 'all') {
+    try {
+      const res = await axios.get(`${API_BASE}/voice-orders/drafts`, { params: { status }, timeout: 10000 });
+      if (res.data && Array.isArray(res.data.data)) {
+        return res.data.data;
+      }
+    } catch (_) {}
+    return [];
+  },
+
+  async getVoiceDraftById(id) {
+    try {
+      const res = await axios.get(`${API_BASE}/voice-orders/drafts/${id}`, { timeout: 10000 });
+      if (res.data && res.data.data) {
+        return res.data.data;
+      }
+    } catch (_) {}
+    return null;
+  },
+
+  async convertVoiceDraftToOrder(draftId, approvalData) {
+    try {
+      const res = await axios.post(`${API_BASE}/voice-orders/drafts/${draftId}/convert`, approvalData, { timeout: 15000 });
+      return res.data;
+    } catch (err) {
+      console.error('Failed to convert draft order:', err);
+      throw err;
+    }
+  },
+
   async getRecentVoiceCalls() {
     try {
       const res = await axios.get(`${API_BASE}/voice-bot/recent-calls`, { timeout: 10000 });

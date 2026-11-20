@@ -138,6 +138,58 @@ export default function CreateOrder() {
     if (typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)) {
       setSpeechSupported(true);
     }
+
+    // Check if loading an AI Voice Draft Order from URL (?draftId=...)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const draftId = urlParams.get('draftId');
+      if (draftId) {
+        mockApi.getVoiceDraftById(draftId).then((draft) => {
+          if (draft) {
+            setCustomer({
+              name: draft.customerName || '',
+              businessName: draft.businessName || '',
+              gstNumber: draft.gstNumber || '',
+              phone: draft.customerPhone || '',
+              email: draft.customerEmail || '',
+              street: draft.shippingAddress?.street || draft.shippingAddress?.address || '',
+              city: draft.shippingAddress?.city || 'Navi Mumbai',
+              state: draft.shippingAddress?.state || 'Maharashtra',
+              pincode: draft.shippingAddress?.pincode || '400705',
+            });
+
+            if (Array.isArray(draft.items) && draft.items.length > 0) {
+              setItems(
+                draft.items.map((it) => ({
+                  productId: it.productId,
+                  productName: it.productName,
+                  variantId: it.variantId,
+                  variantTitle: it.variantTitle || `${it.weightInGrams || 100}g`,
+                  weightInGrams: it.weightInGrams || 100,
+                  unit: it.unit || 'GM',
+                  price: Number(it.price || 0),
+                  quantity: Number(it.quantity || 1),
+                  image: it.image || '/assets/images/cat_dryfruits.jpg',
+                  categoryName: it.categoryName || 'Dry Fruits',
+                  subcategoryName: it.subcategoryName || 'General',
+                  total: Number(it.price || 0) * Number(it.quantity || 1),
+                }))
+              );
+            }
+
+            if (draft.discount > 0) setDiscountAmount(draft.discount);
+            if (draft.deliveryFee > 0) setDeliveryFee(draft.deliveryFee);
+            if (draft.deliveryInstructions) setNotes(draft.deliveryInstructions);
+
+            setAutoFeedBanner({
+              text: `Order Source: AI Voice Call (Draft ID: #${draft.id}). Review details and click 'Confirm & Place Order' below.`,
+              time: new Date(draft.createdAt || Date.now()).toLocaleTimeString(),
+              price: draft.totalAmount || draft.subtotal || 'N/A'
+            });
+          }
+        }).catch((err) => console.warn('Could not load voice draft:', err));
+      }
+    }
   }, []);
 
   // 1.1 Real-Time Polling for incoming phone calls on user's real phone number (every 3 seconds)
