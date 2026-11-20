@@ -25,3 +25,4 @@ class Config:
     PIPER_MODEL_PATH = os.getenv("PIPER_MODEL_PATH", "models/hi_IN-pratham-medium.onnx")
 
 config = Config()
+

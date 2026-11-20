@@ -40,7 +40,6 @@ export default function AdminLayout({ children }) {
     { label: 'Inventory', path: '/inventory', icon: Boxes },
     { label: 'Orders', path: '/orders', icon: ShoppingCart },
     { label: 'Create Order', path: '/create-order', icon: PlusCircle },
-    { label: 'AI Voice Orders', path: '/voice-orders', icon: Headphones },
     { label: 'Customers', path: '/customers', icon: Users },
     { label: 'Coupons', path: '/coupons', icon: Ticket },
     { label: 'Banners', path: '/banners', icon: ImageIcon },

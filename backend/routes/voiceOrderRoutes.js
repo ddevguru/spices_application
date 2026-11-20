@@ -69,3 +69,4 @@ router.post('/drafts/:id/convert', verifyVoiceAccess, voiceOrderController.conve
 router.get('/metrics', verifyVoiceAccess, voiceOrderController.getVoiceDashboardMetrics);
 
 module.exports = router;
+

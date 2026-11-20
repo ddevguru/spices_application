@@ -108,6 +108,13 @@ export default function CreateOrder() {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verificationPendingCall, setVerificationPendingCall] = useState(null);
 
+  // Target Phone Number on which the bot is implemented (Admin Configurable)
+  const [botPhoneNumber, setBotPhoneNumber] = useState('9820012345');
+  const [isEditingBotPhone, setIsEditingBotPhone] = useState(false);
+  const [tempBotPhone, setTempBotPhone] = useState('9820012345');
+  const [phoneSavedToast, setPhoneSavedToast] = useState(false);
+  const [voiceDrafts, setVoiceDrafts] = useState([]);
+
   const requestedVariantIdRef = useRef(null);
   const recognitionRef = useRef(null);
   const transcriptRef = useRef('');
@@ -189,15 +196,25 @@ export default function CreateOrder() {
           }
         }).catch((err) => console.warn('Could not load voice draft:', err));
       }
+
+      const savedPhone = localStorage.getItem('naturale_bot_phone');
+      if (savedPhone) {
+        setBotPhoneNumber(savedPhone);
+        setTempBotPhone(savedPhone);
+      }
     }
   }, []);
 
-  // 1.1 Real-Time Polling for incoming phone calls on user's real phone number (every 3 seconds)
+  // 1.1 Real-Time Polling for incoming phone calls and AI Drafts (every 3 seconds)
   // Per User Rule: Direct feed nahi hoga, pehle admin verify karega tab hi form me aayega
   useEffect(() => {
     const pollInterval = setInterval(async () => {
       try {
-        const calls = await mockApi.getRecentVoiceCalls();
+        const [calls, drafts] = await Promise.all([
+          mockApi.getRecentVoiceCalls(),
+          mockApi.getVoiceDraftOrders('pending_admin_review')
+        ]);
+
         if (Array.isArray(calls)) {
           setRecentCalls(calls);
           // If a new real incoming call arrives from user's phone
@@ -226,6 +243,10 @@ export default function CreateOrder() {
               setShowVerificationModal(true);
             }
           }
+        }
+
+        if (Array.isArray(drafts)) {
+          setVoiceDrafts(drafts);
         }
       } catch (_) {}
     }, 3000);
@@ -777,6 +798,68 @@ export default function CreateOrder() {
     setVerificationPendingCall(null);
   };
 
+  // Save Target Bot Phone Number (Admin Configurable)
+  const handleSaveBotPhone = () => {
+    const cleaned = tempBotPhone.replace(/\D/g, '').slice(-10);
+    if (cleaned.length < 10) {
+      alert('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    setBotPhoneNumber(cleaned);
+    setTempBotPhone(cleaned);
+    setIsEditingBotPhone(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('naturale_bot_phone', cleaned);
+    }
+    setPhoneSavedToast(true);
+    setTimeout(() => setPhoneSavedToast(false), 3000);
+  };
+
+  // Feed AI Voice Draft directly into Create Order form
+  const handleFeedDraftIntoForm = (draft) => {
+    if (!draft) return;
+    setCustomer({
+      name: draft.customerName || '',
+      businessName: draft.businessName || '',
+      gstNumber: draft.gstNumber || '',
+      phone: draft.customerPhone || '',
+      email: draft.customerEmail || `${draft.customerPhone}@store.naturale.com`,
+      street: draft.shippingAddress?.street || draft.shippingAddress?.address || '',
+      city: draft.shippingAddress?.city || 'Navi Mumbai',
+      state: draft.shippingAddress?.state || 'Maharashtra',
+      pincode: draft.shippingAddress?.pincode || '400705',
+    });
+
+    if (Array.isArray(draft.items) && draft.items.length > 0) {
+      setItems(
+        draft.items.map((it) => ({
+          productId: it.productId,
+          productName: it.productName,
+          variantId: it.variantId,
+          variantTitle: it.variantTitle || `${it.weightInGrams || 100}g`,
+          weightInGrams: it.weightInGrams || 100,
+          unit: it.unit || 'GM',
+          price: Number(it.price || 0),
+          quantity: Number(it.quantity || 1),
+          image: it.image || '/assets/images/cat_dryfruits.jpg',
+          categoryName: it.categoryName || 'Dry Fruits',
+          subcategoryName: it.subcategoryName || 'General',
+          total: Number(it.price || 0) * Number(it.quantity || 1),
+        }))
+      );
+    }
+
+    if (draft.discount > 0) setDiscountAmount(draft.discount);
+    if (draft.deliveryFee > 0) setDeliveryFee(draft.deliveryFee);
+    if (draft.deliveryInstructions) setNotes(draft.deliveryInstructions);
+
+    setAutoFeedBanner({
+      text: `Draft Order for "${draft.customerName}" (+91 ${draft.customerPhone}) fed into form! Review details and click 'Confirm & Place Order' below.`,
+      time: new Date(draft.createdAt || Date.now()).toLocaleTimeString(),
+      price: draft.totalAmount || draft.subtotal || 'N/A'
+    });
+  };
+
   // Add Item to Order
   const handleAddItem = (e) => {
     e.preventDefault();
@@ -1136,6 +1219,176 @@ export default function CreateOrder() {
                 </button>
               </div>
             </div>
+
+            {/* Admin Set Bot Implementation Phone Number */}
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                padding: '12px 16px',
+                border: '1.5px solid #FED7AA',
+                marginBottom: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    backgroundColor: '#DCFCE7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#15803D',
+                    flexShrink: 0,
+                  }}
+                >
+                  <PhoneCall size={18} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-secondary-text)' }}>
+                    Admin Bot Implementation Number (Target Calling SIM)
+                  </div>
+                  {isEditingBotPhone ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 800 }}>+91</span>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={tempBotPhone}
+                        onChange={(e) => setTempBotPhone(e.target.value)}
+                        placeholder="10-digit mobile"
+                        style={{ padding: '4px 10px', fontSize: '13px', width: '150px', fontWeight: 700 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveBotPhone}
+                        className="btn-primary"
+                        style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 800 }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingBotPhone(false);
+                          setTempBotPhone(botPhoneNumber);
+                        }}
+                        className="btn-secondary"
+                        style={{ padding: '6px 10px', fontSize: '12px' }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-dark-text)', letterSpacing: '0.5px' }}>
+                        +91 {botPhoneNumber}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          backgroundColor: '#DCFCE7',
+                          color: '#15803D',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
+                        Bot Configured & Listening
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingBotPhone(true)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--color-primary-orange)',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                          padding: '0 4px',
+                        }}
+                      >
+                        Change Number
+                      </button>
+                      {phoneSavedToast && (
+                        <span style={{ fontSize: '11.5px', color: '#10B981', fontWeight: 700 }}>
+                          ✓ Number Saved!
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ fontSize: '11.5px', color: '#6B7280', maxWidth: '360px', lineHeight: '1.4' }}>
+                💡 Customer calls to <strong>+91 {botPhoneNumber}</strong> will be answered by your AI bot, and order drafts will appear below ready for 1-click feeding.
+              </div>
+            </div>
+
+            {/* AI Voice Draft Orders Alert (Ready for 1-Click Feed) */}
+            {voiceDrafts.length > 0 && (
+              <div
+                style={{
+                  backgroundColor: '#FEF3C7',
+                  border: '1.5px solid #F59E0B',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  marginBottom: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '10px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Sparkles size={18} color="#B45309" />
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#92400E' }}>
+                      ⚡ {voiceDrafts.length} AI Voice Call Draft Order(s) Awaiting Admin Review!
+                    </div>
+                    <div style={{ fontSize: '11.5px', color: '#78350F', marginTop: '2px' }}>
+                      Latest: <strong>{voiceDrafts[0].customerName}</strong> ({voiceDrafts[0].businessName || 'Store'}) — ₹{voiceDrafts[0].totalAmount || voiceDrafts[0].subtotal}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleFeedDraftIntoForm(voiceDrafts[0])}
+                    style={{
+                      padding: '7px 14px',
+                      backgroundColor: '#B45309',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    📥 1-Click Feed into this Form
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Step-by-Step Conversational Tracker */}
             <div

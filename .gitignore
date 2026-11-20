@@ -36,6 +36,16 @@ yarn-debug.log*
 yarn-error.log*
 *.log
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
 # OS & Editor
 .DS_Store
 Thumbs.db

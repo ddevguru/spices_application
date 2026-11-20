@@ -139,3 +139,4 @@ class CatalogueClient:
         return None
 
 catalogue_client = CatalogueClient()
+

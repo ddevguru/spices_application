@@ -734,3 +734,4 @@ const metricCardStyle = {
   border: '1px solid #E5E7EB',
   boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
 };
+
