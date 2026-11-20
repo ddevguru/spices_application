@@ -66,7 +66,7 @@ async function runAutoMigrations(p) {
       const { seedPostgres } = require('../scripts/seed');
       await seedPostgres(p);
     } else {
-      // Ensure required columns exist on live PostgreSQL
+      // Ensure required columns and voice tables exist on live PostgreSQL
       await p.query(`
         ALTER TABLE products ADD COLUMN IF NOT EXISTS sku VARCHAR(100);
         ALTER TABLE products ADD COLUMN IF NOT EXISTS barcode VARCHAR(100);
@@ -75,6 +75,47 @@ async function runAutoMigrations(p) {
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS owner_name VARCHAR(255);
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS gst_number VARCHAR(100);
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS license_number VARCHAR(100);
+
+        CREATE TABLE IF NOT EXISTS voice_calls (
+            id VARCHAR(64) PRIMARY KEY,
+            caller_phone VARCHAR(50) NOT NULL,
+            customer_id VARCHAR(64) REFERENCES customers(id) ON DELETE SET NULL,
+            customer_name VARCHAR(255),
+            business_name VARCHAR(255),
+            start_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            end_time TIMESTAMP WITH TIME ZONE,
+            duration_seconds INT DEFAULT 0,
+            status VARCHAR(50) DEFAULT 'in_progress',
+            transcript TEXT,
+            recording_url TEXT,
+            draft_order_id VARCHAR(64),
+            requires_human_intervention BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS voice_order_drafts (
+            id VARCHAR(64) PRIMARY KEY,
+            call_id VARCHAR(64) REFERENCES voice_calls(id) ON DELETE SET NULL,
+            source VARCHAR(50) DEFAULT 'ai_voice',
+            customer_name VARCHAR(255) NOT NULL,
+            customer_phone VARCHAR(50) NOT NULL,
+            customer_email VARCHAR(255),
+            business_name VARCHAR(255),
+            gst_number VARCHAR(100),
+            shipping_address JSONB NOT NULL DEFAULT '{}'::jsonb,
+            delivery_instructions TEXT,
+            items JSONB NOT NULL DEFAULT '[]'::jsonb,
+            subtotal DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+            discount DECIMAL(10, 2) DEFAULT 0.00,
+            delivery_fee DECIMAL(10, 2) DEFAULT 0.00,
+            tax DECIMAL(10, 2) DEFAULT 0.00,
+            total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+            status VARCHAR(50) DEFAULT 'pending_admin_review',
+            order_id VARCHAR(64) REFERENCES orders(id) ON DELETE SET NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
       `);
 
       // If catalog is partial (< 50 products), populate full 57-product database

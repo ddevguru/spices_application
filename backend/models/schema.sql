@@ -187,6 +187,57 @@ CREATE TABLE IF NOT EXISTS store_settings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 11. AI VOICE CALL LOGS TABLE
+CREATE TABLE IF NOT EXISTS voice_calls (
+    id VARCHAR(64) PRIMARY KEY,
+    caller_phone VARCHAR(50) NOT NULL,
+    customer_id VARCHAR(64) REFERENCES customers(id) ON DELETE SET NULL,
+    customer_name VARCHAR(255),
+    business_name VARCHAR(255),
+    start_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    end_time TIMESTAMP WITH TIME ZONE,
+    duration_seconds INT DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'in_progress', -- 'in_progress', 'completed', 'incomplete', 'failed', 'requires_human_review'
+    transcript TEXT,
+    recording_url TEXT,
+    draft_order_id VARCHAR(64),
+    requires_human_intervention BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_voice_calls_phone ON voice_calls(caller_phone);
+CREATE INDEX IF NOT EXISTS idx_voice_calls_status ON voice_calls(status);
+CREATE INDEX IF NOT EXISTS idx_voice_calls_created ON voice_calls(created_at DESC);
+
+-- 12. AI VOICE ORDER DRAFTS TABLE (Awaiting Admin Review)
+CREATE TABLE IF NOT EXISTS voice_order_drafts (
+    id VARCHAR(64) PRIMARY KEY,
+    call_id VARCHAR(64) REFERENCES voice_calls(id) ON DELETE SET NULL,
+    source VARCHAR(50) DEFAULT 'ai_voice',
+    customer_name VARCHAR(255) NOT NULL,
+    customer_phone VARCHAR(50) NOT NULL,
+    customer_email VARCHAR(255),
+    business_name VARCHAR(255),
+    gst_number VARCHAR(100),
+    shipping_address JSONB NOT NULL DEFAULT '{}'::jsonb,
+    delivery_instructions TEXT,
+    items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    subtotal DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    discount DECIMAL(10, 2) DEFAULT 0.00,
+    delivery_fee DECIMAL(10, 2) DEFAULT 0.00,
+    tax DECIMAL(10, 2) DEFAULT 0.00,
+    total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    status VARCHAR(50) DEFAULT 'pending_admin_review', -- 'pending_admin_review', 'converted_to_order', 'rejected'
+    order_id VARCHAR(64) REFERENCES orders(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_voice_drafts_call ON voice_order_drafts(call_id);
+CREATE INDEX IF NOT EXISTS idx_voice_drafts_status ON voice_order_drafts(status);
+CREATE INDEX IF NOT EXISTS idx_voice_drafts_created ON voice_order_drafts(created_at DESC);
+
 -- Safe Schema Alterations (Ensure columns exist on live PostgreSQL without losing records)
 ALTER TABLE products ADD COLUMN IF NOT EXISTS sku VARCHAR(100);
 ALTER TABLE products ADD COLUMN IF NOT EXISTS barcode VARCHAR(100);

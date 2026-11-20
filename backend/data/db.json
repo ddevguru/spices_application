@@ -4139,5 +4139,66 @@
     "lowStockThreshold": 15,
     "enableCustomGramWeight": true,
     "gstPercentage": 0
-  }
+  },
+  "voice_calls": [
+    {
+      "id": "call_test_1795207935449",
+      "callerPhone": "9820012345",
+      "customerName": "Ramesh Bhai Sharma",
+      "businessName": "Sharma Dry Fruits Mart",
+      "startTime": "2026-11-20T20:52:15.934Z",
+      "status": "completed",
+      "draftOrderId": "draft_1795207935984",
+      "endTime": "2026-11-20T20:52:16.022Z",
+      "durationSeconds": 48,
+      "transcript": "Customer ordered 3 packets of California Almonds for Sharma Dry Fruits Mart.",
+      "requiresHumanIntervention": false
+    }
+  ],
+  "voice_order_drafts": [
+    {
+      "id": "draft_1795207935984",
+      "call_id": "call_test_1795207935449",
+      "source": "ai_voice",
+      "customer_name": "Ramesh Bhai Sharma",
+      "customer_phone": "9820012345",
+      "customer_email": "9820012345@store.naturale.com",
+      "business_name": "Sharma Dry Fruits Mart",
+      "gst_number": "27AAACS1234A1Z5",
+      "shipping_address": {
+        "street": "Shop No. 12, APMC Grain Market, Sector 19",
+        "area": "Sharma Dry Fruits Mart",
+        "city": "Navi Mumbai",
+        "state": "Maharashtra",
+        "pincode": "400705"
+      },
+      "delivery_instructions": "Deliver before 5 PM at APMC shop",
+      "items": [
+        {
+          "productId": "p_almonds_1",
+          "productName": "California Whole Almonds (Badam Giri)",
+          "categoryId": "cat_dry_fruits",
+          "categoryName": "Dry Fruits",
+          "subcategoryId": "Almonds",
+          "subcategoryName": "Almonds",
+          "variantId": "p_almonds_1_100",
+          "variantTitle": "100 GM",
+          "weightInGrams": 100,
+          "unit": "GM",
+          "price": 123,
+          "originalPrice": 154,
+          "quantity": 3,
+          "total": 369,
+          "image": "/assets/images/cat_dryfruits.jpg"
+        }
+      ],
+      "subtotal": 369,
+      "discount": 0,
+      "delivery_fee": 100,
+      "tax": 0,
+      "total_amount": 469,
+      "status": "pending_admin_review",
+      "created_at": "2026-11-20T20:52:15.984Z"
+    }
+  ]
 }
