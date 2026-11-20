@@ -74,9 +74,38 @@ services:
           name: dryfruits-api
           type: web
           property: host
+      - key: NEXT_PUBLIC_VOICE_ENGINE_URL
+        fromService:
+          name: dryfruits-voice-engine
+          type: web
+          property: host
+
+  # ---------------------------------------------------------------------------
+  # 3. Python AI Voice Engine (FastAPI Web Service)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: dryfruits-voice-engine
+    env: python
+    plan: free
+    region: oregon
+    rootDir: voice_engine
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: BACKEND_API_BASE
+        fromService:
+          name: dryfruits-api
+          type: web
+          property: host
+      - key: INTERNAL_VOICE_API_KEY
+        value: naturale_voice_internal_secret_2026
 
 # -----------------------------------------------------------------------------
-# 3. Managed PostgreSQL Database
+# 4. Managed PostgreSQL Database
 # -----------------------------------------------------------------------------
 databases:
   - name: dryfruits-db
