@@ -114,6 +114,8 @@ export default function CreateOrder() {
   const [tempBotPhone, setTempBotPhone] = useState('9820012345');
   const [phoneSavedToast, setPhoneSavedToast] = useState(false);
   const [voiceDrafts, setVoiceDrafts] = useState([]);
+  const [speechLang, setSpeechLang] = useState('en-IN');
+  const speechLangRef = useRef('en-IN');
 
   const requestedVariantIdRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -612,16 +614,17 @@ export default function CreateOrder() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = false; // Short utterance prevents persistent socket drops and "network" errors
     recognition.interimResults = true;
-    recognition.lang = 'hi-IN';
+    recognition.lang = speechLangRef.current || 'en-IN';
 
     recognition.onstart = () => {
       setIsListening(true);
-      if (stepNum === 1) setVoiceBotStatus('🎙️ Listening... Apna ya customer ka naam bolkar batayein:');
-      if (stepNum === 2) setVoiceBotStatus('🎙️ Listening... Dukaan / Store ka naam batayein:');
-      if (stepNum === 3) setVoiceBotStatus('🎙️ Listening... Delivery Address aur City batayein:');
-      if (stepNum === 4) setVoiceBotStatus('🎙️ Listening... Product aur quantity batayein (e.g. 1kg Kaju 2 packet):');
+      const langLabel = speechLangRef.current === 'hi-IN' ? 'Hindi' : 'Hinglish';
+      if (stepNum === 1) setVoiceBotStatus(`🎙️ Mic Active (${langLabel}): Apna ya customer ka naam bolkar batayein...`);
+      if (stepNum === 2) setVoiceBotStatus(`🎙️ Mic Active (${langLabel}): Dukaan / Store ka naam batayein...`);
+      if (stepNum === 3) setVoiceBotStatus(`🎙️ Mic Active (${langLabel}): Delivery Address aur City batayein...`);
+      if (stepNum === 4) setVoiceBotStatus(`🎙️ Mic Active (${langLabel}): Product aur quantity batayein...`);
     };
 
     recognition.onresult = (event) => {
@@ -632,11 +635,25 @@ export default function CreateOrder() {
       if (currentText.trim()) {
         setVoiceTranscript(currentText);
         transcriptRef.current = currentText;
+        setVoiceBotStatus(`🎙️ Heard: "${currentText}"`);
       }
     };
 
     recognition.onerror = (event) => {
       console.warn('Speech recognition warning on step', stepNum, event.error);
+      if (event.error === 'network') {
+        if (speechLangRef.current === 'hi-IN') {
+          // If Hindi failed with network error, immediately retry with Hinglish (en-IN)
+          speechLangRef.current = 'en-IN';
+          setSpeechLang('en-IN');
+          setVoiceBotStatus('Switching to Indian Hinglish (en-IN) to bypass network error...');
+          setTimeout(() => listenForStepInput(stepNum), 400);
+          return;
+        }
+        setIsListening(false);
+        setVoiceBotStatus('⚠️ Browser network blocked Google Speech (Adblock/Brave Shield off karein ya niche type karein).');
+        return;
+      }
       if (event.error !== 'no-speech') {
         setIsListening(false);
         setVoiceBotStatus(`Microphone status: ${event.error}. You can speak again or type below.`);
@@ -645,7 +662,10 @@ export default function CreateOrder() {
 
     recognition.onend = () => {
       setIsListening(false);
-      // NOTE: Do NOT auto-retry audio on silence! Keep calm and let user speak or click next!
+      const text = transcriptRef.current || voiceTranscript;
+      if (text && text.trim().length > 1) {
+        setVoiceBotStatus(`✓ Captured: "${text}". Click "Next Step →" or edit below.`);
+      }
     };
 
     recognitionRef.current = recognition;
@@ -1650,24 +1670,50 @@ export default function CreateOrder() {
                     {isListening && (
                       <span style={{ fontSize: '11px', color: '#DC2626', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#EF4444' }}></span>
-                        Mic Listening... Bolkar batayein
+                        Mic Listening ({speechLang === 'en-IN' ? 'Hinglish' : 'Hindi'})... Bolkar batayein
                       </span>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={stopVoiceAssistant}
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      color: '#9CA3AF',
-                      cursor: 'pointer',
-                      fontSize: '11.5px',
-                      fontWeight: 700,
-                    }}
-                  >
-                    ✕ Stop Assistant
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      type="button"
+                      title="Switch Speech Recognition Language"
+                      onClick={() => {
+                        const nextLang = speechLang === 'en-IN' ? 'hi-IN' : 'en-IN';
+                        setSpeechLang(nextLang);
+                        speechLangRef.current = nextLang;
+                        if (isListening) {
+                          listenForStepInput(voiceStep);
+                        }
+                      }}
+                      style={{
+                        padding: '3px 8px',
+                        fontSize: '11px',
+                        borderRadius: '6px',
+                        border: '1px solid #D97706',
+                        backgroundColor: '#FEF3C7',
+                        color: '#92400E',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                      }}
+                    >
+                      🌐 {speechLang === 'en-IN' ? 'Lang: Hinglish' : 'Lang: Hindi'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopVoiceAssistant}
+                      style={{
+                        border: 'none',
+                        background: 'none',
+                        color: '#9CA3AF',
+                        cursor: 'pointer',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                      }}
+                    >
+                      ✕ Stop Assistant
+                    </button>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1749,6 +1795,39 @@ export default function CreateOrder() {
                   >
                     Next Step <ArrowRight size={14} />
                   </button>
+                </div>
+
+                {/* Quick 1-Click Suggestion Chips for Fast Entry */}
+                <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', color: '#92400E', fontWeight: 700 }}>⚡ 1-Click Fast Fill:</span>
+                  {(voiceStep === 1 ? ['Ramesh Sharma', 'Suresh Patel', 'Rajesh Gupta', 'Amit Shah'] :
+                    voiceStep === 2 ? ['Sharma Kirana Mart', 'Patel Supermarket', 'Royal Dry Fruits', 'Gupta Stores'] :
+                    voiceStep === 3 ? ['APMC Market, Navi Mumbai', 'Market Yard, Pune', 'Dadar, Mumbai', 'Surat Ring Road'] :
+                    ['California Almonds 1kg 5 packet', 'Cashews 500g 2 packet', 'Mamra Badam 250g 3 packet']
+                  ).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => {
+                        setVoiceTranscript(option);
+                        transcriptRef.current = option;
+                        handleNextStep(voiceStep, option);
+                      }}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        backgroundColor: '#FFFFFF',
+                        border: '1.5px solid #FCD34D',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        color: '#1F2937',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                      }}
+                    >
+                      + {option}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
