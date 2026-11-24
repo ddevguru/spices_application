@@ -359,7 +359,7 @@ export default function CreateOrder() {
   };
 
   // Speak audio using browser speech synthesis fallback
-  const speakBotAudio = (text) => {
+  const speakBotAudio = (text, onDone) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
@@ -367,10 +367,21 @@ export default function CreateOrder() {
         utterance.lang = 'hi-IN';
         utterance.rate = 1.0;
         utterance.onstart = () => setIsBotSpeaking(true);
-        utterance.onend = () => setIsBotSpeaking(false);
-        utterance.onerror = () => setIsBotSpeaking(false);
+        utterance.onend = () => {
+          setIsBotSpeaking(false);
+          if (typeof onDone === 'function') onDone();
+        };
+        utterance.onerror = () => {
+          setIsBotSpeaking(false);
+          if (typeof onDone === 'function') onDone();
+        };
         window.speechSynthesis.speak(utterance);
-      } catch (_) {}
+      } catch (_) {
+        setIsBotSpeaking(false);
+        if (typeof onDone === 'function') onDone();
+      }
+    } else {
+      if (typeof onDone === 'function') onDone();
     }
   };
 
@@ -511,27 +522,42 @@ export default function CreateOrder() {
   // Requirement: "haar ek input lene k baad he next input pr jana hai, phele customer ka naam sun k phir dal k phir aage ka sawaal puchna hai"
   const startStepByStepVoice = () => {
     if (isListening || voiceStep > 0) {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (_) {}
-      }
-      setIsListening(false);
-      setVoiceStep(0);
-      setVoiceBotStatus('Voice assistant stopped');
+      stopVoiceAssistant();
       return;
     }
 
     setVoiceStep(1);
+    setVoiceTranscript('');
+    transcriptRef.current = '';
     setVoiceBotStatus('Starting Step 1: Asking Customer Name...');
     playStepAudioAndListen(1);
   };
 
+  const stopVoiceAssistant = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch (_) {}
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch (_) {}
+    }
+    setIsListening(false);
+    setIsBotSpeaking(false);
+    setVoiceStep(0);
+    setVoiceTranscript('');
+    transcriptRef.current = '';
+    setVoiceBotStatus('Voice assistant stopped');
+  };
+
   const playStepAudioAndListen = (stepNum) => {
     setVoiceStep(stepNum);
+    setVoiceTranscript('');
+    transcriptRef.current = '';
+
     const audioMap = {
       1: { file: 'step_1_name', text: 'नमस्ते! नैचुरले ड्राई फ्रूट्स में आपका स्वागत है। कृपया अपना नाम बताएं?' },
       2: { file: 'step_2_shop', text: 'आपकी दुकान या बिज़नेस का नाम क्या है?' },
       3: { file: 'step_3_address', text: 'आपका डिलीवरी एड्रेस और शहर कौन सा है?' },
-      4: { file: 'step_4_product_price', text: 'आपको कौन सा ड्राई फ्रूट या मसाला चाहिए, और आपका टारगेट बजट या रेट क्या है?' },
+      4: { file: 'step_4_product_price', text: 'आपको कौन सा ड्राई फ्रूट या मसाला चाहिए, और कितने पैकेट चाहिए?' },
       5: { file: 'step_5_closing', text: 'जी धन्यवाद! आपकी डिटेल्स नोट हो गई हैं। एडमिन के वेरिफिकेशन के बाद आर्डर कन्फर्म हो जाएगा।' }
     };
 
@@ -539,79 +565,87 @@ export default function CreateOrder() {
     if (!target) return;
 
     if (stepNum === 5) {
-      // Closing audio, then open verification modal
       playNaturalAudioPrompt(target.file, target.text);
       setTimeout(() => {
         setIsListening(false);
         setVoiceStep(0);
         openVerificationForCurrentVoiceSession();
-      }, 4000);
+      }, 3500);
       return;
     }
+
+    setIsBotSpeaking(true);
+    setVoiceBotStatus(`🔊 Asking Step ${stepNum}/4: "${target.text}"`);
+
+    const onAudioFinished = () => {
+      setIsBotSpeaking(false);
+      listenForStepInput(stepNum);
+    };
 
     if (typeof window !== 'undefined') {
       try {
         const audio = new Audio(`/assets/voice/${target.file}.mp3`);
-        setIsBotSpeaking(true);
-        audio.onended = () => {
-          setIsBotSpeaking(false);
-          listenForStepInput(stepNum);
-        };
-        audio.onerror = () => {
-          speakBotAudio(target.text, () => listenForStepInput(stepNum));
-        };
-        audio.play().catch(() => speakBotAudio(target.text, () => listenForStepInput(stepNum)));
+        audio.onended = onAudioFinished;
+        audio.onerror = () => speakBotAudio(target.text, onAudioFinished);
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => speakBotAudio(target.text, onAudioFinished));
+        }
         return;
-      } catch (_) {}
+      } catch (_) {
+        speakBotAudio(target.text, onAudioFinished);
+        return;
+      }
     }
-    speakBotAudio(target.text, () => listenForStepInput(stepNum));
+    speakBotAudio(target.text, onAudioFinished);
   };
 
   const listenForStepInput = (stepNum) => {
     const SpeechRecognition = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
     if (!SpeechRecognition) {
-      alert('Speech Recognition is not supported on this browser. Please use Chrome, Edge, or Brave.');
+      setVoiceBotStatus('Speech Recognition not supported in this browser. Please use Chrome/Edge or type below.');
       return;
     }
 
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (_) {}
+      try { recognitionRef.current.abort(); } catch (_) {}
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'hi-IN';
 
     recognition.onstart = () => {
       setIsListening(true);
-      setVoiceTranscript('');
-      transcriptRef.current = '';
-      if (stepNum === 1) setVoiceBotStatus('🎙️ Step 1/4: Listening for Customer Name...');
-      if (stepNum === 2) setVoiceBotStatus('🎙️ Step 2/4: Listening for Business / Shop Name...');
-      if (stepNum === 3) setVoiceBotStatus('🎙️ Step 3/4: Listening for Delivery Address & City...');
-      if (stepNum === 4) setVoiceBotStatus('🎙️ Step 4/4: Listening for Product, Target Budget & Quantity...');
+      if (stepNum === 1) setVoiceBotStatus('🎙️ Listening... Apna ya customer ka naam bolkar batayein:');
+      if (stepNum === 2) setVoiceBotStatus('🎙️ Listening... Dukaan / Store ka naam batayein:');
+      if (stepNum === 3) setVoiceBotStatus('🎙️ Listening... Delivery Address aur City batayein:');
+      if (stepNum === 4) setVoiceBotStatus('🎙️ Listening... Product aur quantity batayein (e.g. 1kg Kaju 2 packet):');
     };
 
     recognition.onresult = (event) => {
       let currentText = '';
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
+      for (let i = 0; i < event.results.length; ++i) {
         currentText += event.results[i][0].transcript;
       }
-      setVoiceTranscript(currentText);
-      transcriptRef.current = currentText;
+      if (currentText.trim()) {
+        setVoiceTranscript(currentText);
+        transcriptRef.current = currentText;
+      }
     };
 
     recognition.onerror = (event) => {
       console.warn('Speech recognition warning on step', stepNum, event.error);
-      setIsListening(false);
-      setVoiceBotStatus(`Microphone status: ${event.error}. You can retry or click next.`);
+      if (event.error !== 'no-speech') {
+        setIsListening(false);
+        setVoiceBotStatus(`Microphone status: ${event.error}. You can speak again or type below.`);
+      }
     };
 
     recognition.onend = () => {
       setIsListening(false);
-      const text = transcriptRef.current;
-      handleStepCompleted(stepNum, text);
+      // NOTE: Do NOT auto-retry audio on silence! Keep calm and let user speak or click next!
     };
 
     recognitionRef.current = recognition;
@@ -619,13 +653,28 @@ export default function CreateOrder() {
       recognition.start();
     } catch (e) {
       console.error('Error starting recognition on step', stepNum, e);
+      setIsListening(false);
     }
+  };
+
+  // Explicit Next Step trigger (Called on Enter, Next button, or speech completion)
+  const handleNextStep = (stepNum, textOverride) => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (_) {}
+    }
+    setIsListening(false);
+
+    const text = (textOverride !== undefined && textOverride !== null && textOverride !== '' ? textOverride : (transcriptRef.current || voiceTranscript || '')).trim();
+    if (!text) {
+      setVoiceBotStatus(`⚠️ Step ${stepNum}: Please speak or type your answer before clicking next.`);
+      return;
+    }
+    handleStepCompleted(stepNum, text);
   };
 
   const handleStepCompleted = (stepNum, text) => {
     if (!text || text.trim().length === 0) {
-      setVoiceBotStatus(`Step ${stepNum}: Voice answer not clear. Retrying question...`);
-      setTimeout(() => playStepAudioAndListen(stepNum), 1200);
+      setVoiceBotStatus(`⚠️ Step ${stepNum}: Please speak or type your answer.`);
       return;
     }
 
@@ -639,7 +688,7 @@ export default function CreateOrder() {
 
       setCustomer((prev) => ({ ...prev, name: cleanName }));
       setVoiceBotStatus(`✓ Step 1 Captured: Name "${cleanName}". Moving to Step 2 (Shop Name)...`);
-      setTimeout(() => playStepAudioAndListen(2), 1400);
+      setTimeout(() => playStepAudioAndListen(2), 1200);
     } else if (stepNum === 2) {
       // Step 2: Business / Store Name
       let cleanShop = raw.replace(/^(?:dukaan ka naam|shop ka naam|store name|meri dukaan|dukaan|shop|humara)\s+(?:hai)?\s*/gi, '').trim();
@@ -1333,8 +1382,8 @@ export default function CreateOrder() {
                 </div>
               </div>
 
-              <div style={{ fontSize: '11.5px', color: '#6B7280', maxWidth: '360px', lineHeight: '1.4' }}>
-                💡 Customer calls to <strong>+91 {botPhoneNumber}</strong> will be answered by your AI bot, and order drafts will appear below ready for 1-click feeding.
+              <div style={{ fontSize: '11.5px', color: '#4B5563', maxWidth: '420px', lineHeight: '1.4' }}>
+                💡 <strong>SIM Call Connection:</strong> Phone par aane wali call ke liye apna phone <strong>Auto-Answer</strong> / <strong>Speaker ON</strong> rakhein ya call uthate hi upper <strong>"🎙️ Start Step-by-Step Voice Call"</strong> dabayein. Bot customer se 1-1 details puchh kar yahan auto-fill karega!
               </div>
             </div>
 
@@ -1578,6 +1627,131 @@ export default function CreateOrder() {
                 </div>
               </div>
             </div>
+
+            {/* Interactive Active Step Input Controller (When Step Assistant is Running) */}
+            {voiceStep >= 1 && voiceStep <= 4 && (
+              <div
+                style={{
+                  backgroundColor: '#FFFBEB',
+                  border: '1.5px solid #F59E0B',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  marginBottom: '14px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#B45309', textTransform: 'uppercase' }}>
+                      Step {voiceStep} of 4: {voiceStep === 1 ? 'Customer Name' : voiceStep === 2 ? 'Store Name' : voiceStep === 3 ? 'Delivery Address & City' : 'Product, Weight & Quantity'}
+                    </span>
+                    {isBotSpeaking && (
+                      <span style={{ fontSize: '11px', color: '#D97706', fontWeight: 600 }}>🔊 Bot bol raha hai...</span>
+                    )}
+                    {isListening && (
+                      <span style={{ fontSize: '11px', color: '#DC2626', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#EF4444' }}></span>
+                        Mic Listening... Bolkar batayein
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={stopVoiceAssistant}
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      color: '#9CA3AF',
+                      cursor: 'pointer',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                    }}
+                  >
+                    ✕ Stop Assistant
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    placeholder={
+                      voiceStep === 1 ? 'Apna ya customer ka naam bolkar batayein ya type karein (e.g. Ramesh Sharma)' :
+                      voiceStep === 2 ? 'Dukaan ka naam batayein (e.g. Sharma Kirana Store)' :
+                      voiceStep === 3 ? 'Address aur City batayein (e.g. APMC Market, Navi Mumbai)' :
+                      'Product aur Quantity batayein (e.g. California Almonds 1kg 5 packet)'
+                    }
+                    value={voiceTranscript}
+                    onChange={(e) => {
+                      setVoiceTranscript(e.target.value);
+                      transcriptRef.current = e.target.value;
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleNextStep(voiceStep, voiceTranscript);
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '9px 12px',
+                      borderRadius: '8px',
+                      border: '1.5px solid #FCD34D',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#1F2937',
+                      backgroundColor: '#FFFFFF',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isListening) {
+                        if (recognitionRef.current) try { recognitionRef.current.abort(); } catch (_) {}
+                        setIsListening(false);
+                      } else {
+                        listenForStepInput(voiceStep);
+                      }
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      backgroundColor: isListening ? '#EF4444' : '#10B981',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    {isListening ? <MicOff size={14} /> : <Mic size={14} />}
+                    {isListening ? 'Pause Mic' : 'Speak'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleNextStep(voiceStep, voiceTranscript)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      backgroundColor: 'var(--color-primary-orange)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    Next Step <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Live Voice Status / Transcript Display */}
             {(isListening || voiceTranscript || voiceBotStatus || isBotSpeaking) && (
