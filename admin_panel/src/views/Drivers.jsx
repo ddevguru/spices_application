@@ -538,10 +538,13 @@ export default function Drivers() {
       <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #F3EAE0', boxShadow: '0 2px 10px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
         {/* Table Filters & Search */}
         <div style={{ padding: '18px 24px', borderBottom: '1px solid #F3EAE0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div>
             <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111827', margin: 0 }}>
               All Delivery Partners ({filteredDrivers.length})
             </h3>
+            <p style={{ fontSize: '12px', color: '#6B7280', margin: '3px 0 0' }}>
+              ↔️ Scroll table horizontally to view all driver management columns and actions.
+            </p>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -584,25 +587,36 @@ export default function Drivers() {
           </div>
         </div>
 
-        {/* Drivers Table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+        {/* Drivers Table with Full Smooth Horizontal Scrolling */}
+        <div style={{
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          width: '100%',
+          scrollbarWidth: 'thin'
+        }}>
+          <table style={{
+            width: '100%',
+            minWidth: '1380px',
+            borderCollapse: 'collapse',
+            textAlign: 'left',
+            fontSize: '13px'
+          }}>
             <thead>
-              <tr style={{ backgroundColor: '#FAF5ED', borderBottom: '1px solid #F3EAE0', color: '#6B7280', fontWeight: 700 }}>
-                <th style={{ padding: '14px 20px' }}>Driver</th>
-                <th style={{ padding: '14px 20px' }}>Contact Phone</th>
-                <th style={{ padding: '14px 20px' }}>Vehicle Details</th>
-                <th style={{ padding: '14px 20px' }}>Duty Status</th>
-                <th style={{ padding: '14px 20px' }}>Account Status</th>
-                <th style={{ padding: '14px 20px' }}>Active Deliveries</th>
-                <th style={{ padding: '14px 20px' }}>Live GPS Coords</th>
-                <th style={{ padding: '14px 20px', textAlign: 'right' }}>Actions</th>
+              <tr style={{ backgroundColor: '#FAF5ED', borderBottom: '1px solid #F3EAE0', color: '#6B7280', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                <th style={{ padding: '14px 20px', minWidth: '220px' }}>Driver Profile</th>
+                <th style={{ padding: '14px 20px', minWidth: '200px' }}>Contact Details</th>
+                <th style={{ padding: '14px 20px', minWidth: '200px' }}>Vehicle Info</th>
+                <th style={{ padding: '14px 20px', minWidth: '150px' }}>Duty Status</th>
+                <th style={{ padding: '14px 20px', minWidth: '140px' }}>Account Access</th>
+                <th style={{ padding: '14px 20px', minWidth: '130px' }}>Active Orders</th>
+                <th style={{ padding: '14px 20px', minWidth: '180px' }}>Live GPS Coordinates</th>
+                <th style={{ padding: '14px 24px', minWidth: '340px', textAlign: 'right' }}>Management Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredDrivers.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                  <td colSpan="8" style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
                     No drivers found. Click "+ Add New Driver" to register a driver account.
                   </td>
                 </tr>
@@ -616,11 +630,11 @@ export default function Drivers() {
                       transition: 'background-color 0.15s'
                     }}
                   >
-                    <td style={{ padding: '16px 20px' }}>
+                    <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{
-                          width: '38px',
-                          height: '38px',
+                          width: '42px',
+                          height: '42px',
                           borderRadius: '50%',
                           backgroundColor: '#FFEDD5',
                           color: '#EA580C',
@@ -628,51 +642,69 @@ export default function Drivers() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontWeight: 800,
-                          fontSize: '14px'
+                          fontSize: '15px',
+                          flexShrink: 0
                         }}>
                           {driver.name.charAt(0)}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, color: '#111827' }}>{driver.name}</div>
-                          <div style={{ fontSize: '11px', color: '#6B7280' }}>ID: {driver.id}</div>
+                          <div style={{ fontWeight: 800, color: '#111827', fontSize: '13.5px' }}>{driver.name}</div>
+                          <div style={{ fontSize: '11px', color: '#EA580C', fontWeight: 700, fontFamily: 'monospace' }}>
+                            ID: {driver.id}
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    <td style={{ padding: '16px 20px' }}>
+                    <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
                       <a
                         href={`tel:${driver.phone}`}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#111827', fontWeight: 600, textDecoration: 'none' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#111827', fontWeight: 700, textDecoration: 'none', fontSize: '13px' }}
                       >
                         <Phone size={14} color="#EA580C" /> {driver.phone}
                       </a>
-                      {driver.email && <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{driver.email}</div>}
-                    </td>
-
-                    <td style={{ padding: '16px 20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#374151' }}>
-                        {driver.vehicleType === 'Van' || driver.vehicleType === 'Tata Ace' ? <Car size={15} color="#4B5563" /> : <Bike size={15} color="#4B5563" />}
-                        {driver.vehicleType}
-                      </div>
-                      <div style={{ fontSize: '11.5px', color: '#EA580C', fontWeight: 700, fontFamily: 'monospace' }}>
-                        {driver.vehicleNumber}
-                      </div>
-                      {driver.licenseNumber && (
-                        <div style={{ fontSize: '10.5px', color: '#9CA3AF' }}>DL: {driver.licenseNumber}</div>
+                      {driver.email && (
+                        <div style={{ fontSize: '11.5px', color: '#6B7280', marginTop: '3px' }}>
+                          {driver.email}
+                        </div>
                       )}
                     </td>
 
-                    <td style={{ padding: '16px 20px' }}>
+                    <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#374151' }}>
+                        {driver.vehicleType === 'Van' || driver.vehicleType === 'Tata Ace' ? <Car size={15} color="#4B5563" /> : <Bike size={15} color="#4B5563" />}
+                        {driver.vehicleType}
+                      </div>
+                      <div style={{
+                        display: 'inline-block',
+                        fontSize: '11.5px',
+                        color: '#C2410C',
+                        fontWeight: 800,
+                        fontFamily: 'monospace',
+                        backgroundColor: '#FFF7ED',
+                        border: '1px solid #FFEDD5',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        marginTop: '3px'
+                      }}>
+                        {driver.vehicleNumber}
+                      </div>
+                      {driver.licenseNumber && (
+                        <div style={{ fontSize: '10.5px', color: '#9CA3AF', marginTop: '2px' }}>DL: {driver.licenseNumber}</div>
+                      )}
+                    </td>
+
+                    <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
                       <button
                         onClick={() => handleToggleOnline(driver)}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          padding: '4px 10px',
+                          padding: '6px 12px',
                           borderRadius: '20px',
                           border: 'none',
-                          fontSize: '11.5px',
+                          fontSize: '12px',
                           fontWeight: 700,
                           cursor: 'pointer',
                           backgroundColor: driver.isOnline ? '#DCFCE7' : '#F3F4F6',
@@ -680,16 +712,16 @@ export default function Drivers() {
                         }}
                       >
                         <span style={{
-                          width: '7px',
-                          height: '7px',
+                          width: '8px',
+                          height: '8px',
                           borderRadius: '50%',
                           backgroundColor: driver.isOnline ? '#10B981' : '#9CA3AF'
                         }} />
-                        {driver.isOnline ? 'Online' : 'Offline'}
+                        {driver.isOnline ? 'Online (On Duty)' : 'Offline'}
                       </button>
                     </td>
 
-                    <td style={{ padding: '16px 20px' }}>
+                    <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
                       <button
                         onClick={() => handleToggleActive(driver)}
                         title="Click to toggle Active / Suspended access"
@@ -697,47 +729,47 @@ export default function Drivers() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          padding: '4px 10px',
+                          padding: '6px 12px',
                           borderRadius: '20px',
                           border: 'none',
-                          fontSize: '11.5px',
+                          fontSize: '12px',
                           fontWeight: 700,
                           cursor: 'pointer',
                           backgroundColor: driver.isActive !== false ? '#EFF6FF' : '#FEE2E2',
                           color: driver.isActive !== false ? '#1E40AF' : '#991B1B'
                         }}
                       >
-                        {driver.isActive !== false ? <ShieldCheck size={13} color="#2563EB" /> : <Ban size={13} color="#DC2626" />}
+                        {driver.isActive !== false ? <ShieldCheck size={14} color="#2563EB" /> : <Ban size={14} color="#DC2626" />}
                         {driver.isActive !== false ? 'Active' : 'Suspended'}
                       </button>
                     </td>
 
-                    <td style={{ padding: '16px 20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{
-                          backgroundColor: driver.activeDeliveries > 0 ? '#EFF6FF' : '#F3F4F6',
-                          color: driver.activeDeliveries > 0 ? '#1D4ED8' : '#6B7280',
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          fontWeight: 700,
-                          fontSize: '12px'
-                        }}>
-                          {driver.activeDeliveries || 0} Orders
-                        </span>
-                      </div>
+                    <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
+                      <span style={{
+                        backgroundColor: driver.activeDeliveries > 0 ? '#EFF6FF' : '#F3F4F6',
+                        color: driver.activeDeliveries > 0 ? '#1D4ED8' : '#6B7280',
+                        padding: '5px 10px',
+                        borderRadius: '8px',
+                        fontWeight: 800,
+                        fontSize: '12.5px',
+                        display: 'inline-block'
+                      }}>
+                        {driver.activeDeliveries || 0} Orders
+                      </span>
                     </td>
 
-                    <td style={{ padding: '16px 20px' }}>
-                      <div style={{ fontSize: '12px', color: '#374151', fontFamily: 'monospace' }}>
+                    <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: '12.5px', color: '#111827', fontFamily: 'monospace', fontWeight: 600 }}>
                         {driver.currentLat ? `${driver.currentLat.toFixed(4)}, ${driver.currentLng.toFixed(4)}` : '19.0760, 72.8777'}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>
+                      <div style={{ fontSize: '11.5px', color: '#10B981', fontWeight: 700, marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }} />
                         Speed: {driver.speed || '24'} km/h
                       </div>
                     </td>
 
-                    <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                    <td style={{ padding: '16px 24px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
                         <button
                           onClick={() => {
                             setSelectedDriver(driver);
@@ -745,80 +777,81 @@ export default function Drivers() {
                           }}
                           title="Focus on Map"
                           style={{
-                            padding: '6px 9px',
+                            padding: '7px 12px',
                             backgroundColor: '#F3F4F6',
                             border: '1px solid #E5E7EB',
-                            borderRadius: '6px',
-                            fontSize: '11.5px',
+                            borderRadius: '8px',
+                            fontSize: '12px',
                             fontWeight: 600,
                             color: '#374151',
                             cursor: 'pointer',
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '5px'
                           }}
                         >
-                          <Navigation size={12} /> Track
+                          <Navigation size={13} /> Track
                         </button>
 
                         <button
                           onClick={() => handleOpenAssignModal(driver)}
                           title="Assign Delivery Order"
                           style={{
-                            padding: '6px 10px',
+                            padding: '7px 14px',
                             backgroundColor: '#EA580C',
                             color: 'white',
                             border: 'none',
-                            borderRadius: '6px',
-                            fontSize: '11.5px',
+                            borderRadius: '8px',
+                            fontSize: '12px',
                             fontWeight: 700,
                             cursor: 'pointer',
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '5px',
+                            boxShadow: '0 2px 6px rgba(234, 88, 12, 0.2)'
                           }}
                         >
-                          <Truck size={12} /> Assign
+                          <Truck size={13} /> Assign
                         </button>
 
                         <button
                           onClick={() => handleOpenEditModal(driver)}
                           title="Edit Driver Profile & Credentials"
                           style={{
-                            padding: '6px 10px',
+                            padding: '7px 12px',
                             backgroundColor: '#EFF6FF',
                             border: '1px solid #BFDBFE',
-                            borderRadius: '6px',
-                            fontSize: '11.5px',
+                            borderRadius: '8px',
+                            fontSize: '12px',
                             fontWeight: 700,
                             color: '#1D4ED8',
                             cursor: 'pointer',
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '5px'
                           }}
                         >
-                          <Edit2 size={12} /> Edit
+                          <Edit2 size={13} /> Edit
                         </button>
 
                         <button
                           onClick={() => handleOpenDeleteModal(driver)}
                           title="Delete Driver Account"
                           style={{
-                            padding: '6px 10px',
+                            padding: '7px 12px',
                             backgroundColor: '#FEE2E2',
                             border: '1px solid #FCA5A5',
-                            borderRadius: '6px',
-                            fontSize: '11.5px',
+                            borderRadius: '8px',
+                            fontSize: '12px',
                             fontWeight: 700,
                             color: '#DC2626',
                             cursor: 'pointer',
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '5px'
                           }}
                         >
-                          <Trash2 size={12} /> Delete
+                          <Trash2 size={13} /> Delete
                         </button>
                       </div>
                     </td>
