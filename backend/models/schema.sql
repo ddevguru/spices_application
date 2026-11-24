@@ -247,3 +247,34 @@ ALTER TABLE customers ADD COLUMN IF NOT EXISTS owner_name VARCHAR(255);
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS gst_number VARCHAR(100);
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS license_number VARCHAR(100);
 
+-- 13. DRIVERS & FLEET MANAGEMENT TABLE
+CREATE TABLE IF NOT EXISTS drivers (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255),
+    password_hash VARCHAR(255) NOT NULL,
+    vehicle_type VARCHAR(50) DEFAULT 'Bike', -- 'Bike', 'Scooter', 'Electric Bike', 'Van', 'Tata Ace'
+    vehicle_number VARCHAR(50) NOT NULL,
+    license_number VARCHAR(100),
+    is_active BOOLEAN DEFAULT TRUE,
+    is_online BOOLEAN DEFAULT FALSE,
+    current_lat DECIMAL(10, 7) DEFAULT 19.0760,
+    current_lng DECIMAL(10, 7) DEFAULT 72.8777,
+    heading DECIMAL(6, 2) DEFAULT 0.00,
+    speed DECIMAL(6, 2) DEFAULT 0.00,
+    last_location_update TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_drivers_phone ON drivers(phone);
+CREATE INDEX IF NOT EXISTS idx_drivers_online ON drivers(is_online);
+
+-- Safe Alterations for Orders table for Driver Assignment & Tracking
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS driver_id VARCHAR(64) REFERENCES drivers(id) ON DELETE SET NULL;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS driver_assigned_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_otp VARCHAR(10);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP WITH TIME ZONE;
+
+

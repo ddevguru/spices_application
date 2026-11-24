@@ -13,6 +13,10 @@ export default function Orders() {
   const [invoiceOrder, setInvoiceOrder] = useState(null);
   const [copiedInvoice, setCopiedInvoice] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [drivers, setDrivers] = useState([]);
+  const [assignModalOrder, setAssignModalOrder] = useState(null);
+  const [selectedDriverId, setSelectedDriverId] = useState('');
+  const [assigning, setAssigning] = useState(false);
 
   const statuses = [
     'Pending',
@@ -51,6 +55,11 @@ export default function Orders() {
       if (Array.isArray(data)) {
         setOrders(data);
       }
+
+      try {
+        const drvs = await mockApi.getDrivers();
+        if (Array.isArray(drvs)) setDrivers(drvs);
+      } catch (_) {}
     } catch (err) {
       console.error('Failed to load orders:', err);
     } finally {
@@ -93,6 +102,21 @@ export default function Orders() {
     navigator.clipboard.writeText(text);
     setCopiedInvoice(true);
     setTimeout(() => setCopiedInvoice(false), 2000);
+  };
+
+  const handleAssignDriver = async () => {
+    if (!assignModalOrder || !selectedDriverId) return;
+    try {
+      setAssigning(true);
+      const res = await mockApi.assignOrderToDriver(assignModalOrder.id, selectedDriverId);
+      alert(`Success! Order #${assignModalOrder.id} assigned to driver.\nCustomer Delivery OTP: ${res.deliveryOtp || '4821'}`);
+      setAssignModalOrder(null);
+      loadOrders();
+    } catch (err) {
+      alert('Failed to assign driver: ' + err);
+    } finally {
+      setAssigning(false);
+    }
   };
 
   const filteredOrders = (orders || []).filter((o) => {
@@ -313,6 +337,31 @@ export default function Orders() {
                       >
                         <Eye size={14} /> Details
                       </button>
+                      {ord.driver_id || ord.driverId ? (
+                        <span style={{ fontSize: '11px', backgroundColor: '#EFF6FF', color: '#1D4ED8', padding: '4px 8px', borderRadius: '6px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px', border: '1px solid #BFDBFE' }}>
+                          <Truck size={12} /> Assigned (OTP: {ord.delivery_otp || ord.deliveryOtp || '4821'})
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => { setAssignModalOrder(ord); setSelectedDriverId(drivers[0]?.id || ''); }}
+                          style={{
+                            background: '#FEF3C7',
+                            color: '#92400E',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #FDE68A',
+                            fontSize: '11.5px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                          title="Assign Delivery Partner"
+                        >
+                          <Truck size={13} /> Assign
+                        </button>
+                      )}
                       <button
                         onClick={() => handlePrintInvoice(ord)}
                         style={{
@@ -867,6 +916,93 @@ export default function Orders() {
                 }
               }
             `}</style>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Driver Modal */}
+      {assignModalOrder && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ backgroundColor: '#FAF5ED' }}>
+              <div>
+                <h3 style={{ fontSize: '17px', fontWeight: 800, margin: 0 }}>
+                  Assign Delivery Partner
+                </h3>
+                <p style={{ fontSize: '12px', color: '#6B7280', margin: '3px 0 0' }}>
+                  Dispatching Order #{assignModalOrder.id} • Total: ₹{assignModalOrder.totalAmount}
+                </p>
+              </div>
+              <button onClick={() => setAssignModalOrder(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>
+                ✕
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px' }}>
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 700, color: '#374151', marginBottom: '6px' }}>
+                  Select Available Driver:
+                </label>
+                <select
+                  value={selectedDriverId}
+                  onChange={(e) => setSelectedDriverId(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #D1D5DB',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    backgroundColor: 'white'
+                  }}
+                >
+                  {drivers.map(d => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} ({d.vehicleType} • {d.vehicleNumber}) {d.isOnline ? '🟢 Online' : '⚪ Offline'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', padding: '12px', borderRadius: '8px', fontSize: '12px', color: '#1E40AF', marginBottom: '20px' }}>
+                🔒 <strong>Automatic OTP Security:</strong> A 4-digit Delivery OTP will be generated for customer verification. Driver must collect this code from the customer to mark the order as delivered.
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setAssignModalOrder(null)}
+                  style={{
+                    padding: '9px 16px',
+                    backgroundColor: '#F3F4F6',
+                    color: '#374151',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!selectedDriverId || assigning}
+                  onClick={handleAssignDriver}
+                  style={{
+                    padding: '9px 18px',
+                    backgroundColor: '#EA580C',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: selectedDriverId ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  {assigning ? 'Dispatching...' : 'Confirm & Dispatch'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

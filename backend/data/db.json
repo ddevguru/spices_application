@@ -4126,7 +4126,27 @@
       "isActive": true
     }
   ],
-  "orders": [],
+  "orders": [
+    {
+      "id": "almond-01-24112026-103000",
+      "customer_name": "Deepak Mishra",
+      "customer_phone": "9820012345",
+      "shipping_address": {
+        "street": "Shop No. 12, APMC Market",
+        "city": "Navi Mumbai",
+        "pincode": "400705"
+      },
+      "total_amount": 1195,
+      "status": "Delivered",
+      "driver_id": "DRV-101",
+      "driverId": "DRV-101",
+      "driver_assigned_at": "2026-11-24T19:06:19.176Z",
+      "delivery_otp": "7059",
+      "deliveryOtp": "7059",
+      "delivered_at": "2026-11-24T19:06:19.202Z",
+      "payment_status": "Paid"
+    }
+  ],
   "customers": [],
   "settings": {
     "storeName": "Naturale - Premium Dry Fruits & Spices",
@@ -4199,6 +4219,62 @@
       "total_amount": 469,
       "status": "pending_admin_review",
       "created_at": "2026-11-20T20:52:15.984Z"
+    }
+  ],
+  "drivers": [
+    {
+      "id": "DRV-101",
+      "name": "Rajesh Kumar",
+      "phone": "9876543210",
+      "email": "rajesh.driver@naturale.com",
+      "password_hash": "driver123",
+      "vehicle_type": "Bike",
+      "vehicle_number": "MH-04-AB-1234",
+      "license_number": "DL-MH0420210089",
+      "is_active": true,
+      "is_online": true,
+      "current_lat": 19.0785,
+      "current_lng": 72.8795,
+      "heading": 90,
+      "speed": 32.5,
+      "last_location_update": "2026-11-24T19:06:19.171Z",
+      "created_at": "2026-11-20T10:00:00.000Z"
+    },
+    {
+      "id": "DRV-102",
+      "name": "Amit Singh",
+      "phone": "9876543211",
+      "email": "amit.driver@naturale.com",
+      "password_hash": "driver123",
+      "vehicle_type": "Scooter",
+      "vehicle_number": "MH-43-CD-5678",
+      "license_number": "DL-MH4320220045",
+      "is_active": true,
+      "is_online": true,
+      "current_lat": 19.033,
+      "current_lng": 73.0297,
+      "heading": 120,
+      "speed": 18,
+      "last_location_update": "2026-11-24T22:32:00.000Z",
+      "created_at": "2026-11-20T11:00:00.000Z"
+    },
+    {
+      "id": "DRV-103",
+      "name": "Sunil Verma",
+      "phone": "9876543212",
+      "email": "sunil.driver@naturale.com",
+      "password_hash": "driver123",
+      "vehicle_type": "Tata Ace",
+      "vehicle_number": "MH-02-EF-9012",
+      "license_number": "DL-MH0220190012",
+      "is_active": true,
+      "is_online": false,
+      "current_lat": 19.1136,
+      "current_lng": 72.8697,
+      "heading": 0,
+      "speed": 0,
+      "last_location_update": "2026-11-24T20:00:00.000Z",
+      "created_at": "2026-11-20T12:00:00.000Z"
     }
   ]
 }

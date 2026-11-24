@@ -4946,5 +4946,118 @@ export const mockApi = {
       timestamp: new Date().toISOString(),
       status: 'Ready to Feed'
     };
+  },
+
+  // -------------------------------------------------------------------------
+  // DRIVERS & FLEET MANAGEMENT API
+  // -------------------------------------------------------------------------
+  async getDrivers() {
+    try {
+      const res = await axios.get(`${API_BASE}/drivers`, { timeout: 8000 });
+      if (res.data && res.data.drivers) {
+        return res.data.drivers;
+      }
+    } catch (_) {}
+    return [
+      {
+        id: 'DRV-101',
+        name: 'Rajesh Kumar',
+        phone: '9876543210',
+        email: 'rajesh.driver@naturale.com',
+        vehicleType: 'Bike',
+        vehicleNumber: 'MH-04-AB-1234',
+        licenseNumber: 'DL-MH0420210089',
+        isActive: true,
+        isOnline: true,
+        currentLat: 19.0760,
+        currentLng: 72.8777,
+        heading: 45.0,
+        speed: 24.5,
+        activeDeliveries: 1,
+        lastLocationUpdate: new Date().toISOString(),
+        createdAt: '2026-11-20T10:00:00.000Z'
+      },
+      {
+        id: 'DRV-102',
+        name: 'Amit Singh',
+        phone: '9876543211',
+        email: 'amit.driver@naturale.com',
+        vehicleType: 'Scooter',
+        vehicleNumber: 'MH-43-CD-5678',
+        licenseNumber: 'DL-MH4320220045',
+        isActive: true,
+        isOnline: true,
+        currentLat: 19.0330,
+        currentLng: 73.0297,
+        heading: 120.0,
+        speed: 18.0,
+        activeDeliveries: 0,
+        lastLocationUpdate: new Date().toISOString(),
+        createdAt: '2026-11-20T11:00:00.000Z'
+      },
+      {
+        id: 'DRV-103',
+        name: 'Sunil Verma',
+        phone: '9876543212',
+        email: 'sunil.driver@naturale.com',
+        vehicleType: 'Tata Ace',
+        vehicleNumber: 'MH-02-EF-9012',
+        licenseNumber: 'DL-MH0220190012',
+        isActive: true,
+        isOnline: false,
+        currentLat: 19.1136,
+        currentLng: 72.8697,
+        heading: 0.0,
+        speed: 0.0,
+        activeDeliveries: 0,
+        lastLocationUpdate: new Date().toISOString(),
+        createdAt: '2026-11-20T12:00:00.000Z'
+      }
+    ];
+  },
+
+  async createDriver(driverData) {
+    try {
+      const res = await axios.post(`${API_BASE}/drivers`, driverData, { timeout: 8000 });
+      return res.data;
+    } catch (err) {
+      throw err.response?.data?.message || err.message;
+    }
+  },
+
+  async updateDriver(driverId, updates) {
+    try {
+      const res = await axios.put(`${API_BASE}/drivers/${driverId}`, updates, { timeout: 8000 });
+      return res.data;
+    } catch (err) {
+      throw err.response?.data?.message || err.message;
+    }
+  },
+
+  async deleteDriver(driverId) {
+    try {
+      const res = await axios.delete(`${API_BASE}/drivers/${driverId}`, { timeout: 8000 });
+      return res.data;
+    } catch (err) {
+      throw err.response?.data?.message || err.message;
+    }
+  },
+
+  async assignOrderToDriver(orderId, driverId) {
+    try {
+      const res = await axios.post(`${API_BASE}/orders/${orderId}/assign-driver`, { driverId }, { timeout: 8000 });
+      return res.data;
+    } catch (err) {
+      throw err.response?.data?.message || err.message;
+    }
+  },
+
+  async getOrderTracking(orderId) {
+    try {
+      const res = await axios.get(`${API_BASE}/orders/${orderId}/tracking`, { timeout: 8000 });
+      return res.data;
+    } catch (err) {
+      throw err.response?.data?.message || err.message;
+    }
   }
 };

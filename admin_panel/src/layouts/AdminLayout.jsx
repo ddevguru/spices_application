@@ -20,7 +20,8 @@ import {
   ExternalLink,
   ShieldCheck,
   PlusCircle,
-  Headphones
+  Headphones,
+  Truck
 } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
@@ -39,6 +40,7 @@ export default function AdminLayout({ children }) {
     { label: 'Categories', path: '/categories', icon: Grid },
     { label: 'Inventory', path: '/inventory', icon: Boxes },
     { label: 'Orders', path: '/orders', icon: ShoppingCart },
+    { label: 'Drivers & Fleet', path: '/drivers', icon: Truck },
     { label: 'Create Order', path: '/create-order', icon: PlusCircle },
     { label: 'Customers', path: '/customers', icon: Users },
     { label: 'Coupons', path: '/coupons', icon: Ticket },
