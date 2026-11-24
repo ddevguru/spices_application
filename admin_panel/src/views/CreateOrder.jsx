@@ -550,56 +550,72 @@ export default function CreateOrder() {
     setVoiceBotStatus('Voice assistant stopped');
   };
 
-  const playStepAudioAndListen = (stepNum) => {
+  const playStepAudioAndListen = (stepNum, dynamicSub = null, dynamicProd = null) => {
     setVoiceStep(stepNum);
     setVoiceTranscript('');
     transcriptRef.current = '';
 
-    const audioMap = {
-      1: { file: 'step_1_name', text: 'नमस्ते! नैचुरले ड्राई फ्रूट्स में आपका स्वागत है। कृपया अपना नाम बताएं?' },
-      2: { file: 'step_2_shop', text: 'आपकी दुकान या बिज़नेस का नाम क्या है?' },
-      3: { file: 'step_3_address', text: 'आपका डिलीवरी एड्रेस और शहर कौन सा है?' },
-      4: { file: 'step_4_product_price', text: 'आपको कौन सा ड्राई फ्रूट या मसाला चाहिए, और कितने पैकेट चाहिए?' },
-      5: { file: 'step_5_closing', text: 'जी धन्यवाद! आपकी डिटेल्स नोट हो गई हैं। एडमिन के वेरिफिकेशन के बाद आर्डर कन्फर्म हो जाएगा।' }
-    };
-
-    const target = audioMap[stepNum];
-    if (!target) return;
-
-    if (stepNum === 5) {
-      playNaturalAudioPrompt(target.file, target.text);
-      setTimeout(() => {
-        setIsListening(false);
+    if (stepNum === 1) {
+      speakStepAudio('step_1_name', 'नमस्ते! नैचुरले ड्राई फ्रूट्स में आपका स्वागत है। कृपया अपना नाम बताएं?', 1);
+    } else if (stepNum === 2) {
+      speakStepAudio('step_2_shop', 'आपकी दुकान या बिज़नेस का नाम क्या है?', 2);
+    } else if (stepNum === 3) {
+      speakStepAudio('step_3_address', 'आपका डिलीवरी एड्रेस और शहर कौन सा है?', 3);
+    } else if (stepNum === 4) {
+      const text = 'आपको कौन सा ड्राई फ्रूट या मसाला चाहिए? जैसे बादाम (Almonds), काजू (Cashews), पिस्ता, या किशमिश?';
+      speakStepAudio(null, text, 4);
+    } else if (stepNum === 5) {
+      // Step 5: AI lists available varieties and prices
+      const sub = dynamicSub || selectedSubcategory || 'Almonds';
+      const cands = products.filter((p) => {
+        const pSub = (p.subcategoryId || p.subcategoryName || p.name || '').toLowerCase();
+        return pSub.includes(sub.toLowerCase());
+      });
+      const pool = cands.length > 0 ? cands : products.filter((p) => p.categoryId === 'cat_dry_fruits');
+      const listSummary = pool.slice(0, 3).map((p) => {
+        const pr = Number(p.variants?.[0]?.price || p.price || 120);
+        const shortName = p.name.split('(')[0].replace(/Whole|Grade|Pouch/gi, '').trim();
+        return `₹${pr} में ${shortName}`;
+      }).join(', ');
+      const text = `${sub} में हमारे पास ये रेट्स हैं: ${listSummary}। आपको कौन से रेट या वैरायटी वाला चाहिए?`;
+      speakStepAudio(null, text, 5);
+    } else if (stepNum === 6) {
+      // Step 6: Weight and Quantity (Image step 5: Quantity in packs / units)
+      const p = dynamicProd || currentProduct || products[0];
+      const prodName = p?.name?.split('(')[0]?.trim() || 'Product';
+      const text = `${prodName} में 250 ग्राम, 500 ग्राम और 1 किलो के पैक हैं। आपको कौन सा वजन और कितने पैकेट्स (Quantity) चाहिए?`;
+      speakStepAudio(null, text, 6);
+    } else if (stepNum === 7) {
+      // Step 7: Completed
+      const text = 'जी बहुत बढ़िया! आपकी आर्डर डिटेल्स और पैकेट्स फॉर्म में जोड़ दिए गए हैं। एडमिन कन्फर्म करके आर्डर प्लेस कर सकते हैं।';
+      setIsBotSpeaking(true);
+      setVoiceBotStatus('✓ All steps completed! Items added to order form.');
+      speakBotAudio(text, () => {
+        setIsBotSpeaking(false);
         setVoiceStep(0);
-        openVerificationForCurrentVoiceSession();
-      }, 3500);
-      return;
+      });
     }
+  };
 
+  const speakStepAudio = (audioFile, text, stepNum) => {
     setIsBotSpeaking(true);
-    setVoiceBotStatus(`🔊 Asking Step ${stepNum}/4: "${target.text}"`);
-
-    const onAudioFinished = () => {
+    setVoiceBotStatus(`🔊 Step ${stepNum}/6: "${text}"`);
+    const onDone = () => {
       setIsBotSpeaking(false);
       listenForStepInput(stepNum);
     };
 
-    if (typeof window !== 'undefined') {
+    if (audioFile && typeof window !== 'undefined') {
       try {
-        const audio = new Audio(`/assets/voice/${target.file}.mp3`);
-        audio.onended = onAudioFinished;
-        audio.onerror = () => speakBotAudio(target.text, onAudioFinished);
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(() => speakBotAudio(target.text, onAudioFinished));
-        }
+        const audio = new Audio(`/assets/voice/${audioFile}.mp3`);
+        audio.onended = onDone;
+        audio.onerror = () => speakBotAudio(text, onDone);
+        const p = audio.play();
+        if (p !== undefined) p.catch(() => speakBotAudio(text, onDone));
         return;
-      } catch (_) {
-        speakBotAudio(target.text, onAudioFinished);
-        return;
-      }
+      } catch (_) {}
     }
-    speakBotAudio(target.text, onAudioFinished);
+    speakBotAudio(text, onDone);
   };
 
   const listenForStepInput = (stepNum) => {
@@ -621,10 +637,12 @@ export default function CreateOrder() {
     recognition.onstart = () => {
       setIsListening(true);
       const langLabel = speechLangRef.current === 'hi-IN' ? 'Hindi' : 'Hinglish';
-      if (stepNum === 1) setVoiceBotStatus(`🎙️ Mic Active (${langLabel}): Apna ya customer ka naam bolkar batayein...`);
-      if (stepNum === 2) setVoiceBotStatus(`🎙️ Mic Active (${langLabel}): Dukaan / Store ka naam batayein...`);
-      if (stepNum === 3) setVoiceBotStatus(`🎙️ Mic Active (${langLabel}): Delivery Address aur City batayein...`);
-      if (stepNum === 4) setVoiceBotStatus(`🎙️ Mic Active (${langLabel}): Product aur quantity batayein...`);
+      if (stepNum === 1) setVoiceBotStatus(`🎙️ Step 1/6 (${langLabel}): Apna ya customer ka naam bolkar batayein...`);
+      if (stepNum === 2) setVoiceBotStatus(`🎙️ Step 2/6 (${langLabel}): Dukaan / Store ka naam batayein...`);
+      if (stepNum === 3) setVoiceBotStatus(`🎙️ Step 3/6 (${langLabel}): Delivery Address aur City batayein...`);
+      if (stepNum === 4) setVoiceBotStatus(`🎙️ Step 4/6 (${langLabel}): Badam (Almonds) ya Kaju (Cashews) batayein...`);
+      if (stepNum === 5) setVoiceBotStatus(`🎙️ Step 5/6 (${langLabel}): Price / Rate batayein (e.g. 123 wala ya California)...`);
+      if (stepNum === 6) setVoiceBotStatus(`🎙️ Step 6/6 (${langLabel}): Weight aur Packets Quantity batayein (e.g. 1kg ke 5 packet)...`);
     };
 
     recognition.onresult = (event) => {
@@ -643,7 +661,6 @@ export default function CreateOrder() {
       console.warn('Speech recognition warning on step', stepNum, event.error);
       if (event.error === 'network') {
         if (speechLangRef.current === 'hi-IN') {
-          // If Hindi failed with network error, immediately retry with Hinglish (en-IN)
           speechLangRef.current = 'en-IN';
           setSpeechLang('en-IN');
           setVoiceBotStatus('Switching to Indian Hinglish (en-IN) to bypass network error...');
@@ -651,12 +668,12 @@ export default function CreateOrder() {
           return;
         }
         setIsListening(false);
-        setVoiceBotStatus('⚠️ Browser network blocked Google Speech (Adblock/Brave Shield off karein ya niche type karein).');
+        setVoiceBotStatus('⚠️ Google Speech unreachable. Niche option par click karein ya type karein:');
         return;
       }
       if (event.error !== 'no-speech') {
         setIsListening(false);
-        setVoiceBotStatus(`Microphone status: ${event.error}. You can speak again or type below.`);
+        setVoiceBotStatus(`Microphone status: ${event.error}. Click Speak to retry or choose below.`);
       }
     };
 
@@ -686,7 +703,7 @@ export default function CreateOrder() {
 
     const text = (textOverride !== undefined && textOverride !== null && textOverride !== '' ? textOverride : (transcriptRef.current || voiceTranscript || '')).trim();
     if (!text) {
-      setVoiceBotStatus(`⚠️ Step ${stepNum}: Please speak or type your answer before clicking next.`);
+      setVoiceBotStatus(`⚠️ Step ${stepNum}: Please speak or click an option before continuing.`);
       return;
     }
     handleStepCompleted(stepNum, text);
@@ -734,82 +751,154 @@ export default function CreateOrder() {
         street: raw,
         city: detectedCity,
       }));
-      setVoiceBotStatus(`✓ Step 3 Captured: Address recorded! Moving to Step 4 (Product & Budget Rate)...`);
+      setVoiceBotStatus(`✓ Step 3 Captured: Address recorded! Moving to Step 4 (Select Product)...`);
       setTimeout(() => playStepAudioAndListen(4), 1400);
     } else if (stepNum === 4) {
-      // Step 4: Product & Target Budget Rate & Quantity
-      let targetBudget = 0;
-      const pm = raw.match(/(?:rs\.?|inr|₹|\b)\s*(\d{2,4})\s*(?:ke\s*rate|rupaye|rs|wala|wali|rate|approx|budget|price)/i) ||
-                 raw.match(/(\d{2,4})\s*(?:rupaye|rs)/i);
-      if (pm && pm[1]) {
-        targetBudget = parseInt(pm[1], 10);
-      }
-
-      // Detect category / subcategory
+      // Step 4: Product Category (User says Badam / Kaju -> English Almonds / Cashews)
       const lower = raw.toLowerCase();
-      let detectedCatId = 'cat_dry_fruits';
-      let detectedSub = 'Almonds';
+      let chosenCat = 'cat_dry_fruits';
+      let chosenSub = 'Almonds';
 
-      if (lower.includes('spice') || lower.includes('masala') || lower.includes('elaichi') || lower.includes('cardamom')) {
-        detectedCatId = 'cat_whole_spices';
-        detectedSub = lower.includes('elaichi') || lower.includes('cardamom') ? 'Green Cardamom' : 'Black Pepper';
+      if (lower.includes('kaju') || lower.includes('cashew')) {
+        chosenSub = 'Cashews';
+      } else if (lower.includes('pista') || lower.includes('pistachio')) {
+        chosenSub = 'Pistachios';
+      } else if (lower.includes('kishmish') || lower.includes('raisin')) {
+        chosenSub = 'Raisins';
+      } else if (lower.includes('akhrot') || lower.includes('walnut')) {
+        chosenSub = 'Walnuts';
+      } else if (lower.includes('khajoor') || lower.includes('date')) {
+        chosenSub = 'Dates';
+      } else if (lower.includes('elaichi') || lower.includes('cardamom')) {
+        chosenCat = 'cat_whole_spices';
+        chosenSub = 'Green Cardamom';
       } else {
-        detectedCatId = 'cat_dry_fruits';
-        if (lower.includes('kaju') || lower.includes('cashew')) detectedSub = 'Cashews';
-        else if (lower.includes('pista') || lower.includes('pistachio')) detectedSub = 'Pistachios';
-        else if (lower.includes('akhrot') || lower.includes('walnut')) detectedSub = 'Walnuts';
-        else if (lower.includes('date') || lower.includes('khajoor')) detectedSub = 'Dates';
-        else detectedSub = 'Almonds';
+        chosenSub = 'Almonds'; // Default for Badam
       }
 
-      // Filter matching products
-      const candidateProducts = products.filter((p) => {
-        const matchCat = p.categoryId === detectedCatId;
-        const sub = (p.subcategoryId || p.subcategoryName || p.name || '').toLowerCase();
-        return matchCat && sub.includes(detectedSub.toLowerCase());
-      });
-      const pool = candidateProducts.length > 0 ? candidateProducts : products.filter((p) => p.categoryId === detectedCatId);
+      setSelectedCategory(chosenCat);
+      setSelectedSubcategory(chosenSub);
+      setVoiceBotStatus(`✓ Step 4 Captured: ${chosenSub}. Fetching price list and varieties...`);
+      setTimeout(() => playStepAudioAndListen(5, chosenSub), 1200);
+    } else if (stepNum === 5) {
+      // Step 5: Price & Variety Selection (AI tells the price list and user picks rate)
+      const lower = raw.toLowerCase();
+      let targetRate = 0;
+      const pm = raw.match(/(?:rs\.?|inr|₹|\b)\s*(\d{2,4})\s*(?:ke\s*rate|rupaye|rs|wala|wali|rate|approx|budget|price)?/i) ||
+                 raw.match(/(\d{2,4})\s*(?:rupaye|rs|wala)/i) ||
+                 raw.match(/(\d{2,4})/);
+      if (pm && pm[1]) {
+        targetRate = parseInt(pm[1], 10);
+      }
 
-      // Match variety based on budget distance
+      // Filter products under selected subcategory
+      const sub = (selectedSubcategory || 'Almonds').toLowerCase();
+      const cand = products.filter((p) => {
+        const pSub = (p.subcategoryId || p.subcategoryName || p.name || '').toLowerCase();
+        return pSub.includes(sub);
+      });
+      const pool = cand.length > 0 ? cand : products.filter((p) => p.categoryId === 'cat_dry_fruits');
+
       let matchedProd = null;
-      if (pool.length > 0) {
-        if (targetBudget > 0) {
-          let minDiff = Infinity;
-          for (const prod of pool) {
-            const pPrice = Number(prod.variants?.[0]?.price || prod.price || 0);
-            const diff = Math.abs(pPrice - targetBudget);
-            if (diff < minDiff) {
-              minDiff = diff;
-              matchedProd = prod;
-            }
+      if (targetRate > 0) {
+        let minDiff = Infinity;
+        for (const prod of pool) {
+          const pPrice = Number(prod.variants?.[0]?.price || prod.price || 0);
+          const diff = Math.abs(pPrice - targetRate);
+          if (diff < minDiff) {
+            minDiff = diff;
+            matchedProd = prod;
           }
-        } else {
-          matchedProd = pool[0];
         }
       }
+      if (!matchedProd) {
+        for (const prod of pool) {
+          const pName = prod.name.toLowerCase();
+          if (lower.includes('california') && pName.includes('california')) { matchedProd = prod; break; }
+          if (lower.includes('mamra') && pName.includes('mamra')) { matchedProd = prod; break; }
+          if (lower.includes('gurbandi') && pName.includes('gurbandi')) { matchedProd = prod; break; }
+          if (lower.includes('tukda') && pName.includes('split')) { matchedProd = prod; break; }
+          if (lower.includes('w320') && pName.includes('w320')) { matchedProd = prod; break; }
+        }
+      }
+      if (!matchedProd) matchedProd = pool[0];
 
-      // Quantity
+      setSelectedProduct(matchedProd.id);
+      if (matchedProd.variants?.[0]?.id) {
+        setSelectedVariantId(matchedProd.variants[0].id);
+      }
+
+      const rate = matchedProd.variants?.[0]?.price || matchedProd.price || 123;
+      setVoiceBotStatus(`✓ Step 5 Captured: ${matchedProd.name} (Rate: ₹${rate}). Now asking weight & quantity...`);
+      setTimeout(() => playStepAudioAndListen(6, null, matchedProd), 1200);
+    } else if (stepNum === 6) {
+      // Step 6: Weight Variant & Quantity (Image Step 5: Quantity in packs/units)
+      const lower = raw.toLowerCase();
+      let weightGrams = 1000;
+      let unit = 'KG';
+
+      if (lower.includes('250') || lower.includes('250g') || lower.includes('250 gram')) {
+        weightGrams = 250;
+        unit = 'GM';
+      } else if (lower.includes('500') || lower.includes('500g') || lower.includes('aadha kilo') || lower.includes('half kg')) {
+        weightGrams = 500;
+        unit = 'GM';
+      } else {
+        weightGrams = 1000;
+        unit = 'KG';
+      }
+
+      // Quantity (Step 5 in image: Quantity packs / units)
       let qty = 1;
-      const qm = raw.match(/(\d+)\s*(?:packet|packs?|units?|box|piece|kilo|kg)/i);
-      if (qm && qm[1]) qty = Math.max(1, parseInt(qm[1], 10));
+      const qm = raw.match(/(\d+)\s*(?:packet|packs?|units?|box|piece|pece|kilo|kg)?/i);
+      if (qm && qm[1]) {
+        qty = Math.max(1, parseInt(qm[1], 10));
+      }
 
-      const finalSelection = {
-        categoryId: matchedProd?.categoryId || detectedCatId,
-        categoryName: matchedProd?.categoryName || 'Dry Fruits',
-        subcategoryId: matchedProd?.subcategoryId || detectedSub,
-        productId: matchedProd?.id || 'p_almonds_1',
-        productName: matchedProd?.name || 'California Whole Almonds (Badam Giri)',
-        variantTitle: matchedProd?.variants?.[0]?.title || '100 GM',
-        weightInGrams: matchedProd?.variants?.[0]?.weightInGrams || 100,
-        price: Number(matchedProd?.variants?.[0]?.price || 123),
-        quantity: qty,
-        targetPrice: targetBudget || 123,
+      // Find matching product and variant
+      const prod = currentProduct || products.find((p) => p.id === selectedProduct) || products[0];
+      const variants = prod?.variants || [];
+      const matchedVariant = variants.find((v) => Number(v.weightInGrams) === weightGrams) || variants[0] || {
+        id: `var_${Date.now()}`,
+        title: `${weightGrams} GM`,
+        weightInGrams: weightGrams,
+        price: prod?.price || 123,
+        unit,
       };
 
-      lastCollectedSelectionRef.current = finalSelection;
+      setSelectedVariantId(matchedVariant.id);
+      setCustomWeightQty(qty);
+      setCustomWeightUnit(unit);
 
-      setVoiceBotStatus(`✓ Step 4 Captured: Matched "${finalSelection.productName}" for budget ₹${finalSelection.targetPrice} (${qty} packs). Closing call...`);
-      setTimeout(() => playStepAudioAndListen(5), 1500);
+      // Add to Order Items
+      const unitPrice = Number(matchedVariant.price || prod?.price || 123);
+      const lineTotal = unitPrice * qty;
+
+      const newItem = {
+        productId: prod.id,
+        productName: prod.name,
+        variantId: matchedVariant.id,
+        variantTitle: matchedVariant.title || `${weightGrams}g`,
+        weightInGrams: matchedVariant.weightInGrams || weightGrams,
+        unit: matchedVariant.unit || unit,
+        price: unitPrice,
+        quantity: qty,
+        image: prod.image || '/assets/images/cat_dryfruits.jpg',
+        categoryName: prod.categoryName || 'Dry Fruits',
+        subcategoryName: selectedSubcategory || 'Almonds',
+        total: lineTotal,
+      };
+
+      setItems((prev) => [...prev, newItem]);
+
+      setAutoFeedBanner({
+        text: `✓ Added ${prod.name} (${newItem.variantTitle}) x ${qty} packs (Step 5 Quantity) to Order! Total: ₹${lineTotal}`,
+        time: new Date().toLocaleTimeString(),
+        price: lineTotal,
+      });
+
+      setVoiceBotStatus(`✓ Step 6 Captured: Added ${prod.name} (${newItem.variantTitle}) x ${qty} packs! Total ₹${lineTotal}.`);
+      setTimeout(() => playStepAudioAndListen(7), 1200);
     }
   };
 
@@ -1481,15 +1570,15 @@ export default function CreateOrder() {
                     fontWeight: 700,
                     padding: '2px 8px',
                     borderRadius: '12px',
-                    backgroundColor: voiceStep > 0 && voiceStep <= 4 ? '#FEF3C7' : '#F3F4F6',
-                    color: voiceStep > 0 && voiceStep <= 4 ? '#92400E' : 'var(--color-secondary-text)',
+                    backgroundColor: voiceStep > 0 && voiceStep <= 6 ? '#FEF3C7' : '#F3F4F6',
+                    color: voiceStep > 0 && voiceStep <= 6 ? '#92400E' : 'var(--color-secondary-text)',
                   }}
                 >
-                  {voiceStep === 0 ? 'Ready to Start' : voiceStep <= 4 ? `Step ${voiceStep} of 4 Active` : 'All Steps Completed'}
+                  {voiceStep === 0 ? 'Ready to Start' : voiceStep <= 6 ? `Step ${voiceStep} of 6 Active` : 'All Steps Completed'}
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                 {/* Step 1: Customer Name */}
                 <div
                   style={{
@@ -1607,13 +1696,13 @@ export default function CreateOrder() {
                   </div>
                 </div>
 
-                {/* Step 4: Variety & Budget */}
+                {/* Step 4: Product (Badam -> Almonds / Kaju -> Cashews) */}
                 <div
                   style={{
                     padding: '8px 10px',
                     borderRadius: '8px',
-                    backgroundColor: selectedProduct ? '#ECFDF5' : voiceStep === 4 ? '#FFF7ED' : '#F9FAFB',
-                    border: selectedProduct ? '1px solid #A7F3D0' : voiceStep === 4 ? '1.5px solid var(--color-primary-orange)' : '1px solid #E5E7EB',
+                    backgroundColor: selectedSubcategory ? '#ECFDF5' : voiceStep === 4 ? '#FFF7ED' : '#F9FAFB',
+                    border: selectedSubcategory ? '1px solid #A7F3D0' : voiceStep === 4 ? '1.5px solid var(--color-primary-orange)' : '1px solid #E5E7EB',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
@@ -1624,7 +1713,7 @@ export default function CreateOrder() {
                       width: '20px',
                       height: '20px',
                       borderRadius: '50%',
-                      backgroundColor: selectedProduct ? '#10B981' : voiceStep === 4 ? 'var(--color-primary-orange)' : '#D1D5DB',
+                      backgroundColor: selectedSubcategory ? '#10B981' : voiceStep === 4 ? 'var(--color-primary-orange)' : '#D1D5DB',
                       color: '#FFFFFF',
                       fontSize: '11px',
                       fontWeight: 800,
@@ -1634,14 +1723,92 @@ export default function CreateOrder() {
                       flexShrink: 0,
                     }}
                   >
-                    {selectedProduct ? <Check size={12} /> : '4'}
+                    {selectedSubcategory ? <Check size={12} /> : '4'}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: selectedSubcategory ? '#065F46' : 'var(--color-dark-text)' }}>
+                      4. Product
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--color-secondary-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {selectedSubcategory || 'Almonds/Cashews'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 5: Variety & Rate */}
+                <div
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: selectedProduct ? '#ECFDF5' : voiceStep === 5 ? '#FFF7ED' : '#F9FAFB',
+                    border: selectedProduct ? '1px solid #A7F3D0' : voiceStep === 5 ? '1.5px solid var(--color-primary-orange)' : '1px solid #E5E7EB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: selectedProduct ? '#10B981' : voiceStep === 5 ? 'var(--color-primary-orange)' : '#D1D5DB',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {selectedProduct ? <Check size={12} /> : '5'}
                   </div>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontSize: '11px', fontWeight: 700, color: selectedProduct ? '#065F46' : 'var(--color-dark-text)' }}>
-                      4. Variety & Budget
+                      5. Price / Variety
                     </div>
                     <div style={{ fontSize: '10px', color: 'var(--color-secondary-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                      {selectedProduct ? 'Matched by Rate' : 'Waiting...'}
+                      {currentProduct?.name?.split('(')[0]?.trim() || 'Price List'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 6: Weight & Quantity (Image Step 5) */}
+                <div
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: items.length > 0 ? '#ECFDF5' : voiceStep === 6 ? '#FFF7ED' : '#F9FAFB',
+                    border: items.length > 0 ? '1px solid #A7F3D0' : voiceStep === 6 ? '1.5px solid var(--color-primary-orange)' : '1px solid #E5E7EB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: items.length > 0 ? '#10B981' : voiceStep === 6 ? 'var(--color-primary-orange)' : '#D1D5DB',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {items.length > 0 ? <Check size={12} /> : '6'}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: items.length > 0 ? '#065F46' : 'var(--color-dark-text)' }}>
+                      6. Packs / Quantity
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--color-secondary-text)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {items.length > 0 ? `${items[items.length - 1].quantity} Packs` : 'Packs / Qty'}
                     </div>
                   </div>
                 </div>
@@ -1649,7 +1816,7 @@ export default function CreateOrder() {
             </div>
 
             {/* Interactive Active Step Input Controller (When Step Assistant is Running) */}
-            {voiceStep >= 1 && voiceStep <= 4 && (
+            {voiceStep >= 1 && voiceStep <= 6 && (
               <div
                 style={{
                   backgroundColor: '#FFFBEB',
@@ -1662,7 +1829,14 @@ export default function CreateOrder() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '12px', fontWeight: 800, color: '#B45309', textTransform: 'uppercase' }}>
-                      Step {voiceStep} of 4: {voiceStep === 1 ? 'Customer Name' : voiceStep === 2 ? 'Store Name' : voiceStep === 3 ? 'Delivery Address & City' : 'Product, Weight & Quantity'}
+                      Step {voiceStep} of 6: {
+                        voiceStep === 1 ? 'Customer Name' :
+                        voiceStep === 2 ? 'Store Name' :
+                        voiceStep === 3 ? 'Delivery Address & City' :
+                        voiceStep === 4 ? 'Select Product (Badam -> Almonds, Kaju -> Cashews)' :
+                        voiceStep === 5 ? 'Variety & Price List (Customer chooses rate)' :
+                        'Weight & Quantity (Step 5: Packs / Units)'
+                      }
                     </span>
                     {isBotSpeaking && (
                       <span style={{ fontSize: '11px', color: '#D97706', fontWeight: 600 }}>🔊 Bot bol raha hai...</span>
@@ -1723,7 +1897,9 @@ export default function CreateOrder() {
                       voiceStep === 1 ? 'Apna ya customer ka naam bolkar batayein ya type karein (e.g. Ramesh Sharma)' :
                       voiceStep === 2 ? 'Dukaan ka naam batayein (e.g. Sharma Kirana Store)' :
                       voiceStep === 3 ? 'Address aur City batayein (e.g. APMC Market, Navi Mumbai)' :
-                      'Product aur Quantity batayein (e.g. California Almonds 1kg 5 packet)'
+                      voiceStep === 4 ? 'Product batayein (Badam / Kaju / Pista / Kishmish / Akhrot)' :
+                      voiceStep === 5 ? 'Price list me se rate ya variety batayein (e.g. 123 wala ya California)' :
+                      'Weight aur Quantity batayein (e.g. 1 kg ke 5 packet)'
                     }
                     value={voiceTranscript}
                     onChange={(e) => {
@@ -1800,10 +1976,16 @@ export default function CreateOrder() {
                 {/* Quick 1-Click Suggestion Chips for Fast Entry */}
                 <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <span style={{ fontSize: '11px', color: '#92400E', fontWeight: 700 }}>⚡ 1-Click Fast Fill:</span>
-                  {(voiceStep === 1 ? ['Ramesh Sharma', 'Suresh Patel', 'Rajesh Gupta', 'Amit Shah'] :
-                    voiceStep === 2 ? ['Sharma Kirana Mart', 'Patel Supermarket', 'Royal Dry Fruits', 'Gupta Stores'] :
-                    voiceStep === 3 ? ['APMC Market, Navi Mumbai', 'Market Yard, Pune', 'Dadar, Mumbai', 'Surat Ring Road'] :
-                    ['California Almonds 1kg 5 packet', 'Cashews 500g 2 packet', 'Mamra Badam 250g 3 packet']
+                  {(voiceStep === 1 ? ['Deepak Mishra', 'Ramesh Sharma', 'Suresh Patel', 'Rajesh Gupta'] :
+                    voiceStep === 2 ? ['Dry Fruit Shop', 'Sharma Kirana Mart', 'Patel Supermarket', 'Royal Dry Fruits'] :
+                    voiceStep === 3 ? ['Navi Mumbai', 'APMC Market, Navi Mumbai', 'Market Yard, Pune', 'Dadar, Mumbai'] :
+                    voiceStep === 4 ? ['Badam (Almonds)', 'Kaju (Cashews)', 'Pista (Pistachios)', 'Kishmish (Raisins)', 'Akhrot (Walnuts)', 'Elaichi (Green Cardamom)'] :
+                    voiceStep === 5 ? (
+                      (selectedSubcategory?.toLowerCase()?.includes('cashew') || selectedSubcategory?.toLowerCase()?.includes('kaju')) ?
+                      ['₹220 (W320 Whole Cashews)', '₹180 (Split Cashews Tukda)'] :
+                      ['₹123 (California Whole Almonds)', '₹280 (Iranian Mamra)', '₹190 (Gurbandi Giri)']
+                    ) :
+                    ['1 kg ke 5 packet', '500g ke 2 packet', '250g ke 3 packet', '1 kg ke 1 packet', '500g ke 10 packet']
                   ).map((option) => (
                     <button
                       key={option}
