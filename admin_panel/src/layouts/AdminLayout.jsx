@@ -49,7 +49,7 @@ export default function AdminLayout({ children }) {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#FAF4ED' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#FAF4ED', maxWidth: '100vw', overflowX: 'hidden' }}>
       {/* Fixed Sidebar */}
       <aside
         style={{
@@ -201,7 +201,7 @@ export default function AdminLayout({ children }) {
       </aside>
 
       {/* Main Content Area */}
-      <div style={{ marginLeft: 'var(--sidebar-width)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ marginLeft: 'var(--sidebar-width)', flex: 1, minWidth: 0, width: 'calc(100vw - var(--sidebar-width))', maxWidth: 'calc(100vw - var(--sidebar-width))', display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
         {/* Top Header */}
         <header
           style={{
@@ -296,7 +296,7 @@ export default function AdminLayout({ children }) {
         </header>
 
         {/* Page Content View */}
-        <main style={{ padding: '32px', flex: 1 }}>
+        <main style={{ padding: '24px 32px', flex: 1, minWidth: 0, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
           {children}
         </main>
       </div>

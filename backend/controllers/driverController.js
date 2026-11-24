@@ -557,6 +557,36 @@ exports.assignOrderToDriver = async (req, res, next) => {
   }
 };
 
+exports.unassignOrderFromDriver = async (req, res, next) => {
+  try {
+    const orderId = req.params.id;
+    if (db.isPostgresConnected()) {
+      await db.query(`
+        UPDATE orders
+        SET driver_id = NULL, delivery_otp = NULL, status = 'Confirmed', updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+      `, [orderId]);
+    } else {
+      const fb = db.getFallbackDb();
+      if (!fb.orders) fb.orders = [];
+      const ord = fb.orders.find(o => o.id === orderId);
+      if (ord) {
+        ord.driver_id = null;
+        ord.driverId = null;
+        ord.driver_name = null;
+        ord.driverName = null;
+        ord.delivery_otp = null;
+        ord.deliveryOtp = null;
+        ord.status = 'Confirmed';
+        db.saveFallbackDb(fb);
+      }
+    }
+    return res.json({ success: true, message: 'Order unassigned successfully', orderId });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // -----------------------------------------------------------------------------
 // CUSTOMER & ADMIN LIVE TRACKING
 // -----------------------------------------------------------------------------
