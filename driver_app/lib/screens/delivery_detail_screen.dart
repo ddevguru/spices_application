@@ -527,3 +527,4 @@ class _DeliveryDetailScreenState extends State<DeliveryDetailScreen> {
     );
   }
 }
+

@@ -23,7 +23,12 @@ import {
   Eye,
   Radio,
   Clock,
-  Compass
+  Compass,
+  Edit2,
+  Trash2,
+  ShieldAlert,
+  Ban,
+  Check
 } from 'lucide-react';
 
 export default function Drivers() {
@@ -38,6 +43,28 @@ export default function Drivers() {
   const [assigningDriver, setAssigningDriver] = useState(null);
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [assignLoading, setAssignLoading] = useState(false);
+
+  // Edit Driver state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingDriver, setEditingDriver] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    vehicleType: 'Bike',
+    vehicleNumber: '',
+    licenseNumber: '',
+    password: '',
+    isActive: true,
+    isOnline: false
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  // Delete Driver state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingDriver, setDeletingDriver] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Form state for new driver
   const [newDriver, setNewDriver] = useState({
@@ -134,6 +161,74 @@ export default function Drivers() {
       alert('Failed to assign order: ' + err);
     } finally {
       setAssignLoading(false);
+    }
+  };
+
+  const handleOpenEditModal = (driver) => {
+    setEditingDriver(driver);
+    setEditForm({
+      name: driver.name || '',
+      phone: driver.phone || '',
+      email: driver.email || '',
+      vehicleType: driver.vehicleType || driver.vehicle_type || 'Bike',
+      vehicleNumber: driver.vehicleNumber || driver.vehicle_number || '',
+      licenseNumber: driver.licenseNumber || driver.license_number || '',
+      password: '',
+      isActive: driver.isActive !== false,
+      isOnline: driver.isOnline === true
+    });
+    setEditError('');
+    setShowEditModal(true);
+  };
+
+  const handleUpdateDriver = async (e) => {
+    e.preventDefault();
+    setEditError('');
+    if (!editForm.name || !editForm.phone || !editForm.vehicleNumber) {
+      setEditError('Please fill in Name, Phone, and Vehicle Number.');
+      return;
+    }
+    try {
+      setEditLoading(true);
+      await mockApi.updateDriver(editingDriver.id, editForm);
+      setShowEditModal(false);
+      await loadData();
+    } catch (err) {
+      setEditError(typeof err === 'string' ? err : err.message || 'Failed to update driver');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleOpenDeleteModal = (driver) => {
+    setDeletingDriver(driver);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingDriver) return;
+    try {
+      setDeleteLoading(true);
+      await mockApi.deleteDriver(deletingDriver.id);
+      if (selectedDriver?.id === deletingDriver.id) {
+        setSelectedDriver(null);
+      }
+      setShowDeleteModal(false);
+      await loadData();
+    } catch (err) {
+      alert('Failed to delete driver: ' + err);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (driver) => {
+    try {
+      const nextStatus = driver.isActive === false ? true : false;
+      await mockApi.updateDriver(driver.id, { isActive: nextStatus });
+      setDrivers(prev => prev.map(d => d.id === driver.id ? { ...d, isActive: nextStatus } : d));
+    } catch (err) {
+      alert('Failed to update account status');
     }
   };
 
@@ -320,23 +415,69 @@ export default function Drivers() {
                 <div><strong>Vehicle:</strong> {selectedDriver.vehicleType} ({selectedDriver.vehicleNumber})</div>
                 <div><strong>Speed:</strong> {selectedDriver.speed || '24'} km/h</div>
                 <div><strong>Coords:</strong> {selectedDriver.currentLat?.toFixed(4)}, {selectedDriver.currentLng?.toFixed(4)}</div>
-                <div style={{ marginTop: '6px' }}>
+                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <button
                     onClick={() => handleOpenAssignModal(selectedDriver)}
                     style={{
                       width: '100%',
-                      padding: '6px',
+                      padding: '7px',
                       backgroundColor: '#EA580C',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
-                      fontSize: '11px',
+                      fontSize: '11.5px',
                       fontWeight: 700,
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px'
                     }}
                   >
-                    + Assign Delivery Order
+                    <Truck size={13} /> Assign Delivery Order
                   </button>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      onClick={() => handleOpenEditModal(selectedDriver)}
+                      style={{
+                        flex: 1,
+                        padding: '6px',
+                        backgroundColor: '#F3F4F6',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: '#374151',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Edit2 size={12} /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleOpenDeleteModal(selectedDriver)}
+                      style={{
+                        flex: 1,
+                        padding: '6px',
+                        backgroundColor: '#FEE2E2',
+                        border: '1px solid #FCA5A5',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: '#DC2626',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <Trash2 size={12} /> Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -452,6 +593,7 @@ export default function Drivers() {
                 <th style={{ padding: '14px 20px' }}>Contact Phone</th>
                 <th style={{ padding: '14px 20px' }}>Vehicle Details</th>
                 <th style={{ padding: '14px 20px' }}>Duty Status</th>
+                <th style={{ padding: '14px 20px' }}>Account Status</th>
                 <th style={{ padding: '14px 20px' }}>Active Deliveries</th>
                 <th style={{ padding: '14px 20px' }}>Live GPS Coords</th>
                 <th style={{ padding: '14px 20px', textAlign: 'right' }}>Actions</th>
@@ -543,7 +685,30 @@ export default function Drivers() {
                           borderRadius: '50%',
                           backgroundColor: driver.isOnline ? '#10B981' : '#9CA3AF'
                         }} />
-                        {driver.isOnline ? 'Online (On Duty)' : 'Offline'}
+                        {driver.isOnline ? 'Online' : 'Offline'}
+                      </button>
+                    </td>
+
+                    <td style={{ padding: '16px 20px' }}>
+                      <button
+                        onClick={() => handleToggleActive(driver)}
+                        title="Click to toggle Active / Suspended access"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '4px 10px',
+                          borderRadius: '20px',
+                          border: 'none',
+                          fontSize: '11.5px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          backgroundColor: driver.isActive !== false ? '#EFF6FF' : '#FEE2E2',
+                          color: driver.isActive !== false ? '#1E40AF' : '#991B1B'
+                        }}
+                      >
+                        {driver.isActive !== false ? <ShieldCheck size={13} color="#2563EB" /> : <Ban size={13} color="#DC2626" />}
+                        {driver.isActive !== false ? 'Active' : 'Suspended'}
                       </button>
                     </td>
 
@@ -572,7 +737,7 @@ export default function Drivers() {
                     </td>
 
                     <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                         <button
                           onClick={() => {
                             setSelectedDriver(driver);
@@ -580,7 +745,7 @@ export default function Drivers() {
                           }}
                           title="Focus on Map"
                           style={{
-                            padding: '6px 10px',
+                            padding: '6px 9px',
                             backgroundColor: '#F3F4F6',
                             border: '1px solid #E5E7EB',
                             borderRadius: '6px',
@@ -593,14 +758,14 @@ export default function Drivers() {
                             gap: '4px'
                           }}
                         >
-                          <Navigation size={13} /> Track
+                          <Navigation size={12} /> Track
                         </button>
 
                         <button
                           onClick={() => handleOpenAssignModal(driver)}
                           title="Assign Delivery Order"
                           style={{
-                            padding: '6px 12px',
+                            padding: '6px 10px',
                             backgroundColor: '#EA580C',
                             color: 'white',
                             border: 'none',
@@ -613,7 +778,47 @@ export default function Drivers() {
                             gap: '4px'
                           }}
                         >
-                          <Truck size={13} /> Assign Order
+                          <Truck size={12} /> Assign
+                        </button>
+
+                        <button
+                          onClick={() => handleOpenEditModal(driver)}
+                          title="Edit Driver Profile & Credentials"
+                          style={{
+                            padding: '6px 10px',
+                            backgroundColor: '#EFF6FF',
+                            border: '1px solid #BFDBFE',
+                            borderRadius: '6px',
+                            fontSize: '11.5px',
+                            fontWeight: 700,
+                            color: '#1D4ED8',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <Edit2 size={12} /> Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleOpenDeleteModal(driver)}
+                          title="Delete Driver Account"
+                          style={{
+                            padding: '6px 10px',
+                            backgroundColor: '#FEE2E2',
+                            border: '1px solid #FCA5A5',
+                            borderRadius: '6px',
+                            fontSize: '11.5px',
+                            fontWeight: 700,
+                            color: '#DC2626',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <Trash2 size={12} /> Delete
                         </button>
                       </div>
                     </td>
@@ -969,6 +1174,323 @@ export default function Drivers() {
           </div>
         </div>
       )}
+
+      {/* MODAL: EDIT DRIVER */}
+      {showEditModal && editingDriver && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            maxWidth: '560px',
+            width: '100%',
+            overflow: 'hidden',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{
+              padding: '18px 24px',
+              borderBottom: '1px solid #F3EAE0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              backgroundColor: '#FAF5ED'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Edit2 size={18} color="#EA580C" />
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#111827' }}>
+                  Edit Driver: {editingDriver.name} ({editingDriver.id})
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateDriver} style={{ padding: '24px' }}>
+              {editError && (
+                <div style={{
+                  padding: '10px 14px',
+                  backgroundColor: '#FEE2E2',
+                  border: '1px solid #FCA5A5',
+                  color: '#991B1B',
+                  borderRadius: '8px',
+                  fontSize: '12.5px',
+                  marginBottom: '16px',
+                  fontWeight: 600
+                }}>
+                  {editError}
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '5px' }}>
+                    Driver Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '5px' }}>
+                    Contact Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '5px' }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '5px' }}>
+                    Vehicle Type *
+                  </label>
+                  <select
+                    value={editForm.vehicleType}
+                    onChange={(e) => setEditForm({ ...editForm, vehicleType: e.target.value })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px', backgroundColor: 'white' }}
+                  >
+                    <option value="Bike">Motorcycle / Bike</option>
+                    <option value="Scooter">Scooter / Activa</option>
+                    <option value="Electric Bike">EV 2-Wheeler</option>
+                    <option value="Tata Ace">Tata Ace / Chhota Hathi</option>
+                    <option value="Van">Delivery Van</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '5px' }}>
+                    Vehicle Plate Number *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.vehicleNumber}
+                    onChange={(e) => setEditForm({ ...editForm, vehicleNumber: e.target.value.toUpperCase() })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '5px' }}>
+                    License Number (DL)
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.licenseNumber}
+                    onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '5px' }}>
+                    Reset App Password (Leave blank to keep current)
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter new password"
+                    value={editForm.password}
+                    onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '5px' }}>
+                    Account Status
+                  </label>
+                  <select
+                    value={editForm.isActive ? 'true' : 'false'}
+                    onChange={(e) => setEditForm({ ...editForm, isActive: e.target.value === 'true' })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px', backgroundColor: 'white' }}
+                  >
+                    <option value="true">Active (Allowed to Login & Deliver)</option>
+                    <option value="false">Suspended / Blocked (Access Denied)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '5px' }}>
+                    Duty Status
+                  </label>
+                  <select
+                    value={editForm.isOnline ? 'true' : 'false'}
+                    onChange={(e) => setEditForm({ ...editForm, isOnline: e.target.value === 'true' })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '13px', backgroundColor: 'white' }}
+                  >
+                    <option value="true">Online (On Duty)</option>
+                    <option value="false">Offline (Off Duty)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: '#F3F4F6',
+                    color: '#374151',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  style={{
+                    padding: '10px 22px',
+                    backgroundColor: '#EA580C',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(234, 88, 12, 0.25)'
+                  }}
+                >
+                  {editLoading ? 'Saving Changes...' : 'Save Driver Details'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: DELETE DRIVER CONFIRMATION */}
+      {showDeleteModal && deletingDriver && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            maxWidth: '460px',
+            width: '100%',
+            overflow: 'hidden',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: '#FEE2E2',
+                color: '#DC2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px'
+              }}>
+                <Trash2 size={28} />
+              </div>
+
+              <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 800, color: '#111827' }}>
+                Delete Driver Account?
+              </h3>
+              <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#6B7280', lineHeight: 1.5 }}>
+                Are you sure you want to permanently delete <strong>{deletingDriver.name}</strong> ({deletingDriver.vehicleType} • {deletingDriver.vehicleNumber})?
+              </p>
+
+              <div style={{ backgroundColor: '#FFF7ED', border: '1px solid #FFEDD5', padding: '12px', borderRadius: '8px', fontSize: '12px', color: '#9A3412', marginBottom: '20px', textAlign: 'left' }}>
+                ⚠️ This driver will be permanently removed from the fleet system and will no longer be able to log in to the Naturale Driver App.
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  style={{
+                    padding: '10px 18px',
+                    backgroundColor: '#F3F4F6',
+                    color: '#374151',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  disabled={deleteLoading}
+                  onClick={handleConfirmDelete}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#DC2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.25)'
+                  }}
+                >
+                  {deleteLoading ? 'Deleting...' : 'Yes, Permanently Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

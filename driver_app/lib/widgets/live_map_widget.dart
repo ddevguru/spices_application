@@ -369,3 +369,4 @@ class _MapCanvasPainter extends CustomPainter {
         oldDelegate.destLng != destLng;
   }
 }
+

@@ -416,30 +416,34 @@ exports.createDriver = async (req, res, next) => {
 exports.updateDriver = async (req, res, next) => {
   try {
     const driverId = req.params.id;
-    const { name, phone, vehicleType, vehicleNumber, licenseNumber, isActive, isOnline } = req.body;
+    const { name, phone, email, vehicleType, vehicleNumber, licenseNumber, password, isActive, isOnline } = req.body;
 
     if (db.isPostgresConnected()) {
       await db.query(`
         UPDATE drivers
         SET name = COALESCE($1, name),
             phone = COALESCE($2, phone),
-            vehicle_type = COALESCE($3, vehicle_type),
-            vehicle_number = COALESCE($4, vehicle_number),
-            license_number = COALESCE($5, license_number),
-            is_active = COALESCE($6, is_active),
-            is_online = COALESCE($7, is_online),
+            email = COALESCE($3, email),
+            vehicle_type = COALESCE($4, vehicle_type),
+            vehicle_number = COALESCE($5, vehicle_number),
+            license_number = COALESCE($6, license_number),
+            password_hash = COALESCE($7, password_hash),
+            is_active = COALESCE($8, is_active),
+            is_online = COALESCE($9, is_online),
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $8
-      `, [name, phone, vehicleType, vehicleNumber, licenseNumber, isActive, isOnline, driverId]);
+        WHERE id = $10
+      `, [name, phone, email, vehicleType, vehicleNumber, licenseNumber, password || null, isActive, isOnline, driverId]);
     } else {
       const fb = db.getFallbackDb();
       const d = (fb.drivers || []).find(drv => drv.id === driverId);
       if (d) {
         if (name !== undefined) d.name = name;
         if (phone !== undefined) d.phone = phone;
+        if (email !== undefined) d.email = email;
         if (vehicleType !== undefined) d.vehicle_type = vehicleType;
         if (vehicleNumber !== undefined) d.vehicle_number = vehicleNumber;
         if (licenseNumber !== undefined) d.license_number = licenseNumber;
+        if (password) d.password_hash = password;
         if (isActive !== undefined) d.is_active = isActive;
         if (isOnline !== undefined) d.is_online = isOnline;
         db.saveFallbackDb(fb);
@@ -456,10 +460,18 @@ exports.deleteDriver = async (req, res, next) => {
   try {
     const driverId = req.params.id;
     if (db.isPostgresConnected()) {
+      // Unlink driver from existing orders to prevent foreign key errors
+      await db.query('UPDATE orders SET driver_id = NULL WHERE driver_id = $1', [driverId]);
       await db.query('DELETE FROM drivers WHERE id = $1', [driverId]);
     } else {
       const fb = db.getFallbackDb();
       fb.drivers = (fb.drivers || []).filter(d => d.id !== driverId);
+      (fb.orders || []).forEach(o => {
+        if (o.driver_id === driverId || o.driverId === driverId) {
+          o.driver_id = null;
+          o.driverId = null;
+        }
+      });
       db.saveFallbackDb(fb);
     }
     return res.json({ success: true, message: 'Driver deleted successfully' });

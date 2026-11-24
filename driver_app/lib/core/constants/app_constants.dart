@@ -10,3 +10,4 @@ class AppConstants {
   static const double defaultLat = 19.0760;
   static const double defaultLng = 72.8777;
 }
+
