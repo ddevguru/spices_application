@@ -143,6 +143,20 @@ async function runAutoMigrations(p) {
         ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP WITH TIME ZONE;
       `);
 
+      // Ensure default drivers exist in PostgreSQL so driver login & admin fleet work out of the box
+      const drvCountRes = await p.query('SELECT COUNT(*) FROM drivers');
+      const drvCount = parseInt(drvCountRes.rows[0].count, 10);
+      if (drvCount === 0) {
+        await p.query(`
+          INSERT INTO drivers (id, name, phone, email, password_hash, vehicle_type, vehicle_number, license_number, is_active, is_online, current_lat, current_lng, heading, speed)
+          VALUES
+            ('DRV-101', 'Rajesh Kumar', '9876543210', 'rajesh.driver@naturale.com', 'driver123', 'Bike', 'MH-04-AB-1234', 'DL-MH0420210089', TRUE, TRUE, 19.0760, 72.8777, 45, 24.5),
+            ('DRV-102', 'Amit Singh', '9876543211', 'amit.driver@naturale.com', 'driver123', 'Scooter', 'MH-43-CD-5678', 'DL-MH4320220045', TRUE, TRUE, 19.0330, 73.0297, 90, 18.0),
+            ('DRV-103', 'Sunil Verma', '9876543212', 'sunil.driver@naturale.com', 'driver123', 'Tata Ace', 'MH-02-EF-9012', 'DL-MH0220190012', TRUE, FALSE, 19.1136, 72.8697, 15, 0.0)
+          ON CONFLICT (id) DO NOTHING;
+        `);
+      }
+
       // If catalog is partial (< 50 products), populate full 57-product database
       const countRes = await p.query('SELECT COUNT(*) FROM products');
       const prodCount = parseInt(countRes.rows[0].count, 10);
@@ -184,7 +198,66 @@ function getFallbackDb() {
       }
     }
     const raw = fs.readFileSync(fallbackDbPath, 'utf8');
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!parsed.drivers || parsed.drivers.length === 0) {
+      parsed.drivers = [
+        {
+          id: 'DRV-101',
+          name: 'Rajesh Kumar',
+          phone: '9876543210',
+          email: 'rajesh.driver@naturale.com',
+          password_hash: 'driver123',
+          vehicle_type: 'Bike',
+          vehicle_number: 'MH-04-AB-1234',
+          license_number: 'DL-MH0420210089',
+          is_active: true,
+          is_online: true,
+          current_lat: 19.0760,
+          current_lng: 72.8777,
+          heading: 45,
+          speed: 24.5,
+          last_location_update: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'DRV-102',
+          name: 'Amit Singh',
+          phone: '9876543211',
+          email: 'amit.driver@naturale.com',
+          password_hash: 'driver123',
+          vehicle_type: 'Scooter',
+          vehicle_number: 'MH-43-CD-5678',
+          license_number: 'DL-MH4320220045',
+          is_active: true,
+          is_online: true,
+          current_lat: 19.0330,
+          current_lng: 73.0297,
+          heading: 90,
+          speed: 18.0,
+          last_location_update: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'DRV-103',
+          name: 'Sunil Verma',
+          phone: '9876543212',
+          email: 'sunil.driver@naturale.com',
+          password_hash: 'driver123',
+          vehicle_type: 'Tata Ace',
+          vehicle_number: 'MH-02-EF-9012',
+          license_number: 'DL-MH0220190012',
+          is_active: true,
+          is_online: false,
+          current_lat: 19.1136,
+          current_lng: 72.8697,
+          heading: 15,
+          speed: 0.0,
+          last_location_update: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        }
+      ];
+    }
+    return parsed;
   } catch {
     return { categories: [], products: [], orders: [], customers: [], coupons: [], banners: [], settings: {} };
   }

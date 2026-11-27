@@ -5,6 +5,25 @@ function generateDeliveryOtp() {
   return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
+// Helper to normalize driver record for API responses
+function formatDriver(d) {
+  return {
+    id: d.id,
+    name: d.name,
+    phone: d.phone,
+    email: d.email || '',
+    vehicleType: d.vehicle_type || d.vehicleType || 'Bike',
+    vehicleNumber: d.vehicle_number || d.vehicleNumber || '',
+    licenseNumber: d.license_number || d.licenseNumber || '',
+    isActive: d.is_active !== false,
+    isOnline: Boolean(d.is_online ?? d.isOnline),
+    currentLat: parseFloat(d.current_lat ?? d.currentLat ?? 19.0760),
+    currentLng: parseFloat(d.current_lng ?? d.currentLng ?? 72.8777),
+    heading: parseFloat(d.heading ?? 0),
+    speed: parseFloat(d.speed ?? 0),
+  };
+}
+
 // -----------------------------------------------------------------------------
 // DRIVER AUTH & PROFILE
 // -----------------------------------------------------------------------------
@@ -12,62 +31,49 @@ function generateDeliveryOtp() {
 exports.login = async (req, res, next) => {
   try {
     const { phone, password } = req.body;
-    if (!phone) {
-      return res.status(400).json({ success: false, message: 'Phone number is required' });
+    if (!phone || !password) {
+      return res.status(400).json({ success: false, message: 'Phone number and password are required' });
     }
 
     const cleanPhone = String(phone).trim().replace(/[^0-9]/g, '').slice(-10);
+    if (cleanPhone.length < 10) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit mobile number' });
+    }
 
     if (db.isPostgresConnected()) {
-      const q = `SELECT * FROM drivers WHERE phone LIKE $1 LIMIT 1`;
-      const result = await db.query(q, [`%${cleanPhone}%`]);
+      const q = `SELECT * FROM drivers WHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 10) = $1 LIMIT 1`;
+      const result = await db.query(q, [cleanPhone]);
       if (result.rows.length === 0) {
         return res.status(404).json({ success: false, message: 'Driver not found with this phone number' });
       }
       const driver = result.rows[0];
-      if (password && driver.password_hash !== password) {
-        return res.status(401).json({ success: false, message: 'Invalid password' });
+      if (driver.is_active === false) {
+        return res.status(403).json({ success: false, message: 'Your driver account is suspended. Please contact admin.' });
+      }
+      if (driver.password_hash !== password) {
+        return res.status(401).json({ success: false, message: 'Invalid mobile number or password' });
       }
       return res.json({
         success: true,
         message: 'Login successful',
-        driver: {
-          id: driver.id,
-          name: driver.name,
-          phone: driver.phone,
-          email: driver.email,
-          vehicleType: driver.vehicle_type,
-          vehicleNumber: driver.vehicle_number,
-          licenseNumber: driver.license_number,
-          isOnline: driver.is_online,
-          currentLat: parseFloat(driver.current_lat || 19.0760),
-          currentLng: parseFloat(driver.current_lng || 72.8777),
-        }
+        driver: formatDriver(driver)
       });
     } else {
       const fb = db.getFallbackDb();
-      const driver = (fb.drivers || []).find(d => String(d.phone).includes(cleanPhone));
+      const driver = (fb.drivers || []).find(d => String(d.phone).replace(/[^0-9]/g, '').slice(-10) === cleanPhone);
       if (!driver) {
         return res.status(404).json({ success: false, message: 'Driver not found with this phone number' });
       }
-      if (password && driver.password_hash !== password && password !== 'driver123') {
-        return res.status(401).json({ success: false, message: 'Invalid password' });
+      if (driver.is_active === false) {
+        return res.status(403).json({ success: false, message: 'Your driver account is suspended. Please contact admin.' });
+      }
+      if (driver.password_hash !== password) {
+        return res.status(401).json({ success: false, message: 'Invalid mobile number or password' });
       }
       return res.json({
         success: true,
         message: 'Login successful',
-        driver: {
-          id: driver.id,
-          name: driver.name,
-          phone: driver.phone,
-          email: driver.email,
-          vehicleType: driver.vehicle_type,
-          vehicleNumber: driver.vehicle_number,
-          licenseNumber: driver.license_number,
-          isOnline: driver.is_online,
-          currentLat: parseFloat(driver.current_lat || 19.0760),
-          currentLng: parseFloat(driver.current_lng || 72.8777),
-        }
+        driver: formatDriver(driver)
       });
     }
   } catch (err) {
@@ -78,16 +84,18 @@ exports.login = async (req, res, next) => {
 exports.getProfile = async (req, res, next) => {
   try {
     const driverId = req.params.id || req.query.driverId;
+    if (!driverId) {
+      return res.status(400).json({ success: false, message: 'driverId is required' });
+    }
     if (db.isPostgresConnected()) {
       const result = await db.query('SELECT * FROM drivers WHERE id = $1', [driverId]);
       if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Driver not found' });
-      const d = result.rows[0];
-      return res.json({ success: true, driver: d });
+      return res.json({ success: true, driver: formatDriver(result.rows[0]) });
     } else {
       const fb = db.getFallbackDb();
       const driver = (fb.drivers || []).find(d => d.id === driverId);
       if (!driver) return res.status(404).json({ success: false, message: 'Driver not found' });
-      return res.json({ success: true, driver });
+      return res.json({ success: true, driver: formatDriver(driver) });
     }
   } catch (err) {
     next(err);
@@ -221,7 +229,27 @@ exports.getAssignedDeliveries = async (req, res, next) => {
       return res.json({ success: true, deliveries: orders });
     } else {
       const fb = db.getFallbackDb();
-      const deliveries = (fb.orders || []).filter(o => o.driver_id === driverId || o.driverId === driverId);
+      const deliveries = (fb.orders || [])
+        .filter(o => o.driver_id === driverId || o.driverId === driverId)
+        .map(r => ({
+          id: r.id,
+          status: r.status || 'Out for Delivery',
+          customerName: r.customerName || r.customer_name || (r.customer && r.customer.name) || 'Customer',
+          customerPhone: r.customerPhone || r.customer_phone || (r.customer && r.customer.phone) || '',
+          customerEmail: r.customerEmail || r.customer_email || '',
+          address: typeof r.shipping_address === 'string'
+            ? JSON.parse(r.shipping_address)
+            : (r.address || r.shipping_address || (r.customer && r.customer.address) || {}),
+          deliveryInstructions: r.deliveryInstructions || r.delivery_instructions || '',
+          items: r.items || [],
+          totalAmount: parseFloat(r.totalAmount ?? r.total_amount ?? 0),
+          paymentMethod: r.paymentMethod || r.payment_method || 'COD',
+          paymentStatus: r.paymentStatus || r.payment_status || 'Pending',
+          deliveryOtp: r.deliveryOtp || r.delivery_otp || null,
+          assignedAt: r.assignedAt || r.driver_assigned_at || null,
+          deliveredAt: r.deliveredAt || r.delivered_at || null,
+          createdAt: r.createdAt || r.created_at || new Date().toISOString()
+        }));
       return res.json({ success: true, deliveries });
     }
   } catch (err) {
@@ -370,11 +398,21 @@ exports.createDriver = async (req, res, next) => {
     }
 
     const cleanPhone = String(phone).trim().replace(/[^0-9]/g, '').slice(-10);
+    if (cleanPhone.length < 10) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit phone number' });
+    }
     const driverId = `DRV-${Date.now().toString().slice(-4)}`;
     const pass = password || 'driver123';
     const vType = vehicleType || 'Bike';
 
     if (db.isPostgresConnected()) {
+      const existing = await db.query(
+        `SELECT id FROM drivers WHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 10) = $1 LIMIT 1`,
+        [cleanPhone]
+      );
+      if (existing.rows.length > 0) {
+        return res.status(409).json({ success: false, message: 'A driver with this phone number already exists' });
+      }
       await db.query(`
         INSERT INTO drivers (id, name, phone, email, password_hash, vehicle_type, vehicle_number, license_number, is_active, is_online, current_lat, current_lng)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, FALSE, 19.0760, 72.8777)
@@ -382,6 +420,9 @@ exports.createDriver = async (req, res, next) => {
     } else {
       const fb = db.getFallbackDb();
       if (!fb.drivers) fb.drivers = [];
+      if (fb.drivers.some(d => String(d.phone).replace(/[^0-9]/g, '').slice(-10) === cleanPhone)) {
+        return res.status(409).json({ success: false, message: 'A driver with this phone number already exists' });
+      }
       fb.drivers.push({
         id: driverId,
         name,

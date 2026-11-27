@@ -21,13 +21,21 @@ class _HomeScreenState extends State<HomeScreen> {
   late bool _isOnline;
   List<DeliveryOrder> _deliveries = [];
   bool _isLoading = true;
+  String? _fetchError;
   Timer? _gpsTimer;
+  Timer? _ordersPollTimer;
 
   @override
   void initState() {
     super.initState();
     _isOnline = widget.driver.isOnline;
+    _syncDriverProfile();
     _loadDeliveries();
+
+    // Auto-poll assigned orders every 15 seconds from backend
+    _ordersPollTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      _loadDeliveries(silent: true);
+    });
 
     // Start background GPS heartbeat streaming every 5 seconds if online
     if (_isOnline) {
@@ -38,7 +46,46 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _gpsTimer?.cancel();
+    _ordersPollTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _syncDriverProfile() async {
+    final res = await ApiService().getProfile(widget.driver.id);
+    if (!mounted) return;
+    if (res['notFound'] == true || res['isActive'] == false) {
+      await ApiService().logout();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            res['isActive'] == false
+                ? 'Your driver account has been suspended by Admin.'
+                : 'Driver account not found. Please sign in again.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      return;
+    }
+
+    if (res['success'] == true && res['driver'] is DriverModel) {
+      final fresh = res['driver'] as DriverModel;
+      setState(() {
+        _isOnline = fresh.isOnline;
+        widget.driver.isOnline = fresh.isOnline;
+        widget.driver.currentLat = fresh.currentLat;
+        widget.driver.currentLng = fresh.currentLng;
+      });
+      if (_isOnline) {
+        _startGpsHeartbeat();
+      } else {
+        _gpsTimer?.cancel();
+      }
+    }
   }
 
   void _startGpsHeartbeat() {
@@ -56,12 +103,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadDeliveries() async {
-    setState(() => _isLoading = true);
-    final list = await ApiService().getAssignedDeliveries(widget.driver.id);
+  Future<void> _loadDeliveries({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+        _fetchError = null;
+      });
+    }
+    final res = await ApiService().getAssignedDeliveriesResult(widget.driver.id);
     if (!mounted) return;
     setState(() {
-      _deliveries = list;
+      if (res['success'] == true) {
+        _deliveries = res['deliveries'] as List<DeliveryOrder>;
+        _fetchError = null;
+      } else if (!silent) {
+        _fetchError = res['message'] as String?;
+      }
       _isLoading = false;
     });
   }
@@ -69,7 +126,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _toggleOnlineStatus(bool val) async {
     setState(() => _isOnline = val);
     widget.driver.isOnline = val;
-    await ApiService().updateStatus(widget.driver.id, val);
+    final ok = await ApiService().updateStatus(widget.driver.id, val);
+    if (!mounted) return;
+
+    if (!ok) {
+      setState(() => _isOnline = !val);
+      widget.driver.isOnline = !val;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update duty status on server. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     if (val) {
       _startGpsHeartbeat();
@@ -282,6 +352,34 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 12),
 
+              if (_fetchError != null)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFCA5A5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cloud_off, color: Color(0xFF991B1B), size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _fetchError!,
+                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF991B1B), fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _loadDeliveries,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+
               if (_isLoading)
                 const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: AppColors.primaryOrange)))
               else if (activeOrders.isEmpty)
@@ -299,7 +397,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 12),
                       Text('No Pending Deliveries', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                       const SizedBox(height: 4),
-                      Text('New wholesale orders assigned by admin will appear here instantly.', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted)),
+                      Text('New wholesale orders assigned by admin will appear here automatically.', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted)),
                     ],
                   ),
                 )
@@ -457,4 +555,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

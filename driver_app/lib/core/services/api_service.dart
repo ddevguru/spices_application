@@ -20,49 +20,47 @@ class ApiService {
     }
   }
 
-  void setBaseUrl(String url) {
+  Future<void> setBaseUrl(String url) async {
     _baseUrl = url;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('custom_api_url', url);
   }
 
   String get baseUrl => _baseUrl;
 
-  // 1. Driver Login
-  Future<DriverModel?> login(String phone, String password) async {
+  // 1. Driver Login (Real Backend Authentication)
+  Future<Map<String, dynamic>> login(String phone, String password) async {
     try {
       final res = await http.post(
         Uri.parse('$_baseUrl/drivers/auth/login'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: jsonEncode({'phone': phone, 'password': password}),
-      ).timeout(const Duration(seconds: 8));
+      ).timeout(const Duration(seconds: 20));
 
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        if (data['success'] == true && data['driver'] != null) {
-          final driver = DriverModel.fromJson(data['driver']);
-          await _saveDriverSession(driver);
-          return driver;
-        }
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['success'] == true && data['driver'] != null) {
+        final driver = DriverModel.fromJson(data['driver'] as Map<String, dynamic>);
+        await _saveDriverSession(driver);
+        return {
+          'success': true,
+          'driver': driver,
+          'message': data['message'] ?? 'Login successful',
+        };
       }
-    } catch (_) {}
 
-    // Offline / Fallback default login for immediate demo
-    if (phone.contains('9876543210') || phone.contains('1234') || phone.contains('driver')) {
-      final demoDriver = DriverModel(
-        id: 'DRV-101',
-        name: 'Rajesh Kumar',
-        phone: '9876543210',
-        email: 'rajesh.driver@naturale.com',
-        vehicleType: 'Bike',
-        vehicleNumber: 'MH-04-AB-1234',
-        licenseNumber: 'DL-MH0420210089',
-        isOnline: true,
-        currentLat: 19.0760,
-        currentLng: 72.8777,
-      );
-      await _saveDriverSession(demoDriver);
-      return demoDriver;
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Invalid mobile number or password',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Unable to reach server. Please check internet or try again in a moment.',
+      };
     }
-    return null;
   }
 
   Future<void> _saveDriverSession(DriverModel driver) async {
@@ -75,7 +73,7 @@ class ApiService {
     final jsonStr = prefs.getString('driver_session');
     if (jsonStr != null) {
       try {
-        return DriverModel.fromJson(jsonDecode(jsonStr));
+        return DriverModel.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
       } catch (_) {}
     }
     return null;
@@ -86,6 +84,34 @@ class ApiService {
     await prefs.remove('driver_session');
   }
 
+  // 1b. Refresh Driver Profile from Backend
+  Future<Map<String, dynamic>> getProfile(String driverId) async {
+    try {
+      final res = await http.get(
+        Uri.parse('$_baseUrl/drivers/profile/$driverId'),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['success'] == true && data['driver'] != null) {
+        final driver = DriverModel.fromJson(data['driver'] as Map<String, dynamic>);
+        await _saveDriverSession(driver);
+        return {
+          'success': true,
+          'driver': driver,
+          'isActive': data['driver']['isActive'] ?? true,
+        };
+      }
+      return {
+        'success': false,
+        'notFound': res.statusCode == 404,
+        'message': data['message'] ?? 'Failed to fetch profile',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error'};
+    }
+  }
+
   // 2. Online / Offline Status Toggle
   Future<bool> updateStatus(String driverId, bool isOnline) async {
     try {
@@ -93,7 +119,7 @@ class ApiService {
         Uri.parse('$_baseUrl/drivers/status'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'driverId': driverId, 'isOnline': isOnline}),
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 8));
       return res.statusCode == 200;
     } catch (_) {
       return false;
@@ -119,20 +145,20 @@ class ApiService {
           'heading': heading,
           'speed': speed,
         }),
-      ).timeout(const Duration(seconds: 4));
+      ).timeout(const Duration(seconds: 6));
       return res.statusCode == 200;
     } catch (_) {
       return false;
     }
   }
 
-  // 4. Fetch Assigned Deliveries
-  Future<List<DeliveryOrder>> getAssignedDeliveries(String driverId) async {
+  // 4. Fetch Assigned Deliveries (Real Backend Only)
+  Future<Map<String, dynamic>> getAssignedDeliveriesResult(String driverId) async {
     try {
       final res = await http.get(
         Uri.parse('$_baseUrl/drivers/deliveries?driverId=$driverId'),
         headers: {'Accept': 'application/json'},
-      ).timeout(const Duration(seconds: 8));
+      ).timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
@@ -140,35 +166,21 @@ class ApiService {
           final list = (data['deliveries'] as List)
               .map((d) => DeliveryOrder.fromJson(d as Map<String, dynamic>))
               .toList();
-          if (list.isNotEmpty) return list;
+          return {'success': true, 'deliveries': list};
         }
       }
-    } catch (_) {}
-
-    // Fallback demo delivery order for seamless testing
-    return [
-      DeliveryOrder(
-        id: 'almond-01-24112026-103000',
-        status: 'Out for Delivery',
-        customerName: 'Deepak Mishra',
-        customerPhone: '9820012345',
-        fullAddress: 'Shop No. 12, APMC Grain Market, Sector 19, Vashi, Navi Mumbai - 400705',
-        city: 'Navi Mumbai',
-        pincode: '400705',
-        deliveryInstructions: 'Deliver at APMC Gate 2 dry fruits wholesale depot',
-        items: [
-          DeliveryItem(productName: 'California Whole Almonds (Badam Giri)', variantTitle: '100 GM', weightInGrams: 100, price: 123.0, quantity: 5),
-          DeliveryItem(productName: 'W320 Royal King Cashews (Kaju)', variantTitle: '250 GM', weightInGrams: 250, price: 290.0, quantity: 2),
-        ],
-        totalAmount: 1195.0,
-        paymentMethod: 'Cash on Delivery (COD)',
-        paymentStatus: 'Pending',
-        deliveryOtp: '4821',
-        createdAt: DateTime.now().subtract(const Duration(minutes: 45)).toIso8601String(),
-        destLat: 19.0760,
-        destLng: 72.8777,
-      ),
-    ];
+      return {
+        'success': false,
+        'deliveries': <DeliveryOrder>[],
+        'message': 'Server returned status ${res.statusCode}',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'deliveries': <DeliveryOrder>[],
+        'message': 'Could not connect to backend. Pull down to retry.',
+      };
+    }
   }
 
   // 5. Update Delivery Status (with OTP verification on Delivered)
@@ -189,13 +201,12 @@ class ApiService {
           'driverId': driverId,
           'cashCollected': cashCollected,
         }),
-      ).timeout(const Duration(seconds: 8));
+      ).timeout(const Duration(seconds: 12));
 
       final data = jsonDecode(res.body);
       return data is Map<String, dynamic> ? data : {'success': res.statusCode == 200};
     } catch (err) {
-      return {'success': false, 'message': err.toString()};
+      return {'success': false, 'message': 'Network error: ${err.toString()}'};
     }
   }
 }
-

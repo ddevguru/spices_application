@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/app_colors.dart';
 import '../core/services/api_service.dart';
+import '../models/driver_model.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,39 +13,56 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController(text: '9876543210');
-  final _passwordController = TextEditingController(text: 'driver123');
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String _errorMessage = '';
 
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _handleLogin() async {
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (phone.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter both mobile number and password.';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
 
-    final phone = _phoneController.text.trim();
-    final password = _passwordController.text.trim();
-
-    final driver = await ApiService().login(phone, password);
+    final result = await ApiService().login(phone, password);
     if (!mounted) return;
 
     setState(() {
       _isLoading = false;
     });
 
-    if (driver != null) {
+    if (result['success'] == true && result['driver'] is DriverModel) {
+      final driver = result['driver'] as DriverModel;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => HomeScreen(driver: driver)),
       );
     } else {
       setState(() {
-        _errorMessage = 'Invalid mobile number or password. Please try again.';
+        _errorMessage = (result['message'] as String?) ??
+            'Invalid mobile number or password. Please try again.';
       });
     }
   }
 
-  void _fillAccount(String phone, String name) {
+  void _fillAccount(String phone) {
     setState(() {
       _phoneController.text = phone;
       _passwordController.text = 'driver123';
@@ -128,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Enter your registered driver contact credentials',
+                        'Sign in with the credentials created by Admin',
                         style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted),
                       ),
                       const SizedBox(height: 20),
@@ -142,9 +160,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: const Color(0xFFFCA5A5)),
                           ),
-                          child: Text(
-                            _errorMessage,
-                            style: GoogleFonts.inter(color: const Color(0xFF991B1B), fontSize: 12.5, fontWeight: FontWeight.w600),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline, color: Color(0xFF991B1B), size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _errorMessage,
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF991B1B),
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
 
@@ -154,6 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
+                        textInputAction: TextInputAction.next,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.primaryOrange, size: 20),
                           hintText: '10-digit mobile number',
@@ -169,9 +200,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 6),
                       TextField(
                         controller: _passwordController,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _isLoading ? null : _handleLogin(),
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.primaryOrange, size: 20),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: AppColors.textMuted,
+                              size: 20,
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
                           hintText: 'Enter your password',
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.borderLight)),
                           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryOrange, width: 2)),
@@ -207,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Fast Fill Demo Driver Chips
                 Text(
-                  '⚡ Fast Fill Test Driver Accounts:',
+                  'Quick Fill Registered Drivers:',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textMuted),
                 ),
@@ -220,14 +261,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ActionChip(
                       avatar: const Icon(Icons.two_wheeler, size: 16, color: AppColors.primaryOrange),
                       label: Text('Rajesh Kumar (9876543210)', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600)),
-                      onPressed: () => _fillAccount('9876543210', 'Rajesh Kumar'),
+                      onPressed: () => _fillAccount('9876543210'),
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: AppColors.borderLight)),
                     ),
                     ActionChip(
                       avatar: const Icon(Icons.electric_scooter, size: 16, color: AppColors.primaryOrange),
                       label: Text('Amit Singh (9876543211)', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600)),
-                      onPressed: () => _fillAccount('9876543211', 'Amit Singh'),
+                      onPressed: () => _fillAccount('9876543211'),
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: AppColors.borderLight)),
                     ),
@@ -241,4 +282,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

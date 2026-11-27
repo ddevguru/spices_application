@@ -4953,7 +4953,7 @@ export const mockApi = {
   // -------------------------------------------------------------------------
   async getDrivers() {
     try {
-      const res = await axios.get(`${API_BASE}/drivers`, { timeout: 8000 });
+      const res = await axios.get(`${API_BASE}/drivers`, { timeout: 30000 });
       if (res.data && res.data.drivers && Array.isArray(res.data.drivers)) {
         if (typeof window !== 'undefined') {
           try { localStorage.setItem('naturale_cached_drivers', JSON.stringify(res.data.drivers)); } catch (_) {}
@@ -5030,69 +5030,31 @@ export const mockApi = {
 
   async createDriver(driverData) {
     try {
-      const res = await axios.post(`${API_BASE}/drivers`, driverData, { timeout: 8000 });
+      const res = await axios.post(`${API_BASE}/drivers`, driverData, { timeout: 30000 });
       return res.data;
     } catch (err) {
-      // Fallback local save so driver appears immediately even if network delayed
-      const newD = {
-        id: `DRV-${Date.now().toString().slice(-4)}`,
-        name: driverData.name,
-        phone: driverData.phone,
-        email: driverData.email || '',
-        vehicleType: driverData.vehicleType || 'Bike',
-        vehicleNumber: driverData.vehicleNumber,
-        licenseNumber: driverData.licenseNumber || '',
-        isActive: true,
-        isOnline: false,
-        currentLat: 19.0760,
-        currentLng: 72.8777,
-        activeDeliveries: 0,
-        lastLocationUpdate: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      };
-      if (typeof window !== 'undefined') {
-        try {
-          const current = JSON.parse(localStorage.getItem('naturale_cached_drivers') || '[]');
-          current.unshift(newD);
-          localStorage.setItem('naturale_cached_drivers', JSON.stringify(current));
-        } catch (_) {}
-      }
-      return { success: true, driver: newD };
+      const msg = err?.response?.data?.message || err?.message || 'Failed to save driver to backend server';
+      throw new Error(msg);
     }
   },
 
   async updateDriver(driverId, updates) {
     try {
-      const res = await axios.put(`${API_BASE}/drivers/${driverId}`, updates, { timeout: 8000 });
+      const res = await axios.put(`${API_BASE}/drivers/${driverId}`, updates, { timeout: 30000 });
       return res.data;
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        try {
-          const current = JSON.parse(localStorage.getItem('naturale_cached_drivers') || '[]');
-          const idx = current.findIndex(d => d.id === driverId);
-          if (idx !== -1) {
-            current[idx] = { ...current[idx], ...updates };
-            localStorage.setItem('naturale_cached_drivers', JSON.stringify(current));
-          }
-        } catch (_) {}
-      }
-      return { success: true, message: 'Driver updated' };
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update driver on backend server';
+      throw new Error(msg);
     }
   },
 
   async deleteDriver(driverId) {
     try {
-      const res = await axios.delete(`${API_BASE}/drivers/${driverId}`, { timeout: 8000 });
+      const res = await axios.delete(`${API_BASE}/drivers/${driverId}`, { timeout: 30000 });
       return res.data;
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        try {
-          let current = JSON.parse(localStorage.getItem('naturale_cached_drivers') || '[]');
-          current = current.filter(d => d.id !== driverId);
-          localStorage.setItem('naturale_cached_drivers', JSON.stringify(current));
-        } catch (_) {}
-      }
-      return { success: true, message: 'Driver deleted' };
+      const msg = err?.response?.data?.message || err?.message || 'Failed to delete driver from backend server';
+      throw new Error(msg);
     }
   },
 

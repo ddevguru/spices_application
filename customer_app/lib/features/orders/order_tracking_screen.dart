@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
+import 'dart:math' show pi;
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../models/order_model.dart';
@@ -40,9 +42,12 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   Map<String, dynamic>? _assignedDriver;
   double _driverLat = 19.0760;
   double _driverLng = 72.8777;
+  double _destLat = 19.0896;
+  double _destLng = 72.8656;
   double _driverHeading = 45.0;
   double _driverSpeed = 24.0;
   bool _isLoading = true;
+  final MapController _mapController = MapController();
 
   @override
   void initState() {
@@ -76,6 +81,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             _trackingData = data;
             if (data['status'] != null) _currentStatus = data['status'];
             if (data['deliveryOtp'] != null) _deliveryOtp = data['deliveryOtp'];
+            if (data['destLat'] != null) _destLat = (data['destLat']).toDouble();
+            if (data['destLng'] != null) _destLng = (data['destLng']).toDouble();
             if (data['assignedDriver'] != null) {
               _assignedDriver = data['assignedDriver'];
               _driverLat = (_assignedDriver!['currentLat'] ?? 19.0760).toDouble();
@@ -257,7 +264,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '🔒 Share this OTP only with the delivery partner upon arrival to confirm package handover.',
+                    'ðŸ”’ Share this OTP only with the delivery partner upon arrival to confirm package handover.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9A3412)),
                   ),
@@ -274,7 +281,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             const SizedBox(height: 8),
 
             Container(
-              height: 260,
+              height: 290,
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: AppDimensions.roundedLarge,
@@ -285,13 +292,154 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 borderRadius: AppDimensions.roundedLarge,
                 child: Stack(
                   children: [
-                    // Free OpenStreetMap Interactive Canvas
-                    CustomPaint(
-                      size: Size.infinite,
-                      painter: _CustomerMapPainter(
-                        driverLat: _driverLat,
-                        driverLng: _driverLng,
-                        heading: _driverHeading,
+                    // Real Interactive OpenStreetMap (100% Free, Same as Admin Panel)
+                    FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                        initialCenter: LatLng(
+                          (_driverLat + _destLat) / 2,
+                          (_driverLng + _destLng) / 2,
+                        ),
+                        initialZoom: 13.0,
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.all,
+                        ),
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.dryfruits.customer_app',
+                        ),
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: [
+                                LatLng(_driverLat, _driverLng),
+                                LatLng(_destLat, _destLng),
+                              ],
+                              strokeWidth: 7.0,
+                              color: const Color(0xFF9A3412),
+                            ),
+                            Polyline(
+                              points: [
+                                LatLng(_driverLat, _driverLng),
+                                LatLng(_destLat, _destLng),
+                              ],
+                              strokeWidth: 4.5,
+                              color: const Color(0xFFEA580C),
+                            ),
+                          ],
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            // Customer Destination Pin
+                            Marker(
+                              point: LatLng(_destLat, _destLng),
+                              width: 72,
+                              height: 58,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 4),
+                                      ],
+                                    ),
+                                    child: const Text(
+                                      '📍 You',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF111827),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Container(
+                                    width: 22,
+                                    height: 22,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFDC2626),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2.5),
+                                      boxShadow: [
+                                        BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 4),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Live Moving Driver Vehicle
+                            Marker(
+                              point: LatLng(_driverLat, _driverLng),
+                              width: 48,
+                              height: 48,
+                              child: Transform.rotate(
+                                angle: _driverHeading * pi / 180.0,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981).withOpacity(0.25),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF111827),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: const Color(0xFF10B981), width: 2.5),
+                                      ),
+                                      child: const Icon(
+                                        Icons.navigation_rounded,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    // Recenter Button
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Material(
+                        color: Colors.white,
+                        elevation: 3,
+                        shape: const CircleBorder(),
+                        child: IconButton(
+                          icon: const Icon(Icons.my_location, color: AppColors.primaryOrange, size: 18),
+                          onPressed: () {
+                            try {
+                              final bounds = LatLngBounds.fromPoints([
+                                LatLng(_driverLat, _driverLng),
+                                LatLng(_destLat, _destLng),
+                              ]);
+                              _mapController.fitCamera(
+                                CameraFit.bounds(
+                                  bounds: bounds,
+                                  padding: const EdgeInsets.all(56),
+                                ),
+                              );
+                            } catch (_) {
+                              _mapController.move(LatLng(_driverLat, _driverLng), 13.5);
+                            }
+                          },
+                          tooltip: 'Recenter Map',
+                          constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                          padding: EdgeInsets.zero,
+                        ),
                       ),
                     ),
 
@@ -311,7 +459,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                             const Icon(Icons.two_wheeler, color: AppColors.primaryOrange, size: 16),
                             const SizedBox(width: 6),
                             Text(
-                              'On the way • 12 mins away',
+                              'On the way â€¢ 12 mins away',
                               style: GoogleFonts.inter(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
                             ),
                           ],
@@ -330,7 +478,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
-                          '© OpenStreetMap (100% Free)',
+                          'Â© OpenStreetMap (100% Free)',
                           style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: Color(0xFF4B5563)),
                         ),
                       ),
@@ -391,7 +539,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${_assignedDriver!['vehicleType'] ?? 'Bike'} • ${_assignedDriver!['vehicleNumber'] ?? 'MH-04-AB-1234'}',
+                            '${_assignedDriver!['vehicleType'] ?? 'Bike'} â€¢ ${_assignedDriver!['vehicleNumber'] ?? 'MH-04-AB-1234'}',
                             style: GoogleFonts.inter(fontSize: 12, color: AppColors.secondaryText),
                           ),
                         ],
@@ -401,7 +549,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('📞 Calling delivery partner: ${_assignedDriver!['phone']}...'),
+                            content: Text('ðŸ“ž Calling delivery partner: ${_assignedDriver!['phone']}...'),
                             backgroundColor: AppColors.primaryOrange,
                           ),
                         );
@@ -490,7 +638,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                               ),
                               Text(
                                 isPassed
-                                    ? (isCurrent ? 'Active stage • Live tracking enabled' : 'Completed')
+                                    ? (isCurrent ? 'Active stage â€¢ Live tracking enabled' : 'Completed')
                                     : 'Upcoming checkpoint',
                                 style: GoogleFonts.inter(
                                   fontSize: 11,
@@ -568,134 +716,5 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         ),
       ),
     );
-  }
-}
-
-class _CustomerMapPainter extends CustomPainter {
-  final double driverLat;
-  final double driverLng;
-  final double heading;
-
-  _CustomerMapPainter({
-    required this.driverLat,
-    required this.driverLng,
-    required this.heading,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 1. Terrain & Street Background
-    final bgPaint = Paint()..color = const Color(0xFFF4F1EA);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    // Park areas
-    final parkPaint = Paint()..color = const Color(0xFFDCEAD4);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(16, 16, 80, 50), const Radius.circular(12)), parkPaint);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(size.width - 100, size.height - 90, 85, 70), const Radius.circular(16)), parkPaint);
-
-    // Grid Roads
-    final roadPaint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 14
-      ..style = PaintingStyle.stroke;
-
-    final roadBorder = Paint()
-      ..color = const Color(0xFFE2DDD5)
-      ..strokeWidth = 16
-      ..style = PaintingStyle.stroke;
-
-    final r1 = Path()..moveTo(0, size.height * 0.45)..lineTo(size.width, size.height * 0.45);
-    final r2 = Path()..moveTo(size.width * 0.35, 0)..lineTo(size.width * 0.35, size.height);
-
-    canvas.drawPath(r1, roadBorder);
-    canvas.drawPath(r1, roadPaint);
-    canvas.drawPath(r2, roadBorder);
-    canvas.drawPath(r2, roadPaint);
-
-    // Coordinates mapping
-    final driverPoint = Offset(size.width * 0.32, size.height * 0.65);
-    final destPoint = Offset(size.width * 0.78, size.height * 0.3);
-
-    // Route polyline (Orange delivery route)
-    final routePaint = Paint()
-      ..color = const Color(0xFFEA580C)
-      ..strokeWidth = 5.5
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final routeBorder = Paint()
-      ..color = const Color(0xFF9A3412)
-      ..strokeWidth = 8.5
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final routePath = Path()
-      ..moveTo(driverPoint.dx, driverPoint.dy)
-      ..cubicTo(
-        driverPoint.dx + 30, driverPoint.dy - 50,
-        destPoint.dx - 50, destPoint.dy + 60,
-        destPoint.dx, destPoint.dy,
-      );
-
-    canvas.drawPath(routePath, routeBorder);
-    canvas.drawPath(routePath, routePaint);
-
-    // Destination Pin (Customer Store)
-    final pulsePaint = Paint()
-      ..color = const Color(0xFFDC2626).withOpacity(0.2)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(destPoint, 20, pulsePaint);
-
-    final destPin = Paint()..color = const Color(0xFFDC2626);
-    canvas.drawCircle(destPoint, 11, destPin);
-    final innerPin = Paint()..color = Colors.white;
-    canvas.drawCircle(destPoint, 4.5, innerPin);
-
-    final textPainter = TextPainter(
-      text: const TextSpan(
-        text: '📍 You',
-        style: TextStyle(color: Color(0xFF111827), fontSize: 10, fontWeight: FontWeight.w800),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    textPainter.paint(canvas, Offset(destPoint.dx - 14, destPoint.dy - 26));
-
-    // Live Moving Driver Vehicle (Bike with Radar Pulse)
-    final vehiclePulse = Paint()
-      ..color = const Color(0xFF10B981).withOpacity(0.25)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(driverPoint, 22, vehiclePulse);
-
-    canvas.save();
-    canvas.translate(driverPoint.dx, driverPoint.dy);
-    canvas.rotate(heading * pi / 180.0);
-
-    final vehicleBg = Paint()..color = const Color(0xFF111827);
-    canvas.drawCircle(Offset.zero, 14, vehicleBg);
-
-    final vehicleBorder = Paint()
-      ..color = const Color(0xFF10B981)
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke;
-    canvas.drawCircle(Offset.zero, 14, vehicleBorder);
-
-    // Arrow pointing direction of movement
-    final arrowPaint = Paint()..color = Colors.white;
-    final arrowPath = Path()
-      ..moveTo(0, -8)
-      ..lineTo(6, 6)
-      ..lineTo(0, 2)
-      ..lineTo(-6, 6)
-      ..close();
-    canvas.drawPath(arrowPath, arrowPaint);
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _CustomerMapPainter oldDelegate) {
-    return oldDelegate.driverLat != driverLat ||
-        oldDelegate.driverLng != driverLng ||
-        oldDelegate.heading != heading;
   }
 }

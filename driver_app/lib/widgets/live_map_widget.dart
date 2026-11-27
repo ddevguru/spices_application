@@ -1,8 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart' hide Path;
 import '../core/constants/app_colors.dart';
 
-class LiveMapWidget extends StatelessWidget {
+class LiveMapWidget extends StatefulWidget {
   final double currentLat;
   final double currentLng;
   final double destLat;
@@ -26,22 +28,68 @@ class LiveMapWidget extends StatelessWidget {
     this.onToggleSimulation,
   });
 
+  @override
+  State<LiveMapWidget> createState() => _LiveMapWidgetState();
+}
+
+class _LiveMapWidgetState extends State<LiveMapWidget> {
+  final MapController _mapController = MapController();
+
+  @override
+  void didUpdateWidget(covariant LiveMapWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSimulating &&
+        (oldWidget.currentLat != widget.currentLat ||
+            oldWidget.currentLng != widget.currentLng)) {
+      try {
+        _mapController.move(
+          LatLng(widget.currentLat, widget.currentLng),
+          _mapController.camera.zoom,
+        );
+      } catch (_) {}
+    }
+  }
+
+  void _recenterMap() {
+    try {
+      final bounds = LatLngBounds.fromPoints([
+        LatLng(widget.currentLat, widget.currentLng),
+        LatLng(widget.destLat, widget.destLng),
+      ]);
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(64),
+        ),
+      );
+    } catch (_) {
+      _mapController.move(LatLng(widget.currentLat, widget.currentLng), 13.5);
+    }
+  }
+
   // Calculate distance in KM using Haversine formula
   double _calculateDistance() {
     const p = 0.017453292519943295; // Pi / 180
     final a = 0.5 -
-        cos((destLat - currentLat) * p) / 2 +
-        cos(currentLat * p) * cos(destLat * p) * (1 - cos((destLng - currentLng) * p)) / 2;
-    return 12742 * asin(sqrt(a)); // 2 * R * asin...
+        cos((widget.destLat - widget.currentLat) * p) / 2 +
+        cos(widget.currentLat * p) *
+            cos(widget.destLat * p) *
+            (1 - cos((widget.destLng - widget.currentLng) * p)) /
+            2;
+    return 12742 * asin(sqrt(a));
   }
 
   @override
   Widget build(BuildContext context) {
     final distanceKm = _calculateDistance();
     final etaMinutes = (distanceKm / 25 * 60).round().clamp(2, 60);
+    final driverPoint = LatLng(widget.currentLat, widget.currentLng);
+    final destPoint = LatLng(widget.destLat, widget.destLng);
+    final midLat = (widget.currentLat + widget.destLat) / 2;
+    final midLng = (widget.currentLng + widget.destLng) / 2;
 
     return Container(
-      height: 320,
+      height: 340,
       width: double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xFFE5E7EB),
@@ -59,15 +107,136 @@ class LiveMapWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            // Interactive OpenStreetMap Canvas
-            CustomPaint(
-              size: Size.infinite,
-              painter: _MapCanvasPainter(
-                currentLat: currentLat,
-                currentLng: currentLng,
-                destLat: destLat,
-                destLng: destLng,
-                heading: heading,
+            // Real Interactive OpenStreetMap (100% Free, Same as Admin Panel)
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: LatLng(midLat, midLng),
+                initialZoom: 12.8,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.all,
+                ),
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.dryfruits.driver_app',
+                ),
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: [driverPoint, destPoint],
+                      strokeWidth: 7.0,
+                      color: const Color(0xFF9A3412),
+                    ),
+                    Polyline(
+                      points: [driverPoint, destPoint],
+                      strokeWidth: 4.5,
+                      color: const Color(0xFFEA580C),
+                    ),
+                  ],
+                ),
+                MarkerLayer(
+                  markers: [
+                    // Customer Destination Pin
+                    Marker(
+                      point: destPoint,
+                      width: 110,
+                      height: 64,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 4),
+                              ],
+                            ),
+                            child: const Text(
+                              'Customer Shop',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF111827),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDC2626),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2.5),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 4),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.storefront, size: 12, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Live Moving Driver Vehicle Marker
+                    Marker(
+                      point: driverPoint,
+                      width: 52,
+                      height: 52,
+                      child: Transform.rotate(
+                        angle: widget.heading * pi / 180.0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withOpacity(0.25),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF111827),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: const Color(0xFF10B981), width: 2.5),
+                                boxShadow: [
+                                  BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 6),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.navigation_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            // Recenter Map Button
+            Positioned(
+              bottom: 44,
+              right: 12,
+              child: Material(
+                color: Colors.white,
+                elevation: 3,
+                shape: const CircleBorder(),
+                child: IconButton(
+                  icon: const Icon(Icons.my_location, color: AppColors.primaryOrange, size: 20),
+                  onPressed: _recenterMap,
+                  tooltip: 'Recenter Map',
+                  constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+                  padding: EdgeInsets.zero,
+                ),
               ),
             ),
 
@@ -84,13 +253,13 @@ class LiveMapWidget extends StatelessWidget {
                     BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(Icons.map_outlined, size: 12, color: AppColors.primaryOrange),
                     SizedBox(width: 4),
                     Text(
-                      '© OpenStreetMap (Free API)',
+                      '© OpenStreetMap',
                       style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF374151)),
                     ),
                   ],
@@ -155,7 +324,7 @@ class LiveMapWidget extends StatelessWidget {
                         border: Border.all(color: AppColors.onlineGreen.withOpacity(0.4)),
                       ),
                       child: Text(
-                        '${speed.round()} km/h',
+                        '${widget.speed.round()} km/h',
                         style: const TextStyle(
                           color: AppColors.onlineGreen,
                           fontWeight: FontWeight.w800,
@@ -169,23 +338,23 @@ class LiveMapWidget extends StatelessWidget {
             ),
 
             // Simulation Control Floating Action Button
-            if (onToggleSimulation != null)
+            if (widget.onToggleSimulation != null)
               Positioned(
                 bottom: 12,
                 left: 12,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: onToggleSimulation,
+                    onTap: widget.onToggleSimulation,
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSimulating ? AppColors.onlineGreen : AppColors.primaryOrange,
+                        color: widget.isSimulating ? AppColors.onlineGreen : AppColors.primaryOrange,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: (isSimulating ? AppColors.onlineGreen : AppColors.primaryOrange).withOpacity(0.4),
+                            color: (widget.isSimulating ? AppColors.onlineGreen : AppColors.primaryOrange).withOpacity(0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           )
@@ -195,13 +364,13 @@ class LiveMapWidget extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            isSimulating ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                            widget.isSimulating ? Icons.pause_circle_filled : Icons.play_circle_fill,
                             color: Colors.white,
                             size: 16,
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            isSimulating ? 'Vehicle Moving Live...' : 'Simulate Drive (Ola Style)',
+                            widget.isSimulating ? 'Vehicle Moving Live...' : 'Simulate Drive (Ola Style)',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 11.5,
@@ -220,153 +389,3 @@ class LiveMapWidget extends StatelessWidget {
     );
   }
 }
-
-class _MapCanvasPainter extends CustomPainter {
-  final double currentLat;
-  final double currentLng;
-  final double destLat;
-  final double destLng;
-  final double heading;
-
-  _MapCanvasPainter({
-    required this.currentLat,
-    required this.currentLng,
-    required this.destLat,
-    required this.destLng,
-    required this.heading,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 1. Draw Map Background with realistic terrain & streets
-    final bgPaint = Paint()..color = const Color(0xFFF4F1EA);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    // Green terrain park zones
-    final parkPaint = Paint()..color = const Color(0xFFDCEAD4);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(20, 20, 100, 70), const Radius.circular(16)), parkPaint);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(size.width - 120, size.height - 110, 100, 80), const Radius.circular(20)), parkPaint);
-
-    // Secondary streets (Light Gray)
-    final secondaryRoadPaint = Paint()
-      ..color = const Color(0xFFFFFFFF)
-      ..strokeWidth = 14
-      ..style = PaintingStyle.stroke;
-
-    final roadBorderPaint = Paint()
-      ..color = const Color(0xFFE2DDD5)
-      ..strokeWidth = 16
-      ..style = PaintingStyle.stroke;
-
-    final roadPath1 = Path()
-      ..moveTo(0, size.height * 0.4)
-      ..lineTo(size.width, size.height * 0.4);
-
-    final roadPath2 = Path()
-      ..moveTo(size.width * 0.3, 0)
-      ..lineTo(size.width * 0.3, size.height);
-
-    canvas.drawPath(roadPath1, roadBorderPaint);
-    canvas.drawPath(roadPath1, secondaryRoadPaint);
-    canvas.drawPath(roadPath2, roadBorderPaint);
-    canvas.drawPath(roadPath2, secondaryRoadPaint);
-
-    // Calculate screen points for Driver and Customer
-    // Driver starts near bottom-left/center, Customer at top-right
-    final driverPoint = Offset(size.width * 0.28, size.height * 0.68);
-    final destPoint = Offset(size.width * 0.75, size.height * 0.28);
-
-    // 2. Main Highway / Transit Route Polyline (Ola / Uber Orange Route)
-    final routeBorderPaint = Paint()
-      ..color = const Color(0xFF9A3412)
-      ..strokeWidth = 9
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final routePaint = Paint()
-      ..color = const Color(0xFFEA580C)
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final routePath = Path()
-      ..moveTo(driverPoint.dx, driverPoint.dy)
-      ..cubicTo(
-        driverPoint.dx + 40, driverPoint.dy - 60,
-        destPoint.dx - 60, destPoint.dy + 80,
-        destPoint.dx, destPoint.dy,
-      );
-
-    canvas.drawPath(routePath, routeBorderPaint);
-    canvas.drawPath(routePath, routePaint);
-
-    // 3. Draw Customer Destination Pin (Red/Orange Map Pin)
-    final pinCirclePaint = Paint()..color = const Color(0xFFDC2626);
-    final pinInnerPaint = Paint()..color = Colors.white;
-
-    // Destination Pulse ring
-    final pulsePaint = Paint()
-      ..color = const Color(0xFFDC2626).withOpacity(0.25)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(destPoint, 22, pulsePaint);
-
-    canvas.drawCircle(destPoint, 12, pinCirclePaint);
-    canvas.drawCircle(destPoint, 5, pinInnerPaint);
-
-    // Destination Label Tag
-    final textPainter = TextPainter(
-      text: const TextSpan(
-        text: '📍 Customer Shop',
-        style: TextStyle(color: Color(0xFF111827), fontSize: 10, fontWeight: FontWeight.w800),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    textPainter.paint(canvas, Offset(destPoint.dx - 36, destPoint.dy - 30));
-
-    // 4. Draw Driver Live Moving Vehicle (Bike/Car)
-    canvas.save();
-    canvas.translate(driverPoint.dx, driverPoint.dy);
-    canvas.rotate((heading * pi / 180.0));
-
-    // Vehicle radar pulse
-    final vehiclePulse = Paint()
-      ..color = const Color(0xFF10B981).withOpacity(0.3)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset.zero, 24, vehiclePulse);
-
-    // Vehicle base circle
-    final vehicleBg = Paint()..color = const Color(0xFF111827);
-    canvas.drawCircle(Offset.zero, 16, vehicleBg);
-
-    // Vehicle border (Green for online)
-    final vehicleRing = Paint()
-      ..color = const Color(0xFF10B981)
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
-    canvas.drawCircle(Offset.zero, 16, vehicleRing);
-
-    // Vehicle Arrow Indicator pointing towards direction of movement
-    final arrowPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    final arrowPath = Path()
-      ..moveTo(0, -9)
-      ..lineTo(7, 7)
-      ..lineTo(0, 3)
-      ..lineTo(-7, 7)
-      ..close();
-    canvas.drawPath(arrowPath, arrowPaint);
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _MapCanvasPainter oldDelegate) {
-    return oldDelegate.currentLat != currentLat ||
-        oldDelegate.currentLng != currentLng ||
-        oldDelegate.heading != heading ||
-        oldDelegate.destLat != destLat ||
-        oldDelegate.destLng != destLng;
-  }
-}
-
