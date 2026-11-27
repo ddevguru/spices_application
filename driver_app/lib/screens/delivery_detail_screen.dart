@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/app_colors.dart';
 import '../core/services/api_service.dart';
@@ -24,6 +25,7 @@ class _DeliveryDetailScreenState extends State<DeliveryDetailScreen> {
   late double _speed;
   bool _isSimulating = false;
   Timer? _simulationTimer;
+  StreamSubscription<Position>? _realGpsSub;
   bool _isSubmitting = false;
 
   @override
@@ -32,12 +34,33 @@ class _DeliveryDetailScreenState extends State<DeliveryDetailScreen> {
     _currentLat = widget.driver.currentLat;
     _currentLng = widget.driver.currentLng;
     _heading = widget.driver.heading > 0 ? widget.driver.heading : 45.0;
-    _speed = widget.driver.speed > 0 ? widget.driver.speed : 24.0;
+    _speed = widget.driver.speed;
+    _listenRealGps();
+  }
+
+  Future<void> _listenRealGps() async {
+    try {
+      final perm = await Geolocator.checkPermission();
+      if (perm != LocationPermission.whileInUse && perm != LocationPermission.always) return;
+      _realGpsSub = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 5),
+      ).listen((pos) {
+        if (!_isSimulating && mounted) {
+          setState(() {
+            _currentLat = pos.latitude;
+            _currentLng = pos.longitude;
+            if (pos.heading >= 0) _heading = pos.heading;
+            _speed = pos.speed > 0 ? pos.speed * 3.6 : 0.0;
+          });
+        }
+      });
+    } catch (_) {}
   }
 
   @override
   void dispose() {
     _simulationTimer?.cancel();
+    _realGpsSub?.cancel();
     super.dispose();
   }
 

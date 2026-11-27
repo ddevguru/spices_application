@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/app_colors.dart';
 import '../core/services/api_service.dart';
@@ -24,6 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _fetchError;
   Timer? _gpsTimer;
   Timer? _ordersPollTimer;
+  StreamSubscription<Position>? _positionSub;
+  bool _hasRealGps = false;
 
   @override
   void initState() {
@@ -47,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _gpsTimer?.cancel();
     _ordersPollTimer?.cancel();
+    _positionSub?.cancel();
     super.dispose();
   }
 
@@ -88,7 +92,71 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _initRealGps() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return;
+      }
+
+      // Fetch immediate exact GPS fix
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      _applyGpsPosition(pos);
+
+      // Stream live GPS updates every 5 meters of movement
+      await _positionSub?.cancel();
+      _positionSub = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 5,
+        ),
+      ).listen((Position p) {
+        if (_isOnline && mounted) {
+          _applyGpsPosition(p);
+        }
+      });
+    } catch (_) {}
+  }
+
+  void _applyGpsPosition(Position pos) {
+    final speedKmh = pos.speed > 0 ? pos.speed * 3.6 : 0.0;
+    if (mounted) {
+      setState(() {
+        _hasRealGps = true;
+        widget.driver.currentLat = pos.latitude;
+        widget.driver.currentLng = pos.longitude;
+        widget.driver.heading = pos.heading >= 0 ? pos.heading : widget.driver.heading;
+        widget.driver.speed = speedKmh;
+      });
+    } else {
+      widget.driver.currentLat = pos.latitude;
+      widget.driver.currentLng = pos.longitude;
+      widget.driver.heading = pos.heading >= 0 ? pos.heading : widget.driver.heading;
+      widget.driver.speed = speedKmh;
+    }
+
+    if (_isOnline) {
+      ApiService().sendLocationHeartbeat(
+        driverId: widget.driver.id,
+        lat: widget.driver.currentLat,
+        lng: widget.driver.currentLng,
+        heading: widget.driver.heading,
+        speed: widget.driver.speed,
+      );
+    }
+  }
+
   void _startGpsHeartbeat() {
+    _initRealGps();
     _gpsTimer?.cancel();
     _gpsTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       if (_isOnline) {
@@ -97,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
           lat: widget.driver.currentLat,
           lng: widget.driver.currentLng,
           heading: widget.driver.heading,
-          speed: widget.driver.speed > 0 ? widget.driver.speed : 24.0,
+          speed: widget.driver.speed,
         );
       }
     });
@@ -152,6 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } else {
       _gpsTimer?.cancel();
+      await _positionSub?.cancel();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('⚪ You are OFFLINE. Deliveries paused.'),
@@ -281,7 +350,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              _isOnline ? 'GPS Heartbeat streaming active' : 'Turn on duty switch to receive deliveries',
+                              _isOnline
+                                  ? (_hasRealGps
+                                      ? 'Live GPS: ${widget.driver.currentLat.toStringAsFixed(5)}, ${widget.driver.currentLng.toStringAsFixed(5)}'
+                                      : 'GPS Heartbeat streaming active')
+                                  : 'Turn on duty switch to receive deliveries',
                               style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
                             ),
                           ],

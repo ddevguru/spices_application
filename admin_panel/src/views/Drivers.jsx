@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { mockApi } from '../services/mockApi';
+import LiveFleetMap from '../components/LiveFleetMap';
 import {
   Truck,
   Users,
@@ -105,6 +106,11 @@ export default function Drivers() {
       ]);
       setDrivers(driversData || []);
       setOrders(ordersData || []);
+      setSelectedDriver(prev => {
+        if (!prev) return null;
+        const fresh = (driversData || []).find(d => d.id === prev.id);
+        return fresh || prev;
+      });
     } catch (err) {
       console.error('Failed to load fleet data:', err);
     } finally {
@@ -481,13 +487,15 @@ export default function Drivers() {
           </div>
         </div>
 
-        {/* Free Map Canvas / Interactive Tile Frame */}
+        {/* Free Map Canvas / Interactive Live Leaflet OpenStreetMap */}
         <div style={{ position: 'relative', height: '420px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', backgroundColor: '#F8F9FA' }}>
-          {/* OpenStreetMap Tile Background Frame */}
-          <iframe
-            title="OpenStreetMap Live Fleet View"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapCenter.lng - 0.12}%2C${mapCenter.lat - 0.08}%2C${mapCenter.lng + 0.12}%2C${mapCenter.lat + 0.08}&layer=mapnik&marker=${mapCenter.lat}%2C${mapCenter.lng}`}
-            style={{ width: '100%', height: '100%', border: 'none' }}
+          <LiveFleetMap
+            drivers={drivers}
+            selectedDriver={selectedDriver}
+            onSelectDriver={(drv) => {
+              setSelectedDriver(drv);
+              setMapCenter({ lat: drv.currentLat || 19.0760, lng: drv.currentLng || 72.8777, zoom: 16 });
+            }}
           />
 
           {/* Live Overlay Marker HUD */}
@@ -514,7 +522,7 @@ export default function Drivers() {
               <div style={{ fontSize: '11.5px', color: '#4B5563', lineHeight: '1.4' }}>
                 <div><strong>Vehicle:</strong> {selectedDriver.vehicleType} ({selectedDriver.vehicleNumber})</div>
                 <div><strong>Speed:</strong> {selectedDriver.speed || '24'} km/h</div>
-                <div><strong>Coords:</strong> {selectedDriver.currentLat?.toFixed(4)}, {selectedDriver.currentLng?.toFixed(4)}</div>
+                <div><strong>Coords:</strong> {Number(selectedDriver.currentLat || 0).toFixed(6)}, {Number(selectedDriver.currentLng || 0).toFixed(6)}</div>
                 <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <button
                     onClick={() => handleOpenAssignModal(selectedDriver)}
