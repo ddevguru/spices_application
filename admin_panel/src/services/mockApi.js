@@ -1,12 +1,23 @@
 import axios from 'axios';
 
-const API_BASE = (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_URL)
-  ? (process.env.NEXT_PUBLIC_API_URL.startsWith('http')
-      ? `${process.env.NEXT_PUBLIC_API_URL}/api`
-      : `https://${process.env.NEXT_PUBLIC_API_URL}/api`)
-  : (typeof window !== 'undefined' && window.__NEXT_DATA__?.env?.NEXT_PUBLIC_API_URL)
-      ? `${window.__NEXT_DATA__.env.NEXT_PUBLIC_API_URL}/api`
-      : 'https://dryfruits-api.onrender.com/api';
+function resolveApiBase() {
+  const raw =
+    (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_URL) ||
+    (typeof window !== 'undefined' && window.__NEXT_DATA__?.env?.NEXT_PUBLIC_API_URL) ||
+    '';
+
+  const trimmed = String(raw).trim().replace(/\/+$/, '');
+  if (!trimmed) return 'https://dryfruits-api.onrender.com/api';
+
+  // If Render Blueprint injected internal service name without domain (e.g. "dryfruits-api"), use public URL
+  if (!trimmed.includes('.') && !trimmed.includes('localhost') && !trimmed.includes('127.0.0.1')) {
+    return 'https://dryfruits-api.onrender.com/api';
+  }
+
+  return trimmed.startsWith('http') ? `${trimmed}/api` : `https://${trimmed}/api`;
+}
+
+const API_BASE = resolveApiBase();
 
 // Authentic Store Data (Strictly Categories & Products only - ZERO Mock Orders / Mock Revenue)
 const INITIAL_DB = {
